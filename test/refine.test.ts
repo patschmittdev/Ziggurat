@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -698,5 +700,106 @@ test('stageProposal: no .tmp files remain after evidence validation failure', as
     }
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// LoopbackChatAdapter: HTTP request structure (in-process server)
+// ---------------------------------------------------------------------------
+
+async function withHttpCapture(
+  responseBody: unknown,
+  fn: (port: number) => Promise<void>,
+): Promise<unknown> {
+  let capturedBody: unknown;
+  const server = createServer((req, res) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => chunks.push(c));
+    req.on('end', () => {
+      capturedBody = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(responseBody));
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  try {
+    await fn(port);
+  } finally {
+    await new Promise<void>((resolve, reject) =>
+      server.close((err) => (err != null ? reject(err) : resolve())),
+    );
+  }
+  if (capturedBody === undefined) throw new Error('No request body captured');
+  return capturedBody;
+}
+
+test('LoopbackChatAdapter: completeJson sends response_format type json_schema', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const rf = (body as Record<string, unknown>)['response_format'] as Record<string, unknown>;
+  assert.equal(rf['type'], 'json_schema');
+});
+
+test('LoopbackChatAdapter: completeJson sends json_schema strict true', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
+  assert.equal(js['strict'], true);
+});
+
+test('LoopbackChatAdapter: completeJson sends json_schema name ziggurat_refinement_proposal', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
+  assert.equal(js['name'], 'ziggurat_refinement_proposal');
+});
+
+test('LoopbackChatAdapter: completeJson schema includes operation enum create/amend/contradict', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
+  const schema = js['schema'] as Record<string, unknown>;
+  const props = schema['properties'] as Record<string, Record<string, unknown>>;
+  const opEnum = (props['operation'] as Record<string, unknown>)['enum'] as string[];
+  assert.deepEqual([...opEnum].sort(), ['amend', 'contradict', 'create']);
+});
+
+test('LoopbackChatAdapter: completeJson schema lists all required top-level fields', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
+  const schema = js['schema'] as Record<string, unknown>;
+  const required = schema['required'] as string[];
+  const expected = ['schema_version', 'operation', 'target_path', 'evidence', 'confidence', 'affected_paths', 'related_paths', 'unresolved_questions'];
+  for (const field of expected) {
+    assert.ok(required.includes(field), `schema.required must include "${field}"`);
+  }
+});
+
+test('LoopbackChatAdapter: completeJson evidence item schema lists all required fields', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
+  const schema = js['schema'] as Record<string, unknown>;
+  const props = schema['properties'] as Record<string, unknown>;
+  const evidence = props['evidence'] as Record<string, unknown>;
+  const items = evidence['items'] as Record<string, unknown>;
+  const itemRequired = items['required'] as string[];
+  const expected = ['source_path', 'body_sha256', 'line_start', 'line_end', 'quote', 'quote_sha256'];
+  for (const field of expected) {
+    assert.ok(itemRequired.includes(field), `evidence items.required must include "${field}"`);
   }
 });
