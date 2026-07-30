@@ -14,7 +14,7 @@ export interface ZigguratConfig {
   };
 }
 
-const ZigguratConfigSchema = z.object({
+export const ZigguratConfigSchema = z.object({
   schema_version: z.literal(1),
   lifecycle: z.object({
     review_queue_limit: z.number().int().min(1),
@@ -42,10 +42,6 @@ async function loadYamlFile(filePath: string): Promise<unknown> {
     throw new Error(`${filePath}: tab characters are not permitted in YAML config`);
   }
 
-  if (/!!/.test(text)) {
-    throw new Error(`${filePath}: custom YAML type tags (!!) are not permitted`);
-  }
-
   const doc = YAML.parseDocument(text);
 
   if (doc.errors.length > 0) {
@@ -65,15 +61,24 @@ async function loadYamlFile(filePath: string): Promise<unknown> {
       if (node.anchor != null) {
         violation = `${filePath}: YAML anchors (&) are not permitted`;
       }
+      if (node.tag != null) {
+        violation = `${filePath}: explicit YAML type tags are not permitted`;
+      }
     },
     Map(_key, node) {
       if (node.anchor != null) {
         violation = `${filePath}: YAML anchors (&) are not permitted`;
       }
+      if (node.tag != null) {
+        violation = `${filePath}: explicit YAML type tags are not permitted`;
+      }
     },
     Seq(_key, node) {
       if (node.anchor != null) {
         violation = `${filePath}: YAML anchors (&) are not permitted`;
+      }
+      if (node.tag != null) {
+        violation = `${filePath}: explicit YAML type tags are not permitted`;
       }
     },
   });

@@ -22,5 +22,5 @@ export type {
   EvidenceCitation,
 } from './common.js';
 
-export { parseZigguratConfig } from './config.js';
+export { parseZigguratConfig, ZigguratConfigSchema } from './config.js';
 export type { ZigguratConfig } from './config.js';
