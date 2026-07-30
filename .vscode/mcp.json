@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "ziggurat-communion": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/dist/src/cli/main.js",
+        "mcp",
+        "--root",
+        "${workspaceFolder}",
+        "--profile",
+        "communion"
+      ]
+    }
+  }
+}

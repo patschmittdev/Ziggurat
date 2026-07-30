@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tmp
+.ziggurat/gold-index.json
+.ziggurat/review-index.json
+.ziggurat/evidence-index.json
+debug-output.txt
