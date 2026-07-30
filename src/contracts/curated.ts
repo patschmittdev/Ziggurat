@@ -16,6 +16,7 @@ const baseCuratedPage = z.object({
   reviewed_by: z.string().optional(),
   reviewed_at: z.string().optional(),
   last_verified: z.string().optional(),
+  review_after: z.string().optional(),
 });
 
 export const CuratedPageSchema = baseCuratedPage.refine(
