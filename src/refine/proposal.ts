@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, open } from 'node:fs/promises';
+import { link, mkdir, open, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RefinementProposalSchema } from '../contracts/index.js';
 import type { RefinementProposal } from '../contracts/index.js';
@@ -18,33 +18,62 @@ export interface RefinementInput {
 }
 
 /**
- * Writes a proposal as JSON under `<root>/.ziggurat/proposals/`.
- * This function only stages the proposal; it never interprets or applies the operation.
+ * Parses unknownProposal through RefinementProposalSchema, validates every evidence
+ * citation against Bronze files under root, then atomically stages the proposal under
+ * .ziggurat/proposals/. This is the single validated staging path; no unchecked writer
+ * is exposed.
  */
 export async function stageProposal(
   root: string,
-  proposal: RefinementProposal,
+  unknownProposal: unknown,
 ): Promise<string> {
+  const proposal = RefinementProposalSchema.parse(unknownProposal);
+
+  for (const citation of proposal.evidence) {
+    const error = await validateEvidenceCitation(root, citation);
+    if (error !== null) {
+      throw new Error(
+        `Evidence citation failed: ${error.source_path} (${error.failed_field}): ${error.message}`,
+      );
+    }
+  }
+
   const proposalsDir = join(root, '.ziggurat', 'proposals');
   await mkdir(proposalsDir, { recursive: true });
 
-  const filePath = join(proposalsDir, `${randomUUID()}.json`);
+  const finalPath = join(proposalsDir, `${randomUUID()}.json`);
+  const tmpPath = join(proposalsDir, `${randomUUID()}.tmp`);
   const content = JSON.stringify(proposal, null, 2) + '\n';
 
-  const fh = await open(filePath, 'wx');
+  let fh: import('node:fs/promises').FileHandle | undefined;
   try {
+    fh = await open(tmpPath, 'w');
     await fh.writeFile(content, 'utf8');
     await fh.sync();
-  } finally {
     await fh.close();
+    fh = undefined;
+  } catch (writeErr) {
+    if (fh !== undefined) {
+      try { await fh.close(); } catch { /* ignore */ }
+    }
+    await unlink(tmpPath).catch(() => undefined);
+    throw writeErr;
   }
 
-  return filePath;
+  try {
+    await link(tmpPath, finalPath);
+  } catch (linkErr) {
+    await unlink(tmpPath).catch(() => undefined);
+    throw linkErr;
+  }
+  await unlink(tmpPath).catch(() => undefined);
+
+  return finalPath;
 }
 
 /**
- * Requests a Silver refinement from the adapter, validates all evidence citations
- * against the Bronze corpus, then stages the proposal on disk.
+ * Requests a Silver refinement from the adapter, then delegates to stageProposal
+ * which parses, validates all evidence citations, and atomically stages on disk.
  */
 export async function requestRefinement(
   adapter: StructuredChatAdapter,
@@ -71,20 +100,6 @@ export async function requestRefinement(
   ];
 
   const raw = await adapter.completeJson(messages);
-
-  // Zod parse: throws ZodError on schema violation.
-  const proposal = RefinementProposalSchema.parse(raw);
-
-  // Validate every evidence citation against the actual Bronze files.
-  for (const citation of proposal.evidence) {
-    const error = await validateEvidenceCitation(input.root, citation);
-    if (error !== null) {
-      throw new Error(
-        `Evidence citation failed: ${error.source_path} (${error.failed_field}): ${error.message}`,
-      );
-    }
-  }
-
-  await stageProposal(input.root, proposal);
-  return proposal;
+  await stageProposal(input.root, raw);
+  return RefinementProposalSchema.parse(raw);
 }

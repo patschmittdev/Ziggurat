@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -334,6 +334,368 @@ test('requestRefinement: stages proposal and returns it when adapter is valid', 
     const proposalsDir = join(root, '.ziggurat', 'proposals');
     const entries = await readdir(proposalsDir);
     assert.equal(entries.length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Adversarial: direct stage bypass - stageProposal must parse+validate unknown
+// ---------------------------------------------------------------------------
+
+test('stageProposal: rejects unknown with bad evidence hash (internal schema parse)', async () => {
+  const { root, sourcePath } = await makeVaultWithBronze(BODY);
+  try {
+    const badProposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: 'knowledge/test.md',
+      evidence: [{
+        source_path: sourcePath,
+        body_sha256: 'a'.repeat(64),
+        line_start: 1,
+        line_end: 1,
+        quote: '# Test Source',
+        quote_sha256: sha256Text('# Test Source'),
+      }],
+      confidence: 'medium',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await assert.rejects(() => stageProposal(root, badProposal), /evidence/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: rejects null', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-bad-'));
+  try {
+    await assert.rejects(() => stageProposal(root, null));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: rejects object with missing required fields', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-bad-'));
+  try {
+    await assert.rejects(() => stageProposal(root, { totally: 'wrong' }));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Adversarial: traversal / absolute / backslash in source_path
+// ---------------------------------------------------------------------------
+
+test('validateEvidenceCitation: rejects traversal in source_path', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-trav-'));
+  try {
+    const citation: EvidenceCitation = {
+      source_path: 'bronze/../outside.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'x',
+      quote_sha256: sha256Text('x'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects absolute source_path', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-abs-'));
+  try {
+    const citation: EvidenceCitation = {
+      source_path: '/bronze/doc.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'x',
+      quote_sha256: sha256Text('x'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects backslash in source_path', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-bs-'));
+  try {
+    const citation: EvidenceCitation = {
+      source_path: 'bronze\\evil.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'x',
+      quote_sha256: sha256Text('x'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects source_path not under bronze/', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-nb-'));
+  try {
+    const citation: EvidenceCitation = {
+      source_path: 'knowledge/page.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'x',
+      quote_sha256: sha256Text('x'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Adversarial: non-Bronze evidence and corrupt Bronze
+// ---------------------------------------------------------------------------
+
+test('validateEvidenceCitation: rejects non-Bronze file (no frontmatter)', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-nbr-'));
+  try {
+    await mkdir(join(root, 'bronze'), { recursive: true });
+    await writeFile(join(root, 'bronze', 'raw.md'), 'just some text\n', 'utf8');
+    const citation: EvidenceCitation = {
+      source_path: 'bronze/raw.md',
+      body_sha256: sha256Text('just some text\n'),
+      line_start: 1,
+      line_end: 1,
+      quote: 'just some text',
+      quote_sha256: sha256Text('just some text'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects corrupt Bronze (frontmatter sha256 does not match body)', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-cor-'));
+  try {
+    await mkdir(join(root, 'bronze'), { recursive: true });
+    const wrongSha = 'f'.repeat(64);
+    const yaml =
+      'schema_version: 1\n' +
+      'source_id: corrupt-doc\n' +
+      'source_kind: article\n' +
+      'captured_at: 2026-01-01T00:00:00.000Z\n' +
+      `sha256: ${wrongSha}\n` +
+      'sensitivity: public\n' +
+      'pii: false\n';
+    const body = 'Real body content\n';
+    await writeFile(join(root, 'bronze', 'corrupt.md'), `---\n${yaml}---\n${body}`, 'utf8');
+    const citation: EvidenceCitation = {
+      source_path: 'bronze/corrupt.md',
+      body_sha256: sha256Text(body),
+      line_start: 1,
+      line_end: 1,
+      quote: 'Real body content',
+      quote_sha256: sha256Text('Real body content'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Adversarial: symlink escape
+// ---------------------------------------------------------------------------
+
+test('validateEvidenceCitation: rejects symlink escaping bronze/', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-sym-'));
+  const outsideDir = await mkdtemp(join(tmpdir(), 'ziggurat-outside-'));
+  try {
+    await mkdir(join(root, 'bronze'), { recursive: true });
+    const body = 'outside content\n';
+    const bodySha = sha256Text(body);
+    const outsideYaml =
+      'schema_version: 1\n' +
+      'source_id: outside\n' +
+      'source_kind: article\n' +
+      'captured_at: 2026-01-01T00:00:00.000Z\n' +
+      `sha256: ${bodySha}\n` +
+      'sensitivity: public\n' +
+      'pii: false\n';
+    const outsideFile = join(outsideDir, 'outside.md');
+    await writeFile(outsideFile, `---\n${outsideYaml}---\n${body}`, 'utf8');
+    const symlinkPath = join(root, 'bronze', 'escape.md');
+    try {
+      await symlink(outsideFile, symlinkPath);
+    } catch {
+      // Symlinks unavailable (Windows without privilege); skip.
+      return;
+    }
+    const citation: EvidenceCitation = {
+      source_path: 'bronze/escape.md',
+      body_sha256: bodySha,
+      line_start: 1,
+      line_end: 1,
+      quote: 'outside content',
+      quote_sha256: sha256Text('outside content'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(outsideDir, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Adversarial: target_path / affected_paths / related_paths constraints
+// ---------------------------------------------------------------------------
+
+test('stageProposal: rejects target_path with traversal', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const badProposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: '../../../etc/passwd',
+      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
+      confidence: 'medium',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await assert.rejects(() => stageProposal(root, badProposal));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: rejects target_path not under knowledge/', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const badProposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: 'bronze/evil.md',
+      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
+      confidence: 'medium',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await assert.rejects(() => stageProposal(root, badProposal));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: rejects affected_paths with traversal', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const badProposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: 'knowledge/test.md',
+      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
+      confidence: 'medium',
+      affected_paths: ['../evil'],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await assert.rejects(() => stageProposal(root, badProposal));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: rejects related_paths with backslash', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const badProposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: 'knowledge/test.md',
+      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
+      confidence: 'medium',
+      affected_paths: [],
+      related_paths: ['knowledge\\evil.md'],
+      unresolved_questions: [],
+    };
+    await assert.rejects(() => stageProposal(root, badProposal));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Adversarial: collision / no-overwrite, and cleanup
+// ---------------------------------------------------------------------------
+
+test('stageProposal: two calls produce two distinct files', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
+    const p1 = await stageProposal(root, proposal);
+    const p2 = await stageProposal(root, proposal);
+    assert.notEqual(p1, p2);
+    const proposalsDir = join(root, '.ziggurat', 'proposals');
+    const entries = await readdir(proposalsDir);
+    assert.equal(entries.length, 2);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: no .tmp files remain after successful stage', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
+    await stageProposal(root, proposal);
+    const proposalsDir = join(root, '.ziggurat', 'proposals');
+    const entries = await readdir(proposalsDir);
+    const tmpFiles = entries.filter(e => e.endsWith('.tmp'));
+    assert.equal(tmpFiles.length, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: no .tmp files remain after evidence validation failure', async () => {
+  const { root, sourcePath } = await makeVaultWithBronze(BODY);
+  try {
+    const badProposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: 'knowledge/test.md',
+      evidence: [{
+        source_path: sourcePath,
+        body_sha256: 'a'.repeat(64),
+        line_start: 1,
+        line_end: 1,
+        quote: '# Test Source',
+        quote_sha256: sha256Text('# Test Source'),
+      }],
+      confidence: 'medium',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await assert.rejects(() => stageProposal(root, badProposal));
+    const proposalsDir = join(root, '.ziggurat', 'proposals');
+    try {
+      const entries = await readdir(proposalsDir);
+      const tmpFiles = entries.filter(e => e.endsWith('.tmp'));
+      assert.equal(tmpFiles.length, 0);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }
