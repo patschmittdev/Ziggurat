@@ -1,0 +1,340 @@
+import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import test from 'node:test';
+import { sha256Text } from '../src/bronze/canonical.js';
+import type { EvidenceCitation } from '../src/contracts/index.js';
+import { validateEvidenceCitation } from '../src/refine/evidence.js';
+import type { StructuredChatAdapter, ChatMessage } from '../src/refine/adapter.js';
+import { LoopbackChatAdapter } from '../src/refine/adapter.js';
+import { stageProposal, requestRefinement } from '../src/refine/proposal.js';
+import type { RefinementInput } from '../src/refine/proposal.js';
+import type { RefinementProposal } from '../src/contracts/index.js';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const BODY = '# Test Source\nLine two content.\nLine three content.\n';
+
+async function makeVaultWithBronze(body: string): Promise<{
+  root: string;
+  sourcePath: string;
+  bodySha: string;
+}> {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-refine-'));
+  const canonical = body.replace(/\r\n/g, '\n');
+  const bodySha = sha256Text(canonical);
+  const yaml =
+    'schema_version: 1\n' +
+    'source_id: test-doc\n' +
+    'source_kind: article\n' +
+    'captured_at: 2026-01-01T00:00:00.000Z\n' +
+    `sha256: ${bodySha}\n` +
+    'sensitivity: restricted\n' +
+    'pii: unknown\n';
+  const fileContent = `---\n${yaml}---\n${canonical}`;
+  const sourcePath = 'bronze/test-doc.md';
+  await mkdir(join(root, 'bronze'), { recursive: true });
+  await writeFile(join(root, sourcePath), fileContent, 'utf8');
+  return { root, sourcePath, bodySha };
+}
+
+function makeCitation(
+  sourcePath: string,
+  bodySha: string,
+  lineStart: number,
+  lineEnd: number,
+  quote: string,
+): EvidenceCitation {
+  return {
+    source_path: sourcePath,
+    body_sha256: bodySha,
+    line_start: lineStart,
+    line_end: lineEnd,
+    quote,
+    quote_sha256: sha256Text(quote),
+  };
+}
+
+class FakeAdapter implements StructuredChatAdapter {
+  constructor(private readonly value: unknown) {}
+  async completeJson(_messages: readonly ChatMessage[]): Promise<unknown> {
+    return this.value;
+  }
+}
+
+function makeValidProposal(
+  sourcePath: string,
+  bodySha: string,
+  quote: string,
+): RefinementProposal {
+  return {
+    schema_version: 1,
+    operation: 'create',
+    target_path: 'knowledge/test.md',
+    evidence: [makeCitation(sourcePath, bodySha, 1, 1, quote)],
+    confidence: 'medium',
+    affected_paths: [],
+    related_paths: [],
+    unresolved_questions: [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// validateEvidenceCitation
+// ---------------------------------------------------------------------------
+
+test('validateEvidenceCitation: returns null for a correct single-line citation', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const quote = '# Test Source';
+    const citation = makeCitation(sourcePath, bodySha, 1, 1, quote);
+    const result = await validateEvidenceCitation(root, citation);
+    assert.equal(result, null);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: returns null for a multi-line citation', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const quote = 'Line two content.\nLine three content.';
+    const citation = makeCitation(sourcePath, bodySha, 2, 3, quote);
+    const result = await validateEvidenceCitation(root, citation);
+    assert.equal(result, null);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects wrong body_sha256', async () => {
+  const { root, sourcePath } = await makeVaultWithBronze(BODY);
+  try {
+    const badSha = 'a'.repeat(64);
+    const citation: EvidenceCitation = {
+      source_path: sourcePath,
+      body_sha256: badSha,
+      line_start: 1,
+      line_end: 1,
+      quote: '# Test Source',
+      quote_sha256: sha256Text('# Test Source'),
+    };
+    const result = await validateEvidenceCitation(root, citation);
+    assert.notEqual(result, null);
+    assert.equal(result?.failed_field, 'body_sha256');
+    assert.equal(result?.source_path, sourcePath);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects wrong quote for correct line range', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const wrongQuote = 'Not what is there';
+    const citation: EvidenceCitation = {
+      source_path: sourcePath,
+      body_sha256: bodySha,
+      line_start: 1,
+      line_end: 1,
+      quote: wrongQuote,
+      quote_sha256: sha256Text(wrongQuote),
+    };
+    const result = await validateEvidenceCitation(root, citation);
+    assert.notEqual(result, null);
+    assert.equal(result?.failed_field, 'quote');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects tampered quote_sha256', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const citation: EvidenceCitation = {
+      source_path: sourcePath,
+      body_sha256: bodySha,
+      line_start: 1,
+      line_end: 1,
+      quote: '# Test Source',
+      quote_sha256: 'b'.repeat(64), // wrong digest
+    };
+    const result = await validateEvidenceCitation(root, citation);
+    assert.notEqual(result, null);
+    assert.equal(result?.failed_field, 'quote_sha256');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// LoopbackChatAdapter construction guard
+// ---------------------------------------------------------------------------
+
+test('LoopbackChatAdapter: accepts 127.0.0.1 endpoint', () => {
+  assert.doesNotThrow(() => new LoopbackChatAdapter('http://127.0.0.1:8080/v1/chat'));
+});
+
+test('LoopbackChatAdapter: accepts localhost endpoint', () => {
+  assert.doesNotThrow(() => new LoopbackChatAdapter('http://localhost:11434/api/chat'));
+});
+
+test('LoopbackChatAdapter: rejects non-loopback endpoint', () => {
+  assert.throws(
+    () => new LoopbackChatAdapter('http://example.com/api'),
+    /loopback/i,
+  );
+});
+
+test('LoopbackChatAdapter: rejects remote HTTPS endpoint', () => {
+  assert.throws(
+    () => new LoopbackChatAdapter('https://api.openai.com/v1/chat/completions'),
+    /loopback/i,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// stageProposal
+// ---------------------------------------------------------------------------
+
+test('stageProposal: writes a file under .ziggurat/proposals/', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
+    const filePath = await stageProposal(root, proposal);
+    assert.match(filePath, /\.ziggurat[/\\]proposals[/\\]/u);
+    const contents = await readFile(filePath, 'utf8');
+    const parsed = JSON.parse(contents) as unknown;
+    assert.deepEqual(parsed, proposal);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: does not execute amend operation side-effects', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal: RefinementProposal = {
+      schema_version: 1,
+      operation: 'amend',
+      target_path: 'knowledge/page-to-amend.md',
+      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
+      confidence: 'low',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await stageProposal(root, proposal);
+    // Target page must NOT have been created or modified.
+    const targetPath = join(root, proposal.target_path);
+    await assert.rejects(readFile(targetPath, 'utf8'), /ENOENT/u);
+    // Only the proposals directory should have been created under .ziggurat.
+    const proposalsDir = join(root, '.ziggurat', 'proposals');
+    const entries = await readdir(proposalsDir);
+    assert.equal(entries.length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('stageProposal: does not execute contradict operation side-effects', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal: RefinementProposal = {
+      schema_version: 1,
+      operation: 'contradict',
+      target_path: 'knowledge/page-to-contradict.md',
+      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
+      confidence: 'high',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    await stageProposal(root, proposal);
+    const targetPath = join(root, proposal.target_path);
+    await assert.rejects(readFile(targetPath, 'utf8'), /ENOENT/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// requestRefinement
+// ---------------------------------------------------------------------------
+
+test('requestRefinement: throws when adapter returns malformed JSON', async () => {
+  const { root } = await makeVaultWithBronze(BODY);
+  try {
+    const adapter = new FakeAdapter({ totally: 'wrong', shape: true });
+    const input: RefinementInput = {
+      root,
+      topic: 'test topic',
+      target_path: 'knowledge/test.md',
+      bronze_source_paths: [],
+    };
+    await assert.rejects(() => requestRefinement(adapter, input));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('requestRefinement: throws when adapter returns valid schema but bad evidence hash', async () => {
+  const { root, sourcePath } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal = {
+      schema_version: 1,
+      operation: 'create',
+      target_path: 'knowledge/test.md',
+      evidence: [
+        {
+          source_path: sourcePath,
+          body_sha256: 'a'.repeat(64), // wrong hash
+          line_start: 1,
+          line_end: 1,
+          quote: '# Test Source',
+          quote_sha256: sha256Text('# Test Source'),
+        },
+      ],
+      confidence: 'medium',
+      affected_paths: [],
+      related_paths: [],
+      unresolved_questions: [],
+    };
+    const adapter = new FakeAdapter(proposal);
+    const input: RefinementInput = {
+      root,
+      topic: 'test topic',
+      target_path: 'knowledge/test.md',
+      bronze_source_paths: [sourcePath],
+    };
+    await assert.rejects(() => requestRefinement(adapter, input));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('requestRefinement: stages proposal and returns it when adapter is valid', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
+    const adapter = new FakeAdapter(proposal);
+    const input: RefinementInput = {
+      root,
+      topic: 'test topic',
+      target_path: 'knowledge/test.md',
+      bronze_source_paths: [sourcePath],
+    };
+    const result = await requestRefinement(adapter, input);
+    assert.equal(result.operation, 'create');
+    assert.equal(result.target_path, 'knowledge/test.md');
+    // Staged file must exist.
+    const proposalsDir = join(root, '.ziggurat', 'proposals');
+    const entries = await readdir(proposalsDir);
+    assert.equal(entries.length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

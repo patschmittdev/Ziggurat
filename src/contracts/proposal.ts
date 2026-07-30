@@ -5,8 +5,8 @@ export const RefinementProposalSchema = z.object({
   schema_version: z.literal(1),
   operation: z.union([
     z.literal('create'),
-    z.literal('update'),
-    z.literal('deprecate'),
+    z.literal('amend'),
+    z.literal('contradict'),
   ]),
   target_path: z.string().min(1),
   evidence: z.array(EvidenceCitationSchema).min(1),
