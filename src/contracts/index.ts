@@ -24,3 +24,22 @@ export type {
 
 export { parseZigguratConfig, ZigguratConfigSchema } from './config.js';
 export type { ZigguratConfig } from './config.js';
+
+export {
+  GoldChunkSchema,
+  ProfileChunkSchema,
+  Bm25SnapshotSchema,
+  EmbeddingSnapshotSchema,
+  GoldIndexSchema,
+  ProfileIndexSchema,
+} from './gold-index.js';
+export type {
+  GoldChunk,
+  ProfileChunk,
+  Bm25Snapshot,
+  EmbeddingSnapshot,
+  GoldIndex,
+  ProfileIndex,
+  RrfEntry,
+  SearchResult,
+} from './gold-index.js';
