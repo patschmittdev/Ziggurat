@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { canonicalBronzeBody, sha256Text } from '../src/bronze/canonical.js';
 import { ingestCapture } from '../src/bronze/ingest.js';
-import { verifyBronzeFile } from '../src/bronze/store.js';
+import { BronzeCorruptionError, collectBronzeHashes, verifyBronzeFile } from '../src/bronze/store.js';
 
 async function makeVault(files: Record<string, string>): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'ziggurat-bronze-'));
@@ -81,6 +81,71 @@ test('inbox is retained when bronze directory cannot be created', async () => {
     await assert.doesNotReject(access(join(root, 'inbox/fail.md')));
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('different content at same target path is rejected and existing Bronze is unchanged', async () => {
+  const root = await makeVault({ 'inbox/report.md': '# Report\n\nFirst body.\n' });
+  try {
+    const first = await ingestCapture(root, 'inbox/report.md', {
+      now: new Date('2026-01-02T00:00:00Z'),
+      sourceKind: 'article',
+    });
+    assert.equal(first.status, 'created');
+
+    await mkdir(join(root, 'inbox'), { recursive: true });
+    await writeFile(join(root, 'inbox/report.md'), '# Report\n\nSecond body.\n', 'utf8');
+
+    await assert.rejects(
+      ingestCapture(root, 'inbox/report.md', {
+        now: new Date('2026-01-02T00:00:00Z'),
+        sourceKind: 'article',
+      }),
+    );
+    const bronzeContent = await readFile(join(root, first.source_path), 'utf8');
+    assert.match(bronzeContent, /First body\./u);
+    assert.doesNotMatch(bronzeContent, /Second body\./u);
+    await assert.doesNotReject(access(join(root, 'inbox/report.md')));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('collectBronzeHashes throws BronzeCorruptionError for corrupt Bronze body', async () => {
+  const root = await makeVault({ 'inbox/doc.md': '# Doc\n\nContent.\n' });
+  try {
+    const result = await ingestCapture(root, 'inbox/doc.md', {
+      now: new Date('2026-01-02T00:00:00Z'),
+      sourceKind: 'article',
+    });
+    const bronzePath = join(root, result.source_path);
+    const original = await readFile(bronzePath, 'utf8');
+    await writeFile(bronzePath, original.replace('Content.', 'Content!'), 'utf8');
+    await assert.rejects(
+      collectBronzeHashes(root),
+      (err: unknown) => err instanceof BronzeCorruptionError,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('invalid sourceKind rejects ingest and Inbox is preserved', async () => {
+  const invalid = ['', '../evil', 'has/slash', 'UPPER', '.hidden'];
+  for (const kind of invalid) {
+    const root = await makeVault({ 'inbox/doc.md': '# Doc\n\nContent.\n' });
+    try {
+      await assert.rejects(
+        ingestCapture(root, 'inbox/doc.md', {
+          now: new Date('2026-01-02T00:00:00Z'),
+          sourceKind: kind,
+        }),
+        /invalid sourceKind/u,
+      );
+      await assert.doesNotReject(access(join(root, 'inbox/doc.md')));
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   }
 });
 
