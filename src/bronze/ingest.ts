@@ -6,7 +6,6 @@ import { assessPrivacy } from './privacy.js';
 import {
   atomicWriteBronze,
   collectBronzeHashes,
-  parseBronzeRecord,
   serializeBronzeFile,
   verifyBronzeFile,
 } from './store.js';
@@ -28,10 +27,12 @@ function toDateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+const SAFE_SOURCE_KIND = /^[a-z0-9][a-z0-9-]*$/u;
+
 /**
  * Ingests an Inbox file as an immutable Bronze record.
  * - Returns 'duplicate' (without removing Inbox) if the body sha256 already exists in bronze/.
- * - Removes Inbox only after the Bronze file exists and reparses through BronzeRecordSchema.
+ * - Removes Inbox only after the Bronze file exists and body hash is verified.
  */
 export async function ingestCapture(
   root: string,
@@ -39,6 +40,10 @@ export async function ingestCapture(
   options: { now: Date; sourceKind: string; origin?: string },
 ): Promise<IngestResult> {
   const { now, sourceKind, origin } = options;
+
+  if (!SAFE_SOURCE_KIND.test(sourceKind)) {
+    throw new Error(`invalid sourceKind: "${sourceKind}"`);
+  }
 
   const inboxFullPath = join(root, inboxPath);
   const rawContent = await readFile(inboxFullPath, 'utf8');
@@ -79,9 +84,6 @@ export async function ingestCapture(
       `Bronze write failed body verification: expected ${verifyResult.expected}, got ${verifyResult.actual}`,
     );
   }
-  // Re-parse through schema as a final structural guard.
-  const writtenContent = await readFile(targetFullPath, 'utf8');
-  parseBronzeRecord(writtenContent);
 
   await unlink(inboxFullPath);
 

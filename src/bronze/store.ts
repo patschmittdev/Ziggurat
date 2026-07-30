@@ -2,12 +2,12 @@ import { randomUUID } from 'node:crypto';
 import {
   access,
   constants,
+  link,
   mkdir,
   open,
   readdir,
   readFile,
-  rename,
-  rm,
+  unlink,
 } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import * as YAML from 'yaml';
@@ -19,6 +19,17 @@ export interface VerifyResult {
   valid: boolean;
   expected: string;
   actual: string;
+}
+
+export class BronzeCorruptionError extends Error {
+  constructor(
+    public readonly filePath: string,
+    public readonly expected: string,
+    public readonly actual: string,
+  ) {
+    super(`Bronze corpus is corrupt: ${filePath} (expected ${expected}, got ${actual})`);
+    this.name = 'BronzeCorruptionError';
+  }
 }
 
 interface BronzeSplit {
@@ -85,10 +96,17 @@ export async function collectBronzeHashes(root: string): Promise<Map<string, str
       const parsed = YAML.parse(split.yamlText) as unknown;
       const result = BronzeRecordSchema.safeParse(parsed);
       if (result.success) {
+        const actualHash = sha256Text(split.body);
+        if (actualHash !== result.data.sha256) {
+          throw new BronzeCorruptionError(filePath, result.data.sha256, actualHash);
+        }
         const relPath = relative(root, filePath).replace(/\\/gu, '/');
         hashes.set(result.data.sha256, relPath);
       }
-    } catch { /* skip unreadable or invalid files */ }
+    } catch (err) {
+      if (err instanceof BronzeCorruptionError) throw err;
+      /* skip unreadable or invalid files */
+    }
   });
   return hashes;
 }
@@ -111,8 +129,8 @@ async function walkDir(dir: string, fn: (filePath: string) => Promise<void>): Pr
 }
 
 /**
- * Writes content to a temporary file, fsyncs, then atomically renames to targetRelPath.
- * Fails if the target already exists (immutability) or if the target directory cannot be created.
+ * Writes content to a temporary file in the target directory, fsyncs, then atomically
+ * hard-links to targetRelPath. Fails with EEXIST if the target already exists (immutability).
  * The caller is responsible for Inbox removal; this function never touches the Inbox.
  */
 export async function atomicWriteBronze(
@@ -121,22 +139,11 @@ export async function atomicWriteBronze(
   content: string,
 ): Promise<void> {
   const targetPath = join(root, targetRelPath);
+  const targetDir = dirname(targetPath);
 
-  // Ensure target directory exists before creating any temp file (fail fast).
-  await mkdir(dirname(targetPath), { recursive: true });
+  await mkdir(targetDir, { recursive: true });
 
-  // Refuse to overwrite an existing Bronze file.
-  try {
-    await access(targetPath, constants.F_OK);
-    throw new Error(`bronze target already exists and must not be overwritten: ${targetRelPath}`);
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
-  }
-
-  const tmpDir = join(root, '.ziggurat', 'tmp');
-  await mkdir(tmpDir, { recursive: true });
-
-  const tmpPath = join(tmpDir, randomUUID());
+  const tmpPath = join(targetDir, randomUUID() + '.tmp');
   let fh: import('node:fs/promises').FileHandle | undefined;
   try {
     fh = await open(tmpPath, 'w');
@@ -148,16 +155,20 @@ export async function atomicWriteBronze(
     if (fh !== undefined) {
       try { await fh.close(); } catch { /* ignore */ }
     }
-    await rm(tmpPath, { force: true }).catch(() => undefined);
+    await unlink(tmpPath).catch(() => undefined);
     throw writeErr;
   }
 
   try {
-    await rename(tmpPath, targetPath);
-  } catch (renameErr) {
-    await rm(tmpPath, { force: true }).catch(() => undefined);
-    throw renameErr;
+    await link(tmpPath, targetPath);
+  } catch (linkErr) {
+    await unlink(tmpPath).catch(() => undefined);
+    if ((linkErr as NodeJS.ErrnoException).code === 'EEXIST') {
+      throw new Error(`bronze target already exists and must not be overwritten: ${targetRelPath}`);
+    }
+    throw linkErr;
   }
+  await unlink(tmpPath).catch(() => undefined);
 }
 
 /**
