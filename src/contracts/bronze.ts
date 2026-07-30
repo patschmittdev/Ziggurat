@@ -10,7 +10,7 @@ export const BronzeRecordSchema = z.object({
     'captured_at must be a UTC ISO-8601 datetime',
   ),
   sha256: z.string().length(64).regex(/^[0-9a-f]{64}$/),
-  origin: z.string().url(),
+  origin: z.string().url().optional(),
   sensitivity: SensitivitySchema,
   pii: PiiStateSchema,
 });
