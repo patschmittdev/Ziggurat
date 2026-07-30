@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ReviewStatusSchema, SensitivitySchema } from './common.js';
+import { PiiStateSchema, ReviewStatusSchema, SensitivitySchema } from './common.js';
 
 const baseCuratedPage = z.object({
   schema_version: z.literal(1),
@@ -9,6 +9,7 @@ const baseCuratedPage = z.object({
   confidence: z.union([z.literal('high'), z.literal('medium'), z.literal('low')]),
   status: ReviewStatusSchema,
   retrieval_eligible: z.boolean(),
+  pii: PiiStateSchema,
   sensitivity: SensitivitySchema,
   visibility: z.string().min(1),
   egress: z.string().min(1),

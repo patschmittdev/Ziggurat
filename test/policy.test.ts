@@ -35,6 +35,14 @@ test('true PII is excluded from every model profile', () => {
   }
 });
 
+test('omitted pii blocks every model profile', () => {
+  for (const profile of ['communion', 'review', 'evidence'] as const) {
+    assert(contextExclusionReasons(
+      { sensitivity: 'public' }, profile, new Date(),
+    ).includes('pii: false required'), `profile ${profile} should block omitted pii`);
+  }
+});
+
 test('lifecycle never permits reviewed metadata to be written by automation', () => {
   fc.assert(fc.property(
     fc.constantFrom('ingest', 'refine', 'build', 'query'),
@@ -58,13 +66,20 @@ test('reviewed page with false PII has no exclusion reasons for communion', () =
   assert.equal(reasons.length, 0);
 });
 
-test('review profile excludes PII but not draft status', () => {
-  const reasons = contextExclusionReasons(
-    { status: 'draft', pii: 'false', sensitivity: 'internal' },
+test('review profile allows Silver (draft and in-review) but blocks pii', () => {
+  for (const status of ['draft', 'in-review'] as const) {
+    const reasons = contextExclusionReasons(
+      { status, pii: 'false', sensitivity: 'internal' },
+      'review',
+      new Date(),
+    );
+    assert.equal(reasons.length, 0, `review profile should allow ${status}`);
+  }
+  assert(contextExclusionReasons(
+    { status: 'draft', pii: 'true', sensitivity: 'internal' },
     'review',
     new Date(),
-  );
-  assert.equal(reasons.length, 0);
+  ).includes('pii: false required'));
 });
 
 test('evidence profile excludes PII but not status', () => {
@@ -112,4 +127,20 @@ test('goldExclusionReasons accepts a valid reviewed page', () => {
     last_verified: '2026-01-01T00:00:00Z',
   });
   assert.equal(reasons.length, 0);
+});
+
+test('goldExclusionReasons blocks pii true, unknown, and absent', () => {
+  const base = {
+    status: 'reviewed' as const,
+    sources: ['raw/articles/source.md'],
+    reviewed_by: 'human',
+    reviewed_at: '2026-01-01T00:00:00Z',
+    last_verified: '2026-01-01T00:00:00Z',
+  };
+  for (const pii of ['true', 'unknown'] as const) {
+    const reasons = goldExclusionReasons({ ...base, pii });
+    assert(reasons.includes('pii: false required'), `pii: ${pii} should be excluded`);
+  }
+  // absent pii (omitted property)
+  assert(goldExclusionReasons({ ...base }).includes('pii: false required'), 'absent pii should be excluded');
 });
