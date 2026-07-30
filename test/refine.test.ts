@@ -198,6 +198,33 @@ test('LoopbackChatAdapter: rejects remote HTTPS endpoint', () => {
   );
 });
 
+// Focused regression: accepted HTTP loopback forms
+test('LoopbackChatAdapter: accepts http://[::1] IPv6 loopback endpoint', () => {
+  assert.doesNotThrow(() => new LoopbackChatAdapter('http://[::1]:11434/api/chat'));
+});
+
+// Focused regression: rejected HTTPS and other schemes even with loopback host
+test('LoopbackChatAdapter: rejects https://localhost (HTTPS loopback)', () => {
+  assert.throws(
+    () => new LoopbackChatAdapter('https://localhost:11434/api/chat'),
+    /loopback/i,
+  );
+});
+
+test('LoopbackChatAdapter: rejects https://127.0.0.1 (HTTPS loopback IP)', () => {
+  assert.throws(
+    () => new LoopbackChatAdapter('https://127.0.0.1:8080/v1/chat'),
+    /loopback/i,
+  );
+});
+
+test('LoopbackChatAdapter: rejects ftp://127.0.0.1 (non-HTTP scheme)', () => {
+  assert.throws(
+    () => new LoopbackChatAdapter('ftp://127.0.0.1/resource'),
+    /loopback/i,
+  );
+});
+
 // ---------------------------------------------------------------------------
 // stageProposal
 // ---------------------------------------------------------------------------

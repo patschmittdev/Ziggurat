@@ -62,9 +62,9 @@ export class LoopbackChatAdapter implements StructuredChatAdapter {
 
   constructor(endpoint: string) {
     const url = new URL(endpoint);
-    if (!LOOPBACK_HOSTS.has(url.hostname)) {
+    if (url.protocol !== 'http:' || !LOOPBACK_HOSTS.has(url.hostname)) {
       throw new Error(
-        `LoopbackChatAdapter: only loopback addresses are permitted, got ${url.hostname}`,
+        `LoopbackChatAdapter: endpoint must be http: with a loopback host (localhost/127.0.0.1/::1), got ${endpoint}`,
       );
     }
     this.endpoint = endpoint;
