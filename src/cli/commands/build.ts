@@ -43,7 +43,8 @@ async function collectCuratedPages(root: string): Promise<CuratedInput[]> {
     if (!entry.endsWith('.md')) continue;
     const relPath = `knowledge/${entry}`;
     try {
-      const content = await readFile(join(root, relPath), 'utf8');
+      const raw = await readFile(join(root, relPath), 'utf8');
+      const content = raw.replace(/\r\n/g, '\n');
       const fm = extractFrontmatter(content);
       if (!fm) continue;
       const parsed = YAML.parse(fm) as unknown;
@@ -61,26 +62,34 @@ async function collectCuratedPages(root: string): Promise<CuratedInput[]> {
 async function collectBronzeFiles(root: string): Promise<BronzeInput[]> {
   const bronzeDir = join(root, 'bronze');
   const inputs: BronzeInput[] = [];
-  let entries: string[];
+  await walkBronzeDir(root, bronzeDir, inputs);
+  return inputs;
+}
+
+async function walkBronzeDir(root: string, dir: string, inputs: BronzeInput[]): Promise<void> {
+  let entries: import('node:fs').Dirent[];
   try {
-    entries = await readdir(bronzeDir);
+    entries = await readdir(dir, { withFileTypes: true });
   } catch {
-    return inputs;
+    return;
   }
   for (const entry of entries) {
-    if (!entry.endsWith('.md')) continue;
-    const relPath = `bronze/${entry}`;
-    try {
-      const content = await readFile(join(root, relPath), 'utf8');
-      const split = splitBronzeFile(content.replace(/\r\n/g, '\n'));
-      if (!split) continue;
-      const sha = sha256Text(split.body);
-      inputs.push({ path: relPath, sha256: sha, body: split.body });
-    } catch {
-      continue;
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await walkBronzeDir(root, fullPath, inputs);
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      try {
+        const relPath = fullPath.replace(/\\/g, '/').replace(root.replace(/\\/g, '/') + '/', '');
+        const content = await readFile(fullPath, 'utf8');
+        const split = splitBronzeFile(content.replace(/\r\n/g, '\n'));
+        if (!split) continue;
+        const sha = sha256Text(split.body);
+        inputs.push({ path: relPath, sha256: sha, body: split.body });
+      } catch {
+        continue;
+      }
     }
   }
-  return inputs;
 }
 
 export async function runBuild(root: string, json: boolean, io: CliIO): Promise<number> {

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "operation": "contradict",
+  "target_path": "knowledge/irrigation-decision.md",
+  "evidence": [],
+  "confidence": "high",
+  "affected_paths": ["knowledge/irrigation-decision.md"],
+  "related_paths": [],
+  "unresolved_questions": [
+    "The municipal report states the base water rate is 4 units per season, but the revised rate schedule states 4.5 units. Which figure is authoritative for the current season?"
+  ]
+}

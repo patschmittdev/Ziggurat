@@ -23,7 +23,8 @@ export async function runReview(root: string, json: boolean, io: CliIO): Promise
     const relPath = `knowledge/${entry}`;
     const fullPath = join(root, relPath);
     try {
-      const content = await readFile(fullPath, 'utf8');
+      const rawContent = await readFile(fullPath, 'utf8');
+      const content = rawContent.replace(/\r\n/g, '\n');
       const fm = extractFrontmatter(content);
       if (!fm) continue;
       const parsed = YAML.parse(fm) as unknown;
