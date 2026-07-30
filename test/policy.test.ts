@@ -102,6 +102,19 @@ test('canTransition allows refine to advance draft to in-review', () => {
   assert.equal(canTransition('draft', 'in-review', 'ingest'), false);
 });
 
+test('canTransition forbids human to skip in-review (draft to reviewed is blocked)', () => {
+  assert.equal(canTransition('draft', 'reviewed', 'human'), false);
+});
+
+test('review profile permits reviewed page with false pii', () => {
+  const reasons = contextExclusionReasons(
+    { status: 'reviewed', pii: 'false', sensitivity: 'internal' },
+    'review',
+    new Date(),
+  );
+  assert.equal(reasons.length, 0);
+});
+
 test('classifyTier maps reviewed to gold and others to silver', () => {
   assert.equal(classifyTier('reviewed'), 'gold');
   assert.equal(classifyTier('draft'), 'silver');
