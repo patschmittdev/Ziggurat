@@ -12,7 +12,10 @@ const baseCuratedPage = z.object({
   pii: PiiStateSchema,
   sensitivity: SensitivitySchema,
   visibility: z.string().min(1),
-  egress: z.string().min(1),
+  // Absent egress resolves to local-only rather than failing to parse, so a page that
+  // never declared one is reported with an explicit repair reason instead of being
+  // silently dropped from every index.
+  egress: z.enum(['local-only', 'approved-cloud']).default('local-only'),
   reviewed_by: z.string().optional(),
   reviewed_at: z.string().optional(),
   last_verified: z.string().optional(),

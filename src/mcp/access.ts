@@ -5,6 +5,7 @@ import { sha256Text } from '../bronze/canonical.js';
 import { loadGoldIndex, searchGoldIndex } from '../retrieval/gold-index.js';
 import { loadProfileIndex, searchProfileIndex } from '../retrieval/profile-index.js';
 import { bm25Search } from '../retrieval/bm25.js';
+import { assertIndexTrustworthy } from '../retrieval/verify.js';
 
 export interface CitationPayload {
   path: string;
@@ -28,15 +29,12 @@ export interface SearchHit extends SearchResult {
  */
 export class ContextAccess {
   private readonly citations = new Map<string, CitationPayload>();
-  private readonly initFingerprint: string;
 
   constructor(
     private readonly root: string,
     private readonly profile: AccessProfile,
     private readonly index: GoldIndex | ProfileIndex,
-  ) {
-    this.initFingerprint = index.corpus_fingerprint;
-  }
+  ) {}
 
   get accessProfile(): AccessProfile {
     return this.profile;
@@ -44,15 +42,14 @@ export class ContextAccess {
 
   /**
    * Searches the index and issues citation IDs for returned results.
-   * Rejects with an error if the on-disk index fingerprint has changed since creation.
+   *
+   * Re-verifies before every query rather than trusting the startup check: the corpus
+   * can change while a server is running, and comparing the index's stored fingerprint
+   * to itself would accept both a stale corpus and injected chunks.
    */
   async search(query: string): Promise<SearchHit[]> {
     const current = await this.reloadIndex();
-    if (current.corpus_fingerprint !== this.initFingerprint) {
-      throw new Error(
-        `Index fingerprint changed since this access session was created. Rebuild may be required. (${this.profile})`,
-      );
-    }
+    await assertIndexTrustworthy(this.root, this.profile, current);
 
     const results = this.runSearch(current, query);
     const hits: SearchHit[] = [];
@@ -128,5 +125,7 @@ export async function createContextAccess(root: string, profile: AccessProfile):
   } else {
     index = await loadProfileIndex(root, profile);
   }
+  // Refuse to start at all on a stale, tampered, or profile-mismatched index.
+  await assertIndexTrustworthy(root, profile, index);
   return new ContextAccess(root, profile, index);
 }

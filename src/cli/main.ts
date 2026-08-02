@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 import { parseCliArgs } from './args.js';
 import { runInit } from './commands/init.js';
 import { runIngest } from './commands/ingest.js';
@@ -49,7 +50,12 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
 }
 
 // Entry point when run as an executable.
-if (import.meta.url === new URL(process.argv[1] ?? '', import.meta.url).href) {
+//
+// pathToFileURL, not `new URL(argv[1], import.meta.url)`: on Windows argv[1] is a path
+// like C:\...\main.js, and the URL parser reads the drive letter as a scheme, so the
+// comparison never matched and the shipped binary silently did nothing. Tests call
+// runCli() directly, which is why CI stayed green on all three platforms.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const exitCode = await runCli(process.argv.slice(2));
   process.exit(exitCode);
 }

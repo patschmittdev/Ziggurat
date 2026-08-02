@@ -76,7 +76,9 @@ export async function goldEligibilityReport(
   if (page.retrieval_eligible !== true) reasons.push('retrieval_eligible required');
   if (page.pii !== 'false') reasons.push('pii: false required');
   if (page.sensitivity === 'restricted') reasons.push('sensitivity: restricted not permitted');
-  if (page.egress !== 'permitted') reasons.push('egress: permitted required');
+  // Missing egress resolves to local-only via the schema default, so a page that never
+  // declared one gets this explicit repair instruction instead of vanishing at parse.
+  if (page.egress !== 'approved-cloud') reasons.push('egress: approved-cloud required');
   if (!page.reviewed_by) reasons.push('reviewed_by: required');
   if (!page.reviewed_at) reasons.push('reviewed_at: required');
   if (!page.last_verified) reasons.push('last_verified: required');
@@ -103,9 +105,17 @@ export async function goldEligibilityReport(
     }
   }
 
-  const contradictions = await collectUnresolvedContradictions(root, pagePath);
-  if (contradictions.length > 0) {
-    reasons.push(`contradictions: ${contradictions.length} unresolved`);
+  // A scan failure means contradiction state is unknown, which must exclude the page
+  // rather than propagate and abort the whole build.
+  try {
+    const contradictions = await collectUnresolvedContradictions(root, pagePath);
+    if (contradictions.length > 0) {
+      reasons.push(`contradictions: ${contradictions.length} unresolved`);
+    }
+  } catch (error) {
+    reasons.push(
+      `contradictions: state unverifiable (${error instanceof Error ? error.message : String(error)})`,
+    );
   }
 
   reasons.sort();

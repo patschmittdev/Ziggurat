@@ -39,7 +39,7 @@ function makeGoldPage(overrides: Partial<CuratedPage> = {}): CuratedPage {
     pii: 'false',
     sensitivity: 'public',
     visibility: 'internal',
-    egress: 'permitted',
+    egress: 'approved-cloud',
     reviewed_by: 'human',
     reviewed_at: '2026-07-01T00:00:00Z',
     last_verified: '2026-07-01T00:00:00Z',
@@ -310,7 +310,7 @@ test('buildEvidenceIndex: includes Bronze and curated, excludes PII', async () =
         { path: 'knowledge/pii.md', page: piiPage, pageBody: 'Private.' },
       ],
       bronze: [
-        { path: 'bronze/src.md', sha256: bronzeHash, body: 'Evidence body.\n' },
+        { path: 'bronze/src.md', sha256: bronzeHash, body: 'Evidence body.\n', pii: 'false', sensitivity: 'public', hashVerified: true },
       ],
     });
 
