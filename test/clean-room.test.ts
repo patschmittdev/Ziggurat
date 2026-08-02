@@ -55,20 +55,65 @@ test('auditCleanRoom: detects git remote', async () => {
   assert(report.findings.some(f => f.category === 'git-remote'));
 });
 
-test('auditCleanRoom: detects personal project name', async () => {
-  const report = await auditCleanRoom([
-    { path: 'notes.md', content: 'Working on Castrum today.\n' },
-  ]);
+test('auditCleanRoom: detects a configured project name', async () => {
+  // Fictional terms only. Naming a real private project here would reintroduce exactly
+  // the vocabulary the clean-room rule exists to keep out of this repository.
+  const report = await auditCleanRoom(
+    [{ path: 'notes.md', content: 'Working on Northwind today.\n' }],
+    ['northwind', 'apollo'],
+  );
   assert.equal(report.pass, false);
   assert(report.findings.some(f => f.category === 'personal-project-name'));
 });
 
-test('auditCleanRoom: detects gold-index.json reference', async () => {
+test('auditCleanRoom: reports no project-name findings when none are configured', async () => {
+  const report = await auditCleanRoom([
+    { path: 'notes.md', content: 'Working on Northwind today.\n' },
+  ]);
+  assert(!report.findings.some(f => f.category === 'personal-project-name'));
+});
+
+test('auditCleanRoom: project-name terms are matched whole-word and case-insensitively', async () => {
+  const matched = await auditCleanRoom(
+    [{ path: 'a.md', content: 'The APOLLO programme.\n' }],
+    ['apollo'],
+  );
+  assert(matched.findings.some(f => f.category === 'personal-project-name'));
+
+  const notMatched = await auditCleanRoom(
+    [{ path: 'b.md', content: 'apollogetics is a different word.\n' }],
+    ['apollo'],
+  );
+  assert(!notMatched.findings.some(f => f.category === 'personal-project-name'));
+});
+
+test('auditCleanRoom: regex metacharacters in a term are escaped, not interpreted', async () => {
+  const report = await auditCleanRoom(
+    [{ path: 'c.md', content: 'mentions a.b here\n' }],
+    ['a.b'],
+  );
+  assert(report.findings.some(f => f.category === 'personal-project-name'));
+
+  const literal = await auditCleanRoom(
+    [{ path: 'd.md', content: 'mentions axb here\n' }],
+    ['a.b'],
+  );
+  assert(!literal.findings.some(f => f.category === 'personal-project-name'));
+});
+
+test('auditCleanRoom: source that merely names an index path is not a finding', async () => {
+  // The modules that write the index necessarily name it. Flagging that was noise; the
+  // rule is about generated state being committed, which is an existence question.
   const report = await auditCleanRoom([
     { path: 'test.ts', content: 'const path = ".ziggurat/gold-index.json";\n' },
   ]);
+  assert(!report.findings.some(f => f.category === 'committed-index-artifact'));
+});
+
+test('auditCleanRoom: a generated index present in the repo is a finding', async () => {
+  const report = await auditCleanRoom([], [], ['.ziggurat/gold-index.json']);
   assert.equal(report.pass, false);
-  assert(report.findings.some(f => f.category === 'index-artifact-reference'));
+  assert(report.findings.some(f => f.category === 'committed-index-artifact'));
 });
 
 test('auditCleanRoom: reports correct line number', async () => {

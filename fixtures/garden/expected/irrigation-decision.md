@@ -13,7 +13,7 @@ retrieval_eligible: true
 pii: "false"
 sensitivity: public
 visibility: public
-egress: permitted
+egress: approved-cloud
 reviewed_by: committee-chair
 reviewed_at: 2026-07-30T00:00:00Z
 last_verified: 2026-07-30T00:00:00Z

@@ -9,6 +9,7 @@ import { buildGoldIndex } from '../src/retrieval/gold-index.js';
 import { buildReviewIndex } from '../src/retrieval/profile-index.js';
 import { createContextAccess, ContextAccess } from '../src/mcp/access.js';
 import { createMcpServer } from '../src/mcp/server.js';
+import * as YAML from 'yaml';
 import type { CuratedPage } from '../src/contracts/index.js';
 
 async function makeVault(files: Record<string, string>): Promise<string> {
@@ -39,7 +40,7 @@ function makeGoldPage(): CuratedPage {
     pii: 'false',
     sensitivity: 'public',
     visibility: 'internal',
-    egress: 'permitted',
+    egress: 'approved-cloud',
     reviewed_by: 'human',
     reviewed_at: '2026-07-01T00:00:00Z',
     last_verified: '2026-07-01T00:00:00Z',
@@ -48,14 +49,33 @@ function makeGoldPage(): CuratedPage {
 
 const FIXED_DATE = new Date('2026-07-30T00:00:00Z');
 
+/**
+ * Writes a curated page to disk so the live corpus matches what the index was built
+ * from. Index verification recomputes the fingerprint from the real corpus, so a
+ * fixture that only builds an in-memory index is correctly rejected as stale.
+ */
+export async function writeCuratedPage(
+  root: string,
+  relPath: string,
+  page: CuratedPage,
+  pageBody: string,
+): Promise<void> {
+  const fullPath = join(root, relPath);
+  await mkdir(dirname(fullPath), { recursive: true });
+  const yaml = YAML.stringify(page, { lineWidth: 0 }).trimEnd();
+  await writeFile(fullPath, `---\n${yaml}\n---\n${pageBody}`, 'utf8');
+}
+
 async function buildTestVaultWithGoldIndex(root: string): Promise<void> {
   const bronzeBody = '# Source\n\nTest evidence for irrigation systems.\n';
   await mkdir(join(root, 'bronze'), { recursive: true });
   await writeFile(join(root, 'bronze', 'src.md'), makeBronzeContent(bronzeBody), 'utf8');
 
   const page = makeGoldPage();
+  const body = 'Gold content about irrigation and water supply.';
+  await writeCuratedPage(root, 'knowledge/gold.md', page, body);
   await buildGoldIndex(root, [
-    { path: 'knowledge/gold.md', page, pageBody: 'Gold content about irrigation and water supply.' },
+    { path: 'knowledge/gold.md', page, pageBody: body },
   ], { asOf: FIXED_DATE });
 }
 
@@ -220,8 +240,10 @@ test('review access loads review index independently', async () => {
   const root = await makeVault({});
   try {
     const page: CuratedPage = { ...makeGoldPage(), status: 'in-review', reviewed_by: undefined, reviewed_at: undefined, last_verified: undefined } as unknown as CuratedPage;
+    const body = 'Silver review content.';
+    await writeCuratedPage(root, 'knowledge/silver.md', page, body);
     await buildReviewIndex(root, {
-      curated: [{ path: 'knowledge/silver.md', page, pageBody: 'Silver review content.' }],
+      curated: [{ path: 'knowledge/silver.md', page, pageBody: body }],
       bronze: [],
     });
 

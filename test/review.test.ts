@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { sha256Text } from '../src/bronze/canonical.js';
-import { collectUnresolvedContradictions } from '../src/review/contradictions.js';
+import { ContradictionScanError, collectUnresolvedContradictions } from '../src/review/contradictions.js';
 import { goldEligibilityReport } from '../src/review/eligibility.js';
 import { buildReviewQueue, renderReviewQueueMarkdown } from '../src/review/queue.js';
 import type { CuratedPage } from '../src/contracts/index.js';
@@ -46,7 +46,7 @@ function makeEligiblePage(overrides: Partial<CuratedPage> = {}): CuratedPage {
     pii: 'false',
     sensitivity: 'public',
     visibility: 'internal',
-    egress: 'permitted',
+    egress: 'approved-cloud',
     reviewed_by: 'human',
     reviewed_at: '2026-07-01T00:00:00Z',
     last_verified: '2026-07-01T00:00:00Z',
@@ -131,12 +131,12 @@ test('goldEligibilityReport: fails for restricted sensitivity', async () => {
   }
 });
 
-test('goldEligibilityReport: fails for non-permitted egress', async () => {
+test('goldEligibilityReport: fails when egress is not approved-cloud', async () => {
   const root = await makeVault({});
   try {
-    const page = makeEligiblePage({ egress: 'blocked', sources: [] });
+    const page = makeEligiblePage({ egress: 'local-only', sources: [] });
     const report = await goldEligibilityReport(root, 'knowledge/test.md', page, FIXED_DATE);
-    assert(report.reasons.includes('egress: permitted required'), JSON.stringify(report.reasons));
+    assert(report.reasons.includes('egress: approved-cloud required'), JSON.stringify(report.reasons));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -485,6 +485,103 @@ test('renderReviewQueueMarkdown: contains no mutation commands', async () => {
     assert(!md.includes('git commit'), 'must not contain git commit');
     assert(!md.includes('ziggurat promote'), 'must not contain promote command');
     assert(!md.includes('npm run'), 'must not contain npm run');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Contradiction scanning fails closed
+// ---------------------------------------------------------------------------
+
+test('collectUnresolvedContradictions: an absent proposals directory means none staged', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-contra-'));
+  try {
+    assert.deepEqual(await collectUnresolvedContradictions(root, 'knowledge/p.md'), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('collectUnresolvedContradictions: unparseable JSON fails closed', async () => {
+  // Corrupting an artifact must never be a way to restore a blocked page's eligibility.
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-contra-'));
+  try {
+    await mkdir(join(root, '.ziggurat', 'proposals'), { recursive: true });
+    await writeFile(join(root, '.ziggurat', 'proposals', 'broken.json'), '{ not json', 'utf8');
+    await assert.rejects(
+      () => collectUnresolvedContradictions(root, 'knowledge/p.md'),
+      ContradictionScanError,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('collectUnresolvedContradictions: an invalid contradiction artifact fails closed', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-contra-'));
+  try {
+    await mkdir(join(root, '.ziggurat', 'proposals'), { recursive: true });
+    await writeFile(
+      join(root, '.ziggurat', 'proposals', 'bad.json'),
+      JSON.stringify({ schema_version: 1, operation: 'contradict' }),
+      'utf8',
+    );
+    await assert.rejects(
+      () => collectUnresolvedContradictions(root, 'knowledge/p.md'),
+      ContradictionScanError,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('collectUnresolvedContradictions: other proposal operations are skipped, not rejected', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-contra-'));
+  try {
+    await mkdir(join(root, '.ziggurat', 'proposals'), { recursive: true });
+    await writeFile(
+      join(root, '.ziggurat', 'proposals', 'create.json'),
+      JSON.stringify({ schema_version: 1, operation: 'create', target_path: 'knowledge/p.md' }),
+      'utf8',
+    );
+    assert.deepEqual(await collectUnresolvedContradictions(root, 'knowledge/p.md'), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('goldEligibilityReport: an unverifiable contradiction scan excludes the page', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-contra-'));
+  try {
+    await mkdir(join(root, '.ziggurat', 'proposals'), { recursive: true });
+    await writeFile(join(root, '.ziggurat', 'proposals', 'broken.json'), '{ not json', 'utf8');
+
+    const bronzeBody = 'Evidence.\n';
+    await mkdir(join(root, 'bronze'), { recursive: true });
+    await writeFile(
+      join(root, 'bronze', 'src.md'),
+      `---
+schema_version: 1
+source_id: s
+source_kind: article
+captured_at: 2026-01-01T00:00:00Z
+sha256: ${sha256Text(bronzeBody)}
+sensitivity: public
+pii: 'false'
+---
+${bronzeBody}`,
+      'utf8',
+    );
+
+    const page = makeEligiblePage({ sources: ['bronze/src.md'] });
+    const report = await goldEligibilityReport(root, 'knowledge/p.md', page, new Date('2026-07-30T00:00:00Z'));
+
+    assert.equal(report.eligible, false);
+    assert(
+      report.reasons.some(r => r.startsWith('contradictions: state unverifiable')),
+      JSON.stringify(report.reasons),
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }

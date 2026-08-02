@@ -1,0 +1,20 @@
+# Clean-room release gate configuration.
+#
+# `ziggurat check` scans every tracked text file for material that must not appear in a
+# published reference repository: machine paths, email addresses, credentials, git
+# remotes, and generated retrieval state. Those detectors are built in.
+#
+# Project names cannot be built in. Naming a private vault's projects inside this file
+# would put exactly the vocabulary the clean-room rule excludes into the repository, and
+# every adopter's project names are different. Add your own before publishing a fork.
+#
+# Example:
+#   project_names:
+#     - apollo
+#     - northwind
+project_names: []
+
+# Additional paths to exclude from the scan, beyond the built-in defaults
+# (package-lock.json and the audit's own test fixtures). Keep this list short and
+# justified: an exclusion is a promise that a human checked the file by hand.
+exclude_paths: []

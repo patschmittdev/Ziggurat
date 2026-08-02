@@ -11,16 +11,22 @@ import { makeProfileChunk } from './chunks.js';
 import { sha256Text } from '../bronze/canonical.js';
 import type { SearchResult } from '../contracts/gold-index.js';
 
-export interface CuratedInput {
-  path: string;
-  page: CuratedPage;
-  pageBody: string;
-}
+export type { CuratedInput, BronzeInput } from '../corpus/collect.js';
+import type { CuratedInput, BronzeInput } from '../corpus/collect.js';
 
-export interface BronzeInput {
-  path: string;
-  sha256: string;
-  body: string;
+/**
+ * A Bronze record may enter a model-readable index only when it positively asserts
+ * `pii: false`, is not restricted, and still hashes to its declared digest.
+ *
+ * Ingest deliberately defaults an unassessed capture to `pii: unknown` /
+ * `sensitivity: restricted`, so an omitted check here would expose every freshly
+ * captured source through the evidence profile. `piiBlocksModelAccess` already fails
+ * closed on `unknown`; sensitivity and integrity need the same treatment.
+ */
+export function bronzeBlockedFromModelAccess(record: BronzeInput): boolean {
+  return piiBlocksModelAccess(record.pii as never)
+    || record.sensitivity === 'restricted'
+    || !record.hashVerified;
 }
 
 export interface BuildProfileIndexInput {
@@ -60,7 +66,9 @@ export async function buildEvidenceIndex(
   const chunks: ProfileChunk[] = [];
   const fingerprintEntries: Array<{ path: string; content_hash: string }> = [];
 
-  for (const { path, sha256, body } of input.bronze) {
+  for (const record of input.bronze) {
+    if (bronzeBlockedFromModelAccess(record)) continue;
+    const { path, sha256, body } = record;
     chunks.push(makeProfileChunk(path, path, body, 'bronze', 'bronze', 'evidence'));
     fingerprintEntries.push({ path, content_hash: sha256 });
   }

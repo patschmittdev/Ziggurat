@@ -29,7 +29,7 @@ function buildConformanceCases(root: string) {
             schema_version: 1, title: 'PII Test', type: 'concept', sources: [],
             confidence: 'high', status: 'reviewed', retrieval_eligible: true,
             pii: 'unknown', sensitivity: 'public', visibility: 'internal',
-            egress: 'permitted', reviewed_by: 'tester', reviewed_at: '2026-01-01T00:00:00Z',
+            egress: 'approved-cloud', reviewed_by: 'tester', reviewed_at: '2026-01-01T00:00:00Z',
             last_verified: '2026-01-01T00:00:00Z',
           };
           const index = await buildGoldIndex(root, [
@@ -49,7 +49,7 @@ function buildConformanceCases(root: string) {
           schema_version: 1, title: 'Draft', type: 'concept', sources: [],
           confidence: 'low', status: 'draft', retrieval_eligible: false,
           pii: 'false', sensitivity: 'public', visibility: 'internal',
-          egress: 'permitted',
+          egress: 'approved-cloud',
         };
         const index = await buildGoldIndex(root, [
           { path: 'knowledge/draft.md', page: draftPage, pageBody: 'Draft.' },
