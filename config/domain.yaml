@@ -1,0 +1,17 @@
+domain:
+  page_types:
+    - entity
+    - concept
+    - comparison
+    - query
+    - decision
+    - reference
+  tags:
+    - ai
+    - architecture
+    - infrastructure
+    - product
+    - personal
+    - workflow
+    - security
+    - performance

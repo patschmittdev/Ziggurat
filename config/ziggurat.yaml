@@ -1,0 +1,3 @@
+schema_version: 1
+lifecycle:
+  review_queue_limit: 50
