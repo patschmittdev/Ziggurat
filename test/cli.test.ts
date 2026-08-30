@@ -5,6 +5,8 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { runCli } from '../src/cli/main.js';
 import type { CliIO } from '../src/cli/main.js';
+import { parseCliArgs } from '../src/cli/args.js';
+import type { CleanRoomReport } from '../src/eval/clean-room.js';
 
 interface IOCapture { out: string; err: string; }
 
@@ -62,6 +64,136 @@ test('no command returns exit code 1', async () => {
   const { io } = makeIO();
   const code = await runCli([], io);
   assert.equal(code, 1);
+});
+
+// ---------------------------------------------------------------------------
+// --audit-clean-room: parsing, scope, and audit behavior
+//
+// The flag was previously declared in the parser but never returned, so every
+// command silently accepted it and `check` could not observe it. Release
+// automation, CONTRIBUTING, and the pull request template all invoke it, so a
+// silently swallowed flag reads as an assertion that the gate ran.
+// ---------------------------------------------------------------------------
+
+test('--audit-clean-room parses into typed args for check', () => {
+  const parsed = parseCliArgs(['check', '--root', '.', '--audit-clean-room']);
+  assert.equal(parsed.command, 'check');
+  assert.equal(parsed.auditCleanRoom, true);
+});
+
+test('--audit-clean-room defaults to false when omitted', () => {
+  const parsed = parseCliArgs(['check', '--root', '.']);
+  assert.equal(parsed.command, 'check');
+  assert.equal(parsed.auditCleanRoom, false);
+});
+
+test('--audit-clean-room defaults to false for every other command', () => {
+  for (const command of ['init', 'ingest', 'refine', 'review', 'build', 'query', 'mcp', 'eval']) {
+    const parsed = parseCliArgs([command, '--root', '.']);
+    assert.equal(parsed.auditCleanRoom, false, `${command} should default to false`);
+  }
+});
+
+test('--audit-clean-room is rejected by every command except check', async () => {
+  for (const command of ['init', 'ingest', 'refine', 'review', 'build', 'query', 'mcp', 'eval']) {
+    assert.throws(
+      () => parseCliArgs([command, '--root', '.', '--audit-clean-room']),
+      /applies only to the check command/iu,
+      `${command} should reject --audit-clean-room`,
+    );
+
+    const { io, captured } = makeIO();
+    const code = await runCli([command, '--root', '.', '--audit-clean-room'], io);
+    assert.equal(code, 1, `${command} should exit 1`);
+    assert.match(captured.err, /applies only to the check command/iu);
+  }
+});
+
+test('--audit-clean-room rejects an inline value like every other boolean option', () => {
+  assert.throws(
+    () => parseCliArgs(['check', '--root', '.', '--audit-clean-room=true']),
+    /does not take an argument/iu,
+  );
+  // Same contract as the pre-existing --json boolean, so the two cannot drift.
+  assert.throws(
+    () => parseCliArgs(['check', '--root', '.', '--json=true']),
+    /does not take an argument/iu,
+  );
+});
+
+test('a repeated --audit-clean-room collapses to true like a repeated --json', () => {
+  const audit = parseCliArgs(['check', '--root', '.', '--audit-clean-room', '--audit-clean-room']);
+  assert.equal(audit.auditCleanRoom, true);
+  const json = parseCliArgs(['check', '--root', '.', '--json', '--json']);
+  assert.equal(json.json, true);
+});
+
+test('check --help still renders usage when the audit flag is present', async () => {
+  const { io, captured } = makeIO();
+  const code = await runCli(['check', '--root', '.', '--audit-clean-room', '--help'], io);
+  assert.equal(code, 0);
+  assert.match(captured.out, /--audit-clean-room/u);
+});
+
+// Composed at runtime so the literal never appears in this file. The audit scans this
+// repository too, and a hard-coded address here would make the release gate fail on
+// its own regression test.
+const PLANTED_EMAIL = ['release', 'example.com'].join('@');
+
+test('check --audit-clean-room runs the clean-room audit and fails on a violation', async () => {
+  const root = await makeVault({
+    // A contributor email address is one of the categories the release gate exists
+    // to catch, so its presence proves the audit actually executed.
+    'notes.md': `# Notes\n\nContact: ${PLANTED_EMAIL}\n`,
+  });
+  try {
+    const { io, captured } = makeIO();
+    const code = await runCli(['check', '--root', root, '--audit-clean-room', '--json'], io);
+    assert.equal(code, 1);
+    const report = JSON.parse(captured.out) as CleanRoomReport;
+    assert.equal(report.pass, false);
+    assert.ok(
+      report.findings.some(f => f.path === 'notes.md' && f.category === 'email-address'),
+      'the audit should report the planted email address',
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('check --audit-clean-room passes on a clean tree', async () => {
+  const root = await makeVault({ 'notes.md': '# Fictional notes\n\nNothing sensitive here.\n' });
+  try {
+    const { io, captured } = makeIO();
+    const code = await runCli(['check', '--root', root, '--audit-clean-room'], io);
+    assert.equal(code, 0);
+    assert.match(captured.out, /Clean-Room Audit: PASS/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('the audit flag names the gate and does not change what check reports', async () => {
+  const root = await makeVault({ 'notes.md': `# Notes\n\nContact: ${PLANTED_EMAIL}\n` });
+  try {
+    const flagged = makeIO();
+    const flaggedCode = await runCli(
+      ['check', '--root', root, '--audit-clean-room', '--json'], flagged.io,
+    );
+    const bare = makeIO();
+    const bareCode = await runCli(['check', '--root', root, '--json'], bare.io);
+
+    // check performs exactly one audit, so selecting it explicitly must not change
+    // the result. This pins the documented semantics: the flag is a scoped selector,
+    // never a switch that could silently downgrade the release gate.
+    assert.equal(flaggedCode, bareCode);
+    assert.deepEqual(
+      JSON.parse(flagged.captured.out) as CleanRoomReport,
+      JSON.parse(bare.captured.out) as CleanRoomReport,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test('global help lists the communion-only and proposal-only surfaces', async () => {

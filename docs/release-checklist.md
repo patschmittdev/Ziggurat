@@ -11,6 +11,8 @@ Every item is verifiable locally and must pass before a publication commit merge
 - [ ] `npm ci` installs cleanly and reports no vulnerabilities.
 - [ ] `npm run check` passes. It cleans, builds, and runs the full compiled suite.
 - [ ] `node dist/src/cli/main.js check --root . --audit-clean-room` reports PASS.
+      The flag names the clean-room audit and is accepted only by `check`; other
+      commands reject it so a misplaced flag cannot exit zero without auditing.
 - [ ] `git diff --check` reports no whitespace or conflict-marker damage.
 - [ ] Documented commands were executed, not just read. At minimum `init`, `ingest`,
       `review`, `build`, `query`, `eval`, `check`, and `--help`.

@@ -248,16 +248,20 @@ development-only global link.
 | `ziggurat query --root <vault> --query <text>` | Query authorized Gold communion |
 | `ziggurat mcp --root <vault>` | Start the communion-only read-only MCP server |
 | `ziggurat eval --root <vault>` | Run built-in conformance cases |
-| `ziggurat check --root <repo>` | Audit a tree you intend to publish for clean-room and key-material violations |
+| `ziggurat check --root <repo> --audit-clean-room` | Audit a tree you intend to publish for clean-room and key-material violations |
 
 `check` is a publication gate rather than a vault command. It scans a source tree for
 contributor machine paths, email addresses, tokens, private keys, personal Git remotes,
 configured project names, and generated retrieval state. Point it at the repository
 root. Generated indexes are reported unconditionally and cannot be suppressed by
 `config/clean-room.yaml`, so a working vault that has already been built reports those
-files until they are removed. The `--audit-clean-room` flag is accepted for
-explicitness and is used throughout this project's contributor documentation, but
-`check` performs the same audit with or without it.
+files until they are removed.
+
+`--audit-clean-room` names the audit that `check` runs. `check` performs exactly one
+audit today, so passing the flag and omitting it produce the same report; the flag lets
+release automation state which gate it invoked and reserves a selector for a future
+second audit. It is scoped to `check` and every other command rejects it, so a script
+that misplaces the flag fails loudly instead of exiting zero without auditing anything.
 
 Configure only loopback model endpoints in `config/adapters.yaml`. The VS Code binding
 in `.vscode/mcp.json` starts communion without a selectable profile.
