@@ -18,6 +18,7 @@ const FORBIDDEN_PATTERNS: Array<{ pattern: RegExp; category: string }> = [
   { pattern: /\/Users\/[a-z]/u, category: 'unix-absolute-path' },
   { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/u, category: 'email-address' },
   { pattern: /(?:ghp_|gho_|github_pat_)[A-Za-z0-9_]{20,}/u, category: 'github-token' },
+  { pattern: /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/u, category: 'private-key-material' },
   { pattern: /(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?/u, category: 'git-remote' },
 ];
 
@@ -45,7 +46,7 @@ export function buildProjectNamePattern(terms: string[]): RegExp | null {
  *
  * Presence is checked by asking whether the file EXISTS, not by searching text for its
  * name. A content match flags every module that legitimately writes the index, the
- * architecture doc that explains it, and this very list — which is how the earlier gate
+ * architecture doc that explains it, and this very list; that is how the earlier gate
  * produced noise instead of signal.
  */
 export const GENERATED_ARTIFACTS = [

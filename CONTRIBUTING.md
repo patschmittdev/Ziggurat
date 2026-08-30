@@ -1,39 +1,71 @@
 # Contributing
 
-## Development Workflow
+## Development workflow
 
-1. Write failing tests first (TDD).
-2. Implement the minimum code to pass the tests.
-3. Run `npm run check` and confirm zero failures before committing.
-4. Run `node dist/src/cli/main.js check --root . --audit-clean-room --json` to verify no clean-room violations.
+1. Write failing tests first for every behavior change.
+2. Implement the smallest complete security boundary that passes them.
+3. Use real temporary files. Do not mock the filesystem.
+4. Run targeted compiled tests while iterating.
+5. Run `npm run check`.
+6. Run `node dist/src/cli/main.js check --root . --audit-clean-room`.
 
-## Clean-Room Requirements
+All changes must work on Windows, macOS, and Linux with Node.js 22 or newer.
+
+## Nondelegable memory boundary
+
+- Models may return strict Silver proposal payloads only.
+- Model and refine pathways must never write Bronze, knowledge pages, reviewed
+  metadata, trusted reviewer keys, authorization receipts, or indexes.
+- Do not add a signer, apply, approve, or promote command.
+- The `--promote` flag does not exist and must remain rejected.
+- A `reviewed_by` string is not authority. Gold requires a verified detached
+  Ed25519 receipt from `config/trust.yaml`.
+- Review and evidence indexes are advisory or forensic. They never prove human
+  identity.
+- Shipped MCP startup is communion-only and exposes two read-only tools.
+- All retrieved content is reference data with `instruction_authority: none`.
+
+## Silver proposal changes
+
+Canonical Silver artifacts are strict schema-version-2 JSON under
+`.ziggurat/proposals/`. They contain complete candidate content, exact Bronze
+evidence, contradictions, confidence, and unresolved questions. Candidate schemas
+must reject human admission fields.
+
+Knowledge drafts are not Silver. Do not restore status-based Silver indexing.
+Invalid proposal state must fail closed.
+
+## Authorization and index changes
+
+- Keep reviewer private keys outside the repository and tests. Tests must generate
+  ephemeral keys at runtime.
+- Bind authorization to canonical semantic page content, target, identity, time, and
+  key.
+- Any field used to establish trust or retrieval behavior must be covered by index
+  integrity.
+- Preserve physical separation: communion is Gold only, review is Silver plus Gold,
+  and evidence is Bronze plus curated Gold.
+- Verify stored index state against both its own contents and the live corpus at
+  startup, search, and citation read.
+
+## Clean-room requirements
 
 The repository must not contain:
 
-- Absolute file paths from any contributor's machine.
-- Email addresses, tokens, or credentials.
-- Git remote URLs pointing to personal repositories.
-- Personal project names from the owner's portfolio.
-- Index artifact files (`.ziggurat/*.json`).
+- absolute contributor-machine paths
+- email addresses, tokens, credentials, or private keys
+- personal Git remote URLs or private project names
+- generated index artifacts under `.ziggurat/`
 
-Run `ziggurat check --audit-clean-room` to verify.
+Public reviewer keys and fictional fixtures are allowed. Configure project-name
+terms in `config/clean-room.yaml`; do not hard-code private names.
 
-## Gold Promotion
+## TypeScript and SDK
 
-Human-only. Never write `status: reviewed` metadata programmatically.
-The `--promote` flag is not accepted by any command and must not be added.
-Gold promotion is a human Git commit of reviewed frontmatter.
-
-## Testing
-
-- Use real temporary files. Do not mock the filesystem.
-- All tests must pass on Windows, macOS, and Linux.
-- Property tests use `fast-check` with deterministic seeds where meaningful.
-- Do not add tests that require network access.
-
-## TypeScript
-
-- Strict mode. No `any`. No CommonJS compatibility code.
-- NodeNext ESM module resolution throughout.
-- All untrusted inputs pass runtime Zod validation.
+- Use strict NodeNext ESM TypeScript with no `any`.
+- Validate every untrusted input with strict Zod v4 schemas.
+- Use `node:util.parseArgs` for CLI arguments.
+- Preserve `@modelcontextprotocol/server` v2 and Standard Schema-compatible tool
+  inputs.
+- Prefer shared canonicalization and verification functions over duplicated trust
+  logic.

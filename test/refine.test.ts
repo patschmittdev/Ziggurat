@@ -12,7 +12,7 @@ import type { StructuredChatAdapter, ChatMessage } from '../src/refine/adapter.j
 import { LoopbackChatAdapter } from '../src/refine/adapter.js';
 import { stageProposal, requestRefinement } from '../src/refine/proposal.js';
 import type { RefinementInput } from '../src/refine/proposal.js';
-import type { RefinementProposal } from '../src/contracts/index.js';
+import type { RefinementProposalPayload } from '../src/contracts/index.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -71,13 +71,27 @@ function makeValidProposal(
   sourcePath: string,
   bodySha: string,
   quote: string,
-): RefinementProposal {
+): RefinementProposalPayload {
   return {
-    schema_version: 1,
+    schema_version: 2,
     operation: 'create',
     target_path: 'knowledge/test.md',
+    candidate: {
+      schema_version: 1,
+      title: 'Test candidate',
+      type: 'concept',
+      sources: [sourcePath],
+      confidence: 'medium',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: '# Test candidate\n',
+    },
     evidence: [makeCitation(sourcePath, bodySha, 1, 1, quote)],
     confidence: 'medium',
+    contradictions: [],
     affected_paths: [],
     related_paths: [],
     unresolved_questions: [],
@@ -107,6 +121,45 @@ test('validateEvidenceCitation: returns null for a multi-line citation', async (
     const citation = makeCitation(sourcePath, bodySha, 2, 3, quote);
     const result = await validateEvidenceCitation(root, citation);
     assert.equal(result, null);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects line ranges beyond the Bronze body', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const citation = makeCitation(
+      sourcePath,
+      bodySha,
+      1,
+      999,
+      '# Test Source\nLine two content.\nLine three content.',
+    );
+    const result = await validateEvidenceCitation(root, citation);
+    assert.equal(result?.failed_field, 'line_range');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: rejects reversed line ranges', async () => {
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
+  try {
+    const citation = makeCitation(sourcePath, bodySha, 3, 2, 'Line three content.');
+    const result = await validateEvidenceCitation(root, citation);
+    assert.equal(result?.failed_field, 'line_range');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('validateEvidenceCitation: preserves lone carriage returns exactly as ingested', async () => {
+  const body = 'Line one\rLine two\n';
+  const { root, sourcePath, bodySha } = await makeVaultWithBronze(body);
+  try {
+    const citation = makeCitation(sourcePath, bodySha, 1, 1, 'Line one\rLine two');
+    assert.equal(await validateEvidenceCitation(root, citation), null);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -233,11 +286,13 @@ test('stageProposal: writes a file under .ziggurat/proposals/', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
     const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
-    const filePath = await stageProposal(root, proposal);
-    assert.match(filePath, /\.ziggurat[/\\]proposals[/\\]/u);
-    const contents = await readFile(filePath, 'utf8');
-    const parsed = JSON.parse(contents) as unknown;
-    assert.deepEqual(parsed, proposal);
+    const staged = await stageProposal(root, proposal);
+    assert.match(staged.path, /\.ziggurat[/\\]proposals[/\\]/u);
+    const contents = await readFile(staged.path, 'utf8');
+    const parsed = JSON.parse(contents) as Record<string, unknown>;
+    assert.equal(parsed['proposal_id'], staged.proposal.proposal_id);
+    assert.equal(parsed['state'], 'staged');
+    assert.deepEqual(parsed['candidate'], proposal.candidate);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -246,20 +301,20 @@ test('stageProposal: writes a file under .ziggurat/proposals/', async () => {
 test('stageProposal: does not execute amend operation side-effects', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
-    const proposal: RefinementProposal = {
-      schema_version: 1,
+    const current = '# Existing\n';
+    await mkdir(join(root, 'knowledge'), { recursive: true });
+    await writeFile(join(root, 'knowledge', 'page-to-amend.md'), current, 'utf8');
+    const proposal: RefinementProposalPayload = {
+      ...makeValidProposal(sourcePath, bodySha, '# Test Source'),
+      schema_version: 2,
       operation: 'amend',
       target_path: 'knowledge/page-to-amend.md',
+      base_content_sha256: sha256Text(current),
       evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
-      confidence: 'low',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
     };
     await stageProposal(root, proposal);
-    // Target page must NOT have been created or modified.
     const targetPath = join(root, proposal.target_path);
-    await assert.rejects(readFile(targetPath, 'utf8'), /ENOENT/u);
+    assert.equal(await readFile(targetPath, 'utf8'), current);
     // Only the proposals directory should have been created under .ziggurat.
     const proposalsDir = join(root, '.ziggurat', 'proposals');
     const entries = await readdir(proposalsDir);
@@ -272,19 +327,22 @@ test('stageProposal: does not execute amend operation side-effects', async () =>
 test('stageProposal: does not execute contradict operation side-effects', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
-    const proposal: RefinementProposal = {
-      schema_version: 1,
+    const current = '# Existing\n';
+    await mkdir(join(root, 'knowledge'), { recursive: true });
+    await writeFile(join(root, 'knowledge', 'page-to-contradict.md'), current, 'utf8');
+    const citation = makeCitation(sourcePath, bodySha, 1, 1, '# Test Source');
+    const proposal: RefinementProposalPayload = {
+      ...makeValidProposal(sourcePath, bodySha, '# Test Source'),
+      schema_version: 2,
       operation: 'contradict',
       target_path: 'knowledge/page-to-contradict.md',
-      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
-      confidence: 'high',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
+      base_content_sha256: sha256Text(current),
+      evidence: [citation],
+      contradictions: [{ summary: 'Source conflicts with the current page.', evidence: [citation] }],
     };
     await stageProposal(root, proposal);
     const targetPath = join(root, proposal.target_path);
-    await assert.rejects(readFile(targetPath, 'utf8'), /ENOENT/u);
+    assert.equal(await readFile(targetPath, 'utf8'), current);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -314,9 +372,7 @@ test('requestRefinement: throws when adapter returns valid schema but bad eviden
   const { root, sourcePath } = await makeVaultWithBronze(BODY);
   try {
     const proposal = {
-      schema_version: 1,
-      operation: 'create',
-      target_path: 'knowledge/test.md',
+      ...makeValidProposal(sourcePath, 'a'.repeat(64), '# Test Source'),
       evidence: [
         {
           source_path: sourcePath,
@@ -327,10 +383,6 @@ test('requestRefinement: throws when adapter returns valid schema but bad eviden
           quote_sha256: sha256Text('# Test Source'),
         },
       ],
-      confidence: 'medium',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
     };
     const adapter = new FakeAdapter(proposal);
     const input: RefinementInput = {
@@ -376,9 +428,7 @@ test('stageProposal: rejects unknown with bad evidence hash (internal schema par
   const { root, sourcePath } = await makeVaultWithBronze(BODY);
   try {
     const badProposal = {
-      schema_version: 1,
-      operation: 'create',
-      target_path: 'knowledge/test.md',
+      ...makeValidProposal(sourcePath, 'a'.repeat(64), '# Test Source'),
       evidence: [{
         source_path: sourcePath,
         body_sha256: 'a'.repeat(64),
@@ -387,10 +437,6 @@ test('stageProposal: rejects unknown with bad evidence hash (internal schema par
         quote: '# Test Source',
         quote_sha256: sha256Text('# Test Source'),
       }],
-      confidence: 'medium',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
     };
     await assert.rejects(() => stageProposal(root, badProposal), /evidence/i);
   } finally {
@@ -583,6 +629,37 @@ test('validateEvidenceCitation: rejects symlink escaping bronze/', async () => {
   }
 });
 
+test('validateEvidenceCitation: rejects a Bronze root symlink outside the vault', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'ziggurat-sym-root-'));
+  const outsideDir = await mkdtemp(join(tmpdir(), 'ziggurat-outside-root-'));
+  try {
+    const body = 'outside content\n';
+    const bodySha = sha256Text(body);
+    await writeFile(
+      join(outsideDir, 'source.md'),
+      `---\nschema_version: 1\nsource_id: outside\nsource_kind: article\ncaptured_at: 2026-01-01T00:00:00Z\nsha256: ${bodySha}\nsensitivity: public\npii: 'false'\n---\n${body}`,
+      'utf8',
+    );
+    try {
+      await symlink(outsideDir, join(root, 'bronze'), 'dir');
+    } catch {
+      return;
+    }
+    const citation: EvidenceCitation = {
+      source_path: 'bronze/source.md',
+      body_sha256: bodySha,
+      line_start: 1,
+      line_end: 1,
+      quote: 'outside content',
+      quote_sha256: sha256Text('outside content'),
+    };
+    await assert.rejects(() => validateEvidenceCitation(root, citation), /outside/iu);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(outsideDir, { recursive: true, force: true });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Adversarial: target_path / affected_paths / related_paths constraints
 // ---------------------------------------------------------------------------
@@ -591,14 +668,8 @@ test('stageProposal: rejects target_path with traversal', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
     const badProposal = {
-      schema_version: 1,
-      operation: 'create',
+      ...makeValidProposal(sourcePath, bodySha, '# Test Source'),
       target_path: '../../../etc/passwd',
-      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
-      confidence: 'medium',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
     };
     await assert.rejects(() => stageProposal(root, badProposal));
   } finally {
@@ -610,14 +681,8 @@ test('stageProposal: rejects target_path not under knowledge/', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
     const badProposal = {
-      schema_version: 1,
-      operation: 'create',
+      ...makeValidProposal(sourcePath, bodySha, '# Test Source'),
       target_path: 'bronze/evil.md',
-      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
-      confidence: 'medium',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
     };
     await assert.rejects(() => stageProposal(root, badProposal));
   } finally {
@@ -629,14 +694,8 @@ test('stageProposal: rejects affected_paths with traversal', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
     const badProposal = {
-      schema_version: 1,
-      operation: 'create',
-      target_path: 'knowledge/test.md',
-      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
-      confidence: 'medium',
+      ...makeValidProposal(sourcePath, bodySha, '# Test Source'),
       affected_paths: ['../evil'],
-      related_paths: [],
-      unresolved_questions: [],
     };
     await assert.rejects(() => stageProposal(root, badProposal));
   } finally {
@@ -648,14 +707,8 @@ test('stageProposal: rejects related_paths with backslash', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
     const badProposal = {
-      schema_version: 1,
-      operation: 'create',
-      target_path: 'knowledge/test.md',
-      evidence: [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')],
-      confidence: 'medium',
-      affected_paths: [],
+      ...makeValidProposal(sourcePath, bodySha, '# Test Source'),
       related_paths: ['knowledge\\evil.md'],
-      unresolved_questions: [],
     };
     await assert.rejects(() => stageProposal(root, badProposal));
   } finally {
@@ -673,7 +726,7 @@ test('stageProposal: two calls produce two distinct files', async () => {
     const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
     const p1 = await stageProposal(root, proposal);
     const p2 = await stageProposal(root, proposal);
-    assert.notEqual(p1, p2);
+    assert.notEqual(p1.path, p2.path);
     const proposalsDir = join(root, '.ziggurat', 'proposals');
     const entries = await readdir(proposalsDir);
     assert.equal(entries.length, 2);
@@ -700,9 +753,7 @@ test('stageProposal: no .tmp files remain after evidence validation failure', as
   const { root, sourcePath } = await makeVaultWithBronze(BODY);
   try {
     const badProposal = {
-      schema_version: 1,
-      operation: 'create',
-      target_path: 'knowledge/test.md',
+      ...makeValidProposal(sourcePath, 'a'.repeat(64), '# Test Source'),
       evidence: [{
         source_path: sourcePath,
         body_sha256: 'a'.repeat(64),
@@ -711,10 +762,6 @@ test('stageProposal: no .tmp files remain after evidence validation failure', as
         quote: '# Test Source',
         quote_sha256: sha256Text('# Test Source'),
       }],
-      confidence: 'medium',
-      affected_paths: [],
-      related_paths: [],
-      unresolved_questions: [],
     };
     await assert.rejects(() => stageProposal(root, badProposal));
     const proposalsDir = join(root, '.ziggurat', 'proposals');
@@ -808,7 +855,18 @@ test('LoopbackChatAdapter: completeJson schema lists all required top-level fiel
   const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
   const schema = js['schema'] as Record<string, unknown>;
   const required = schema['required'] as string[];
-  const expected = ['schema_version', 'operation', 'target_path', 'evidence', 'confidence', 'affected_paths', 'related_paths', 'unresolved_questions'];
+  const expected = [
+    'schema_version',
+    'operation',
+    'target_path',
+    'candidate',
+    'evidence',
+    'contradictions',
+    'confidence',
+    'affected_paths',
+    'related_paths',
+    'unresolved_questions',
+  ];
   for (const field of expected) {
     assert.ok(required.includes(field), `schema.required must include "${field}"`);
   }
@@ -819,6 +877,7 @@ test('LoopbackChatAdapter: completeJson evidence item schema lists all required 
     const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
     await adapter.completeJson([{ role: 'user', content: 'test' }]);
   });
+
   const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
   const schema = js['schema'] as Record<string, unknown>;
   const props = schema['properties'] as Record<string, unknown>;
@@ -829,4 +888,29 @@ test('LoopbackChatAdapter: completeJson evidence item schema lists all required 
   for (const field of expected) {
     assert.ok(itemRequired.includes(field), `evidence items.required must include "${field}"`);
   }
+});
+
+test('LoopbackChatAdapter: JSON schema mirrors target, evidence, and operation constraints', async () => {
+  const body = await withHttpCapture({}, async (port) => {
+    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
+    await adapter.completeJson([{ role: 'user', content: 'test' }]);
+  });
+  const jsonSchema = (
+    (body as Record<string, unknown>)['response_format'] as Record<string, unknown>
+  )['json_schema'] as Record<string, unknown>;
+  const schema = jsonSchema['schema'] as Record<string, unknown>;
+  const properties = schema['properties'] as Record<string, Record<string, unknown>>;
+  const targetPattern = new RegExp(properties['target_path']!['pattern'] as string, 'u');
+  assert(targetPattern.test('knowledge/policy.md'));
+  assert(!targetPattern.test('knowledge/Policy.md'));
+  assert(!targetPattern.test('knowledge/con.md'));
+  assert(!targetPattern.test('knowledge/nested/policy.md'));
+
+  const evidence = properties['evidence']!;
+  const evidenceItems = evidence['items'] as Record<string, unknown>;
+  const evidenceProperties = evidenceItems['properties'] as Record<string, Record<string, unknown>>;
+  const sourcePattern = new RegExp(evidenceProperties['source_path']!['pattern'] as string, 'u');
+  assert(sourcePattern.test('bronze/article/source.md'));
+  assert(!sourcePattern.test('bronze/../secret.md'));
+  assert(Array.isArray(schema['allOf']));
 });

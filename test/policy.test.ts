@@ -8,14 +8,14 @@ import {
   goldExclusionReasons,
 } from '../src/policy/index.js';
 
-test('communion excludes every non-reviewed page', () => {
-  for (const status of ['draft', 'in-review'] as const) {
+test('communion excludes every artifact without authorized-page provenance', () => {
+  for (const artifact_kind of ['bronze-record', 'staged-proposal'] as const) {
     const reasons = contextExclusionReasons(
-      { status, retrieval_eligible: false, pii: 'false', sensitivity: 'public' },
+      { artifact_kind, retrieval_eligible: false, pii: 'false', sensitivity: 'public' },
       'communion',
       new Date('2026-01-01T00:00:00Z'),
     );
-    assert(reasons.includes('status: reviewed required'));
+    assert(reasons.includes('artifact: authorized page required'));
   }
 });
 
@@ -51,14 +51,15 @@ test('lifecycle never permits reviewed metadata to be written by automation', ()
   assert.equal(canTransition('in-review', 'reviewed', 'human'), true);
 });
 
-test('reviewed page with false PII has no exclusion reasons for communion', () => {
+test('authorized page with false PII has no exclusion reasons for communion', () => {
   const reasons = contextExclusionReasons(
     {
-      status: 'reviewed',
+      artifact_kind: 'authorized-page',
       retrieval_eligible: true,
       pii: 'false',
       sensitivity: 'public',
       last_verified: new Date().toISOString(),
+      authorization_verified: true,
     },
     'communion',
     new Date(),
@@ -66,29 +67,36 @@ test('reviewed page with false PII has no exclusion reasons for communion', () =
   assert.equal(reasons.length, 0);
 });
 
-test('review profile allows Silver (draft and in-review) but blocks pii', () => {
-  for (const status of ['draft', 'in-review'] as const) {
-    const reasons = contextExclusionReasons(
-      { status, pii: 'false', sensitivity: 'internal' },
-      'review',
-      new Date(),
-    );
-    assert.equal(reasons.length, 0, `review profile should allow ${status}`);
-  }
+test('review profile allows Silver, excludes Bronze, and blocks pii', () => {
+  assert.deepEqual(contextExclusionReasons(
+    { artifact_kind: 'staged-proposal', pii: 'false', sensitivity: 'internal' },
+    'review',
+    new Date(),
+  ), []);
   assert(contextExclusionReasons(
-    { status: 'draft', pii: 'true', sensitivity: 'internal' },
+    { artifact_kind: 'bronze-record', pii: 'false', sensitivity: 'public' },
+    'review',
+    new Date(),
+  ).includes('artifact: Bronze is not available in review'));
+  assert(contextExclusionReasons(
+    { artifact_kind: 'staged-proposal', pii: 'true', sensitivity: 'internal' },
     'review',
     new Date(),
   ).includes('pii: false required'));
 });
 
-test('evidence profile excludes PII but not status', () => {
+test('evidence profile allows Bronze but excludes Silver', () => {
   const reasons = contextExclusionReasons(
-    { status: 'in-review', pii: 'false', sensitivity: 'restricted' },
+    { artifact_kind: 'bronze-record', pii: 'false', sensitivity: 'public' },
     'evidence',
     new Date(),
   );
   assert.equal(reasons.length, 0);
+  assert(contextExclusionReasons(
+    { artifact_kind: 'staged-proposal', pii: 'false', sensitivity: 'internal' },
+    'evidence',
+    new Date(),
+  ).includes('artifact: Silver is not available in evidence'));
 });
 
 test('canTransition only allows human to demote reviewed back to in-review', () => {
@@ -98,7 +106,7 @@ test('canTransition only allows human to demote reviewed back to in-review', () 
 });
 
 test('canTransition allows refine to advance draft to in-review', () => {
-  assert.equal(canTransition('draft', 'in-review', 'refine'), true);
+  assert.equal(canTransition('draft', 'in-review', 'refine'), false);
   assert.equal(canTransition('draft', 'in-review', 'ingest'), false);
 });
 
@@ -106,19 +114,19 @@ test('canTransition forbids human to skip in-review (draft to reviewed is blocke
   assert.equal(canTransition('draft', 'reviewed', 'human'), false);
 });
 
-test('review profile permits reviewed page with false pii', () => {
+test('review profile permits authorized page with false pii', () => {
   const reasons = contextExclusionReasons(
-    { status: 'reviewed', pii: 'false', sensitivity: 'internal' },
+    { artifact_kind: 'authorized-page', pii: 'false', sensitivity: 'internal' },
     'review',
     new Date(),
   );
   assert.equal(reasons.length, 0);
 });
 
-test('classifyTier maps reviewed to gold and others to silver', () => {
-  assert.equal(classifyTier('reviewed'), 'gold');
-  assert.equal(classifyTier('draft'), 'silver');
-  assert.equal(classifyTier('in-review'), 'silver');
+test('classifyTier maps physical artifact kinds rather than self-asserted status', () => {
+  assert.equal(classifyTier('bronze-record'), 'bronze');
+  assert.equal(classifyTier('staged-proposal'), 'silver');
+  assert.equal(classifyTier('authorized-page'), 'gold');
 });
 
 test('goldExclusionReasons rejects a page missing required gold fields', () => {
@@ -138,6 +146,7 @@ test('goldExclusionReasons accepts a valid reviewed page', () => {
     reviewed_by: 'human',
     reviewed_at: '2026-01-01T00:00:00Z',
     last_verified: '2026-01-01T00:00:00Z',
+    authorization_verified: true,
   });
   assert.equal(reasons.length, 0);
 });

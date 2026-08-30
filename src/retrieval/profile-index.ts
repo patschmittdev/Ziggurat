@@ -1,28 +1,29 @@
-import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
-import type { CuratedPage, AccessProfile } from '../contracts/index.js';
-import type { ProfileChunk, ProfileIndex } from '../contracts/gold-index.js';
+import type { AccessProfile } from '../contracts/index.js';
+import type { ZigguratConfig } from '../contracts/config.js';
+import { parseZigguratConfig } from '../contracts/config.js';
+import type {
+  ProfileChunk,
+  ProfileIndex,
+  SearchResult,
+} from '../contracts/gold-index.js';
 import { ProfileIndexSchema } from '../contracts/gold-index.js';
+import type { CuratedInput, BronzeInput } from '../corpus/collect.js';
 import { piiBlocksModelAccess } from '../policy/privacy.js';
+import type { StagedProposalRecord } from '../refine/store.js';
 import { buildBm25, bm25Search } from './bm25.js';
-import { computeCorpusFingerprint } from './fingerprint.js';
 import { makeProfileChunk } from './chunks.js';
-import { sha256Text } from '../bronze/canonical.js';
-import type { SearchResult } from '../contracts/gold-index.js';
+import { collectEligibleGoldChunks } from './gold-index.js';
+import {
+  indexCorpusFingerprint,
+  trustPolicyFingerprint,
+} from './integrity.js';
+import { writeIndexAtomic } from './store.js';
+import { compareCodeUnits } from '../order.js';
 
 export type { CuratedInput, BronzeInput } from '../corpus/collect.js';
-import type { CuratedInput, BronzeInput } from '../corpus/collect.js';
 
-/**
- * A Bronze record may enter a model-readable index only when it positively asserts
- * `pii: false`, is not restricted, and still hashes to its declared digest.
- *
- * Ingest deliberately defaults an unassessed capture to `pii: unknown` /
- * `sensitivity: restricted`, so an omitted check here would expose every freshly
- * captured source through the evidence profile. `piiBlocksModelAccess` already fails
- * closed on `unknown`; sensitivity and integrity need the same treatment.
- */
 export function bronzeBlockedFromModelAccess(record: BronzeInput): boolean {
   return piiBlocksModelAccess(record.pii as never)
     || record.sensitivity === 'restricted'
@@ -32,121 +33,167 @@ export function bronzeBlockedFromModelAccess(record: BronzeInput): boolean {
 export interface BuildProfileIndexInput {
   curated: CuratedInput[];
   bronze: BronzeInput[];
+  proposals?: StagedProposalRecord[];
+  config?: ZigguratConfig;
+  asOf?: Date;
 }
 
-/**
- * Builds a review profile index (Silver + Gold, no Bronze, no PII).
- * Atomic write to .ziggurat/review-index.json.
- */
+function goldProfileChunk(
+  profile: 'review' | 'evidence',
+  chunk: Awaited<ReturnType<typeof collectEligibleGoldChunks>>['chunks'][number],
+): ProfileChunk {
+  return makeProfileChunk(
+    chunk.path,
+    chunk.heading,
+    chunk.body,
+    'gold',
+    'reviewed',
+    profile,
+    {
+      kind: 'authorization',
+      receipt_path: chunk.authorization.receipt_path,
+      receipt_sha256: chunk.authorization.receipt_sha256,
+      reviewer_id: chunk.authorization.reviewer_id,
+      key_id: chunk.authorization.key_id,
+      bronze_lineage: chunk.bronze_lineage,
+    },
+  );
+}
+
+export async function collectReviewChunks(
+  root: string,
+  input: BuildProfileIndexInput,
+): Promise<{ chunks: ProfileChunk[]; config: ZigguratConfig }> {
+  const config = input.config ?? await parseZigguratConfig(root);
+  const chunks: ProfileChunk[] = [];
+  const bronzeByPath = new Map(input.bronze.map(record => [record.path, record]));
+  for (const record of input.proposals ?? []) {
+    const candidate = record.proposal.candidate;
+    if (piiBlocksModelAccess(candidate.pii)) continue;
+    const sourcesAreModelReadable = candidate.sources.every(path => {
+      const source = bronzeByPath.get(path);
+      return source !== undefined && !bronzeBlockedFromModelAccess(source);
+    });
+    if (!sourcesAreModelReadable) continue;
+    chunks.push(makeProfileChunk(
+      record.artifact_path,
+      candidate.title,
+      candidate.body,
+      'silver',
+      'staged',
+      'review',
+      {
+        kind: 'proposal',
+        proposal_id: record.proposal.proposal_id,
+        artifact_path: record.artifact_path,
+        artifact_sha256: record.artifact_sha256,
+      },
+    ));
+  }
+  const gold = await collectEligibleGoldChunks(root, input.curated, {
+    config,
+    ...(input.proposals === undefined ? {} : { proposals: input.proposals }),
+    ...(input.asOf === undefined ? {} : { asOf: input.asOf }),
+  });
+  chunks.push(...gold.chunks.map(chunk => goldProfileChunk('review', chunk)));
+  chunks.sort((left, right) => compareCodeUnits(left.path, right.path));
+  return { chunks, config };
+}
+
+export async function collectEvidenceChunks(
+  root: string,
+  input: BuildProfileIndexInput,
+): Promise<{ chunks: ProfileChunk[]; config: ZigguratConfig }> {
+  const config = input.config ?? await parseZigguratConfig(root);
+  const chunks: ProfileChunk[] = [];
+  for (const record of input.bronze) {
+    if (bronzeBlockedFromModelAccess(record)) continue;
+    chunks.push(makeProfileChunk(
+      record.path,
+      record.path,
+      record.body,
+      'bronze',
+      'bronze',
+      'evidence',
+      { kind: 'bronze', body_sha256: record.sha256 },
+    ));
+  }
+  const gold = await collectEligibleGoldChunks(root, input.curated, {
+    config,
+    ...(input.proposals === undefined ? {} : { proposals: input.proposals }),
+    ...(input.asOf === undefined ? {} : { asOf: input.asOf }),
+  });
+  chunks.push(...gold.chunks.map(chunk => goldProfileChunk('evidence', chunk)));
+  chunks.sort((left, right) => compareCodeUnits(left.path, right.path));
+  return { chunks, config };
+}
+
 export async function buildReviewIndex(
   root: string,
   input: BuildProfileIndexInput,
 ): Promise<ProfileIndex> {
-  const chunks: ProfileChunk[] = [];
-  const fingerprintEntries: Array<{ path: string; content_hash: string }> = [];
-
-  for (const { path, page, pageBody } of input.curated) {
-    if (piiBlocksModelAccess(page.pii)) continue;
-    const tier = page.status === 'reviewed' ? 'gold' as const : 'silver' as const;
-    chunks.push(makeProfileChunk(path, page.title, pageBody, tier, page.status, 'review'));
-    fingerprintEntries.push({ path, content_hash: sha256Text(pageBody) });
-  }
-
-  return buildAndWriteProfileIndex(root, 'review', chunks, fingerprintEntries, 'review-index.json');
+  const { chunks, config } = await collectReviewChunks(root, input);
+  return buildAndWriteProfileIndex(root, 'review', chunks, config, 'review-index.json');
 }
 
-/**
- * Builds an evidence profile index (valid Bronze + labeled curated context, no PII).
- * Atomic write to .ziggurat/evidence-index.json.
- */
 export async function buildEvidenceIndex(
   root: string,
   input: BuildProfileIndexInput,
 ): Promise<ProfileIndex> {
-  const chunks: ProfileChunk[] = [];
-  const fingerprintEntries: Array<{ path: string; content_hash: string }> = [];
-
-  for (const record of input.bronze) {
-    if (bronzeBlockedFromModelAccess(record)) continue;
-    const { path, sha256, body } = record;
-    chunks.push(makeProfileChunk(path, path, body, 'bronze', 'bronze', 'evidence'));
-    fingerprintEntries.push({ path, content_hash: sha256 });
-  }
-
-  for (const { path, page, pageBody } of input.curated) {
-    if (piiBlocksModelAccess(page.pii)) continue;
-    const tier = page.status === 'reviewed' ? 'gold' as const : 'silver' as const;
-    chunks.push(makeProfileChunk(path, page.title, pageBody, tier, page.status, 'evidence'));
-    fingerprintEntries.push({ path, content_hash: sha256Text(pageBody) });
-  }
-
-  return buildAndWriteProfileIndex(root, 'evidence', chunks, fingerprintEntries, 'evidence-index.json');
+  const { chunks, config } = await collectEvidenceChunks(root, input);
+  return buildAndWriteProfileIndex(root, 'evidence', chunks, config, 'evidence-index.json');
 }
 
 async function buildAndWriteProfileIndex(
   root: string,
   profile: 'review' | 'evidence',
   chunks: ProfileChunk[],
-  fingerprintEntries: Array<{ path: string; content_hash: string }>,
+  config: ZigguratConfig,
   filename: string,
 ): Promise<ProfileIndex> {
-  const corpus_fingerprint = computeCorpusFingerprint(profile, 1, fingerprintEntries);
-  const bm25 = buildBm25(chunks.map(c => ({ id: c.id, text: c.heading + ' ' + c.body })));
-
+  const policy_fingerprint = trustPolicyFingerprint(config);
   const index: ProfileIndex = {
-    version: 1,
+    version: 2,
     profile,
     retrieval_mode: 'bm25',
     built_at: new Date().toISOString(),
-    corpus_fingerprint,
+    corpus_fingerprint: indexCorpusFingerprint(profile, chunks, policy_fingerprint),
+    policy_fingerprint,
     chunks,
-    bm25,
+    bm25: buildBm25(chunks.map(chunk => ({
+      id: chunk.id,
+      text: `${chunk.heading} ${chunk.body}`,
+    }))),
   };
-
   await writeIndexAtomic(root, filename, ProfileIndexSchema.parse(index));
   return index;
 }
 
-export async function loadProfileIndex(root: string, profile: Exclude<AccessProfile, 'communion'>): Promise<ProfileIndex> {
+export async function loadProfileIndex(
+  root: string,
+  profile: Exclude<AccessProfile, 'communion'>,
+): Promise<ProfileIndex> {
   const filename = profile === 'review' ? 'review-index.json' : 'evidence-index.json';
   const text = await readFile(join(root, '.ziggurat', filename), 'utf8');
   return ProfileIndexSchema.parse(JSON.parse(text));
 }
 
-export function searchProfileIndex(
-  index: ProfileIndex,
-  query: string,
-): SearchResult[] {
+export function searchProfileIndex(index: ProfileIndex, query: string): SearchResult[] {
   const ranked = bm25Search(query, index.bm25);
-  const chunkMap = new Map(index.chunks.map(c => [c.id, c]));
-
-  const results: SearchResult[] = [];
-  for (const { id, score } of ranked) {
+  const chunkMap = new Map(index.chunks.map(chunk => [chunk.id, chunk]));
+  return ranked.flatMap(({ id, score }) => {
     const chunk = chunkMap.get(id);
-    if (chunk === undefined) continue;
-    results.push({ chunk_id: id, path: chunk.path, heading: chunk.heading, score, tier: chunk.tier, profile: chunk.profile, status: chunk.status, body: chunk.body });
-  }
-  return results;
-}
-
-async function writeIndexAtomic(root: string, filename: string, data: unknown): Promise<void> {
-  const dir = join(root, '.ziggurat');
-  await mkdir(dir, { recursive: true });
-  const tmpPath = join(dir, randomUUID() + '.tmp');
-  const finalPath = join(dir, filename);
-
-  const fh = await open(tmpPath, 'w');
-  try {
-    await fh.writeFile(JSON.stringify(data, null, 2), 'utf8');
-    await fh.sync();
-  } finally {
-    await fh.close();
-  }
-
-  try {
-    await rename(tmpPath, finalPath);
-  } catch (err) {
-    await unlink(tmpPath).catch(() => undefined);
-    throw err;
-  }
+    return chunk === undefined ? [] : [{
+      chunk_id: id,
+      path: chunk.path,
+      heading: chunk.heading,
+      score,
+      tier: chunk.tier,
+      profile: chunk.profile,
+      status: chunk.status,
+      body: chunk.body,
+      content_role: chunk.content_role,
+      instruction_authority: chunk.instruction_authority,
+    }];
+  });
 }

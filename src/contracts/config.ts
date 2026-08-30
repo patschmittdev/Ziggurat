@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
 import * as YAML from 'yaml';
+import { TrustPolicySchema } from './authorization.js';
 
 export interface ZigguratConfig {
   schema_version: 1;
@@ -12,6 +13,7 @@ export interface ZigguratConfig {
     model_endpoint?: string;
     embedding_endpoint?: string;
   };
+  trust: z.infer<typeof TrustPolicySchema>;
 }
 
 export const ZigguratConfigSchema = z.object({
@@ -31,6 +33,7 @@ export const ZigguratConfigSchema = z.object({
     model_endpoint: z.string().url().optional(),
     embedding_endpoint: z.string().url().optional(),
   }),
+  trust: TrustPolicySchema,
 });
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
@@ -106,11 +109,12 @@ function buildAdapters(
 export async function parseZigguratConfig(root: string): Promise<ZigguratConfig> {
   const configDir = join(root, 'config');
 
-  const [base, domain, privacy, adapters] = await Promise.all([
+  const [base, domain, privacy, adapters, trust] = await Promise.all([
     loadYamlFile(join(configDir, 'ziggurat.yaml')),
     loadYamlFile(join(configDir, 'domain.yaml')),
     loadYamlFile(join(configDir, 'privacy.yaml')),
     loadYamlFile(join(configDir, 'adapters.yaml')),
+    loadYamlFile(join(configDir, 'trust.yaml')),
   ]);
 
   const merged: unknown = Object.assign(
@@ -119,6 +123,7 @@ export async function parseZigguratConfig(root: string): Promise<ZigguratConfig>
     typeof domain === 'object' && domain !== null ? domain : {},
     typeof privacy === 'object' && privacy !== null ? privacy : {},
     typeof adapters === 'object' && adapters !== null ? adapters : {},
+    typeof trust === 'object' && trust !== null ? trust : {},
   );
 
   const parsed = ZigguratConfigSchema.parse(merged);
@@ -127,9 +132,9 @@ export async function parseZigguratConfig(root: string): Promise<ZigguratConfig>
     const endpoint = parsed.adapters[key];
     if (endpoint !== undefined) {
       const url = new URL(endpoint);
-      if (!LOOPBACK_HOSTS.has(url.hostname)) {
+      if (url.protocol !== 'http:' || !LOOPBACK_HOSTS.has(url.hostname)) {
         throw new Error(
-          `adapters.${key}: only loopback addresses are allowed, got ${url.hostname}`,
+          `adapters.${key}: only HTTP loopback addresses are allowed, got ${url.href}`,
         );
       }
     }
@@ -141,5 +146,6 @@ export async function parseZigguratConfig(root: string): Promise<ZigguratConfig>
     domain: parsed.domain,
     privacy: parsed.privacy,
     adapters: buildAdapters(parsed.adapters),
+    trust: parsed.trust,
   };
 }

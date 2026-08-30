@@ -1,4 +1,4 @@
-export type { Tier } from './tier.js';
+export type { Tier, TierArtifact } from './tier.js';
 export { classifyTier } from './tier.js';
 
 export type { TransitionActor } from './eligibility.js';

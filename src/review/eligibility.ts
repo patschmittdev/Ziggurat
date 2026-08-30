@@ -1,14 +1,26 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import * as YAML from 'yaml';
 import type { CuratedPage } from '../contracts/index.js';
+import { BronzeRecordSchema } from '../contracts/index.js';
 import { sha256Text } from '../bronze/canonical.js';
-import { collectUnresolvedContradictions } from './contradictions.js';
+import {
+  collectUnresolvedContradictions,
+  unresolvedContradictionsFromIndex,
+} from './contradictions.js';
+import type { ContradictionIndex } from './contradictions.js';
+import { verifyPageAuthorization } from '../authorization/verify.js';
+import type { VerifiedAuthorization } from '../authorization/verify.js';
+import {
+  parseZigguratConfig,
+} from '../contracts/config.js';
+import type { ZigguratConfig } from '../contracts/config.js';
+import { resolveBronzeSourcePath } from '../refine/evidence.js';
 
 export interface EligibilityReport {
   eligible: boolean;
   reasons: string[];
   bronze_lineage: string[];
+  authorization?: VerifiedAuthorization;
 }
 
 interface BronzeSplit {
@@ -35,9 +47,9 @@ async function verifyBronzeSource(root: string, sourcePath: string): Promise<str
 
   let content: string;
   try {
-    content = await readFile(join(root, sourcePath), 'utf8');
+    content = await readFile(await resolveBronzeSourcePath(root, sourcePath), 'utf8');
   } catch {
-    return `lineage: ${sourcePath} is not readable`;
+    return `lineage: ${sourcePath} is not readable within Bronze`;
   }
 
   const split = splitBronzeFile(content.replace(/\r\n/g, '\n'));
@@ -50,11 +62,11 @@ async function verifyBronzeSource(root: string, sourcePath: string): Promise<str
     return `lineage: ${sourcePath} has unparseable frontmatter`;
   }
 
-  const rec = frontmatter as Record<string, unknown>;
-  if (typeof rec['sha256'] !== 'string') return `lineage: ${sourcePath} has no sha256 in frontmatter`;
+  const record = BronzeRecordSchema.safeParse(frontmatter);
+  if (!record.success) return `lineage: ${sourcePath} has invalid Bronze frontmatter`;
 
   const actual = sha256Text(split.body);
-  if (actual !== rec['sha256']) return `lineage: ${sourcePath} body hash mismatch`;
+  if (actual !== record.data.sha256) return `lineage: ${sourcePath} body hash mismatch`;
 
   return null;
 }
@@ -67,10 +79,14 @@ export async function goldEligibilityReport(
   root: string,
   pagePath: string,
   page: CuratedPage,
+  pageBody: string,
   asOf: Date = new Date(),
+  suppliedConfig?: ZigguratConfig,
+  contradictionIndex?: ContradictionIndex,
 ): Promise<EligibilityReport> {
   const reasons: string[] = [];
   const bronze_lineage: string[] = [];
+  const config = suppliedConfig ?? await parseZigguratConfig(root);
 
   if (page.status !== 'reviewed') reasons.push('status: reviewed required');
   if (page.retrieval_eligible !== true) reasons.push('retrieval_eligible required');
@@ -82,6 +98,35 @@ export async function goldEligibilityReport(
   if (!page.reviewed_by) reasons.push('reviewed_by: required');
   if (!page.reviewed_at) reasons.push('reviewed_at: required');
   if (!page.last_verified) reasons.push('last_verified: required');
+  if (page.reviewed_at !== undefined) {
+    const reviewedAt = new Date(page.reviewed_at);
+    if (Number.isNaN(reviewedAt.getTime())) {
+      reasons.push('reviewed_at: invalid date');
+    } else if (reviewedAt > asOf) {
+      reasons.push('reviewed_at: future date');
+    }
+  }
+  if (page.last_verified !== undefined) {
+    const verifiedAt = new Date(page.last_verified);
+    if (Number.isNaN(verifiedAt.getTime())) {
+      reasons.push('last_verified: invalid date');
+    } else if (verifiedAt > asOf) {
+      reasons.push('last_verified: future date');
+    } else if (asOf.getTime() - verifiedAt.getTime() > 90 * 24 * 60 * 60 * 1000) {
+      reasons.push('last_verified: page is stale');
+    }
+  }
+
+  const authorizationReport = await verifyPageAuthorization(
+    root,
+    pagePath,
+    page,
+    pageBody,
+    config,
+  );
+  for (const reason of authorizationReport.reasons) {
+    reasons.push(`authorization: ${reason}`);
+  }
 
   if (page.review_after !== undefined) {
     const ra = new Date(page.review_after);
@@ -108,7 +153,10 @@ export async function goldEligibilityReport(
   // A scan failure means contradiction state is unknown, which must exclude the page
   // rather than propagate and abort the whole build.
   try {
-    const contradictions = await collectUnresolvedContradictions(root, pagePath);
+    const resolved = authorizationReport.valid ? (page.resolved_proposals ?? []) : [];
+    const contradictions = contradictionIndex === undefined
+      ? await collectUnresolvedContradictions(root, pagePath, resolved)
+      : unresolvedContradictionsFromIndex(contradictionIndex, pagePath, resolved);
     if (contradictions.length > 0) {
       reasons.push(`contradictions: ${contradictions.length} unresolved`);
     }
@@ -120,5 +168,12 @@ export async function goldEligibilityReport(
 
   reasons.sort();
 
-  return { eligible: reasons.length === 0, reasons, bronze_lineage };
+  return {
+    eligible: reasons.length === 0,
+    reasons,
+    bronze_lineage,
+    ...(authorizationReport.authorization === undefined
+      ? {}
+      : { authorization: authorizationReport.authorization }),
+  };
 }

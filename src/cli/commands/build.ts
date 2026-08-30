@@ -2,14 +2,31 @@ import type { CliIO } from '../main.js';
 import { buildGoldIndex } from '../../retrieval/gold-index.js';
 import { buildReviewIndex, buildEvidenceIndex } from '../../retrieval/profile-index.js';
 import { collectBronzeFiles, collectCuratedPages } from '../../corpus/collect.js';
+import { collectStagedProposals } from '../../refine/store.js';
+import { parseZigguratConfig } from '../../contracts/config.js';
 
 export async function runBuild(root: string, json: boolean, io: CliIO): Promise<number> {
   const curated = await collectCuratedPages(root);
   const bronze = await collectBronzeFiles(root);
+  const proposals = await collectStagedProposals(root);
+  const config = await parseZigguratConfig(root);
+  const asOf = new Date();
 
-  const goldIndex = await buildGoldIndex(root, curated, { asOf: new Date() });
-  const reviewIndex = await buildReviewIndex(root, { curated, bronze });
-  const evidenceIndex = await buildEvidenceIndex(root, { curated, bronze });
+  const goldIndex = await buildGoldIndex(root, curated, { asOf, config, proposals });
+  const reviewIndex = await buildReviewIndex(root, {
+    curated,
+    bronze,
+    proposals,
+    config,
+    asOf,
+  });
+  const evidenceIndex = await buildEvidenceIndex(root, {
+    curated,
+    bronze,
+    proposals,
+    config,
+    asOf,
+  });
 
   const result = {
     gold_chunks: goldIndex.chunks.length,

@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { PiiStateSchema, ReviewStatusSchema, SensitivitySchema } from './common.js';
+import {
+  PiiStateSchema,
+  ReviewStatusSchema,
+  SensitivitySchema,
+  UtcDateTimeSchema,
+} from './common.js';
 
 const baseCuratedPage = z.object({
   schema_version: z.literal(1),
@@ -17,10 +22,11 @@ const baseCuratedPage = z.object({
   // silently dropped from every index.
   egress: z.enum(['local-only', 'approved-cloud']).default('local-only'),
   reviewed_by: z.string().optional(),
-  reviewed_at: z.string().optional(),
-  last_verified: z.string().optional(),
-  review_after: z.string().optional(),
-});
+  reviewed_at: UtcDateTimeSchema.optional(),
+  last_verified: UtcDateTimeSchema.optional(),
+  review_after: UtcDateTimeSchema.optional(),
+  resolved_proposals: z.array(z.string().uuid()).optional(),
+}).strict();
 
 export const CuratedPageSchema = baseCuratedPage.refine(
   (data) => {

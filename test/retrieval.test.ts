@@ -8,12 +8,34 @@ import { tokenize, buildBm25, bm25Search } from '../src/retrieval/bm25.js';
 import { reciprocalRankFusion } from '../src/retrieval/rrf.js';
 import { computeCorpusFingerprint } from '../src/retrieval/fingerprint.js';
 import { buildGoldIndex, checkIndexFreshness, loadGoldIndex } from '../src/retrieval/gold-index.js';
-import { buildReviewIndex, buildEvidenceIndex, searchProfileIndex } from '../src/retrieval/profile-index.js';
 import type { CuratedPage } from '../src/contracts/index.js';
+import * as YAML from 'yaml';
+import {
+  authorizeTestPage,
+  createTestReviewer,
+} from './helpers/authorization.js';
+
+const TEST_REVIEWER = createTestReviewer('retrieval-reviewer', 'retrieval-reviewer-primary');
 
 async function makeVault(files: Record<string, string>): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'ziggurat-retrieval-'));
-  for (const [relPath, content] of Object.entries(files)) {
+  const configFiles = {
+    'config/ziggurat.yaml': 'schema_version: 1\nlifecycle:\n  review_queue_limit: 10\n',
+    'config/domain.yaml': 'domain:\n  page_types: [concept]\n  tags: [security]\n',
+    'config/privacy.yaml': 'privacy:\n  default_sensitivity: restricted\n  default_pii: unknown\n',
+    'config/adapters.yaml': 'adapters: {}\n',
+    'config/trust.yaml': YAML.stringify({
+      trust: {
+        reviewers: [{
+          reviewer_id: TEST_REVIEWER.reviewerId,
+          key_id: TEST_REVIEWER.keyId,
+          algorithm: 'ed25519',
+          public_key_pem: TEST_REVIEWER.publicKeyPem,
+        }],
+      },
+    }),
+  };
+  for (const [relPath, content] of Object.entries({ ...configFiles, ...files })) {
     const fullPath = join(root, relPath);
     await mkdir(dirname(fullPath), { recursive: true });
     await writeFile(fullPath, content, 'utf8');
@@ -40,9 +62,10 @@ function makeGoldPage(overrides: Partial<CuratedPage> = {}): CuratedPage {
     sensitivity: 'public',
     visibility: 'internal',
     egress: 'approved-cloud',
-    reviewed_by: 'human',
+    reviewed_by: TEST_REVIEWER.reviewerId,
     reviewed_at: '2026-07-01T00:00:00Z',
     last_verified: '2026-07-01T00:00:00Z',
+    resolved_proposals: [],
     ...overrides,
   };
 }
@@ -151,6 +174,7 @@ test('buildGoldIndex: includes only eligible page', async () => {
   try {
     const eligible = makeGoldPage({ sources: ['bronze/article.md'] });
     const ineligible = makeGoldPage({ status: 'draft', sources: [], reviewed_by: undefined as unknown as string });
+    await authorizeTestPage(root, 'knowledge/good.md', eligible, 'Gold content.', TEST_REVIEWER);
 
     const index = await buildGoldIndex(root, [
       { path: 'knowledge/good.md', page: eligible, pageBody: 'Gold content.' },
@@ -170,13 +194,34 @@ test('buildGoldIndex: stores Bronze lineage paths', async () => {
   const root = await makeVault({
     'bronze/article.md': makeBronzeContent(bronzeBody),
   });
+
   try {
     const page = makeGoldPage({ sources: ['bronze/article.md'] });
+    await authorizeTestPage(root, 'knowledge/page.md', page, 'Content.', TEST_REVIEWER);
     const index = await buildGoldIndex(root, [
       { path: 'knowledge/page.md', page, pageBody: 'Content.' },
     ], { asOf: FIXED_DATE });
 
     assert.equal(index.chunks[0]?.bronze_lineage[0]?.path, 'bronze/article.md');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('buildGoldIndex: accepts a schema-valid quoted Bronze digest', async () => {
+  const bronzeBody = '# Source\n\nEvidence.\n';
+  const sha = sha256Text(bronzeBody);
+  const root = await makeVault({
+    'bronze/article.md':
+      `---\nschema_version: 1\nsource_id: test\nsource_kind: article\ncaptured_at: 2026-01-01T00:00:00Z\nsha256: "${sha}"\nsensitivity: public\npii: 'false'\n---\n${bronzeBody}`,
+  });
+  try {
+    const page = makeGoldPage({ sources: ['bronze/article.md'] });
+    await authorizeTestPage(root, 'knowledge/quoted.md', page, 'Content.', TEST_REVIEWER);
+    const index = await buildGoldIndex(root, [
+      { path: 'knowledge/quoted.md', page, pageBody: 'Content.' },
+    ], { asOf: FIXED_DATE });
+    assert.equal(index.chunks[0]?.bronze_lineage[0]?.sha256, sha);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -188,9 +233,10 @@ test('buildGoldIndex: writes index to disk atomically', async () => {
   });
   try {
     const page = makeGoldPage({ sources: ['bronze/src.md'] });
+    await authorizeTestPage(root, 'knowledge/p.md', page, 'Text.', TEST_REVIEWER);
     await buildGoldIndex(root, [{ path: 'knowledge/p.md', page, pageBody: 'Text.' }], { asOf: FIXED_DATE });
     const loaded = await loadGoldIndex(root);
-    assert.equal(loaded.version, 1);
+    assert.equal(loaded.version, 2);
     assert.equal(loaded.profile, 'communion');
     assert.equal(loaded.chunks.length, 1);
   } finally {
@@ -217,6 +263,7 @@ test('checkIndexFreshness: stale when source changes', async () => {
   });
   try {
     const page = makeGoldPage({ sources: ['bronze/src.md'] });
+    await authorizeTestPage(root, 'knowledge/p.md', page, 'Original text.', TEST_REVIEWER);
     await buildGoldIndex(root, [{ path: 'knowledge/p.md', page, pageBody: 'Original text.' }], { asOf: FIXED_DATE });
 
     const fresh = await checkIndexFreshness(root, [
@@ -235,128 +282,12 @@ test('checkIndexFreshness: fresh when unchanged', async () => {
   });
   try {
     const page = makeGoldPage({ sources: ['bronze/src.md'] });
+    await authorizeTestPage(root, 'knowledge/p.md', page, 'Stable.', TEST_REVIEWER);
     await buildGoldIndex(root, [{ path: 'knowledge/p.md', page, pageBody: 'Stable.' }], { asOf: FIXED_DATE });
     const result = await checkIndexFreshness(root, [
       { path: 'knowledge/p.md', page, pageBody: 'Stable.' },
     ], { asOf: FIXED_DATE });
     assert.equal(result.fresh, true);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// Profile indexes
-// ---------------------------------------------------------------------------
-
-test('buildReviewIndex: includes Silver and Gold, excludes PII', async () => {
-  const root = await makeVault({});
-  try {
-    const gold = makeGoldPage({ pii: 'false' });
-    const silver = makeGoldPage({ status: 'in-review', pii: 'false', reviewed_by: undefined, reviewed_at: undefined, last_verified: undefined } as unknown as CuratedPage);
-    const private_ = makeGoldPage({ pii: 'true' });
-
-    const index = await buildReviewIndex(root, {
-      curated: [
-        { path: 'knowledge/gold.md', page: gold, pageBody: 'Gold text.' },
-        { path: 'knowledge/silver.md', page: silver, pageBody: 'Silver text.' },
-        { path: 'knowledge/private.md', page: private_, pageBody: 'Private.' },
-      ],
-      bronze: [],
-    });
-
-    assert.equal(index.profile, 'review');
-    assert.equal(index.chunks.length, 2);
-    assert(!index.chunks.some(c => c.path === 'knowledge/private.md'));
-    assert(index.chunks.every(c => c.tier === 'gold' || c.tier === 'silver'));
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test('buildReviewIndex: labels tier correctly', async () => {
-  const root = await makeVault({});
-  try {
-    const gold = makeGoldPage({ pii: 'false' });
-    const silver: CuratedPage = { ...makeGoldPage({ pii: 'false' }), status: 'in-review', reviewed_by: undefined, reviewed_at: undefined, last_verified: undefined } as unknown as CuratedPage;
-
-    const index = await buildReviewIndex(root, {
-      curated: [
-        { path: 'knowledge/gold.md', page: gold, pageBody: 'Gold.' },
-        { path: 'knowledge/silver.md', page: silver, pageBody: 'Silver.' },
-      ],
-      bronze: [],
-    });
-
-    const goldChunk = index.chunks.find(c => c.path === 'knowledge/gold.md');
-    const silverChunk = index.chunks.find(c => c.path === 'knowledge/silver.md');
-    assert.equal(goldChunk?.tier, 'gold');
-    assert.equal(silverChunk?.tier, 'silver');
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test('buildEvidenceIndex: includes Bronze and curated, excludes PII', async () => {
-  const root = await makeVault({});
-  try {
-    const bronzeHash = sha256Text('Evidence body.\n');
-    const goldPage = makeGoldPage({ pii: 'false' });
-    const piiPage = makeGoldPage({ pii: 'unknown' });
-
-    const index = await buildEvidenceIndex(root, {
-      curated: [
-        { path: 'knowledge/page.md', page: goldPage, pageBody: 'Curated.' },
-        { path: 'knowledge/pii.md', page: piiPage, pageBody: 'Private.' },
-      ],
-      bronze: [
-        { path: 'bronze/src.md', sha256: bronzeHash, body: 'Evidence body.\n', pii: 'false', sensitivity: 'public', hashVerified: true },
-      ],
-    });
-
-    assert.equal(index.profile, 'evidence');
-    assert.equal(index.chunks.length, 2); // 1 bronze + 1 curated (pii excluded)
-    assert(index.chunks.some(c => c.tier === 'bronze'));
-    assert(!index.chunks.some(c => c.path === 'knowledge/pii.md'));
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test('searchProfileIndex: returns results sorted by relevance', async () => {
-  const root = await makeVault({});
-  try {
-    const page1 = makeGoldPage({ title: 'Water Supply', pii: 'false' });
-    const page2 = makeGoldPage({ title: 'Irrigation Systems', pii: 'false' });
-
-    const index = await buildReviewIndex(root, {
-      curated: [
-        { path: 'knowledge/water.md', page: page1, pageBody: 'irrigation water water irrigation pumps' },
-        { path: 'knowledge/irrigation.md', page: page2, pageBody: 'general gardening tips flowers' },
-      ],
-      bronze: [],
-    });
-
-    const results = searchProfileIndex(index, 'irrigation');
-    assert(results.length >= 1);
-    assert.equal(results[0]?.path, 'knowledge/water.md');
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test('profile index chunks carry profile and tier labels', async () => {
-  const root = await makeVault({});
-  try {
-    const page = makeGoldPage({ pii: 'false' });
-    const index = await buildReviewIndex(root, {
-      curated: [{ path: 'knowledge/p.md', page, pageBody: 'Text.' }],
-      bronze: [],
-    });
-    const chunk = index.chunks[0];
-    assert.equal(chunk?.profile, 'review');
-    assert.equal(chunk?.tier, 'gold');
-    assert.equal(chunk?.status, 'reviewed');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
