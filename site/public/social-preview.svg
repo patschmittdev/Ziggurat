@@ -1,56 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Ziggurat. Models propose. Humans decide what persists.">
   <title>Ziggurat</title>
-  <rect width="1200" height="630" fill="#101214" />
+  <rect width="1200" height="630" fill="#101214"></rect>
+  <rect x="24.5" y="24.5" width="1151" height="581" fill="none" stroke="#2e3337" stroke-width="1"></rect>
 
-  <!-- Plate border and title block rules -->
-  <g stroke="#61686f" stroke-width="1.5" fill="none">
-    <rect x="48" y="48" width="1104" height="534" />
-    <path d="M48 138h1104M800 48v534" />
+  <rect x="114" y="387" width="252" height="54" fill="#de9a6a"></rect>
+  <rect x="150" y="315" width="180" height="54" fill="#96bad2"></rect>
+  <rect x="186" y="243" width="108" height="54" fill="#e6b854"></rect>
+  <rect x="222" y="207" width="36" height="18" fill="#eceeec"></rect>
+
+  <g font-family="system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+    <text x="472" y="310" fill="#eceeec" font-size="76" font-weight="600" letter-spacing="-2">Ziggurat</text>
+    <text x="474" y="372" fill="#a9afb3" font-size="33">Models propose. Humans decide what persists.</text>
   </g>
-
-  <!-- Title block -->
-  <text x="80" y="106" fill="#eceeec" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="42" font-weight="600" letter-spacing="-0.5">Ziggurat</text>
-  <text x="1120" y="106" fill="#8a9095" font-family="ui-monospace, Consolas, monospace" font-size="22" text-anchor="end">v0.1.0 &#183; pre-release</text>
-
-  <!-- Thesis -->
-  <g fill="#eceeec" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="62" font-weight="600" letter-spacing="-2.2">
-    <text x="80" y="222">Models propose.</text>
-    <text x="80" y="292">Humans decide</text>
-    <text x="80" y="362">what persists.</text>
-  </g>
-
-  <g fill="#a9afb3" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="24">
-    <text x="80" y="416">A human-gated memory firewall. Durable AI memory is a</text>
-    <text x="80" y="448">privileged write surface, and no shipped path creates</text>
-    <text x="80" y="480">the authorization that admits one.</text>
-  </g>
-
-  <g font-family="ui-monospace, Consolas, monospace" font-size="18" fill="#8a9095">
-    <text x="80" y="520">Bronze: canonicalized evidence &#183; Silver: proposals only</text>
-    <text x="80" y="544">Gold: externally key-authorized</text>
-    <text x="80" y="568">not truth, not instruction authority</text>
-  </g>
-
-  <!-- Section: stepped structure with the authorization gap -->
-  <g>
-    <rect x="838" y="470" width="274" height="52" fill="#8c4a22" />
-    <text x="854" y="504" fill="#fbf8f5" font-family="ui-monospace, Consolas, monospace" font-size="22" letter-spacing="2">BRONZE</text>
-
-    <rect x="866" y="392" width="218" height="52" fill="#3b5a6b" />
-    <text x="882" y="426" fill="#f6fafc" font-family="ui-monospace, Consolas, monospace" font-size="22" letter-spacing="2">SILVER</text>
-
-    <!-- The gap: nothing in the structure bridges it from below -->
-    <path d="M866 352h94M1000 352h84" stroke="#61686f" stroke-width="2" stroke-dasharray="8 8" />
-    <path d="M1152 352h-96" stroke="#e6b854" stroke-width="5" />
-    <circle cx="976" cy="352" r="15" fill="none" stroke="#e6b854" stroke-width="3" />
-    <text x="866" y="325" fill="#e6b854" font-family="ui-monospace, Consolas, monospace" font-size="19">external key required</text>
-
-    <rect x="894" y="240" width="190" height="52" fill="#c8921f" />
-    <text x="910" y="274" fill="#14171a" font-family="ui-monospace, Consolas, monospace" font-size="22" letter-spacing="2">GOLD</text>
-
-    <rect x="962" y="180" width="56" height="20" fill="#eceeec" />
-    <text x="990" y="160" fill="#a9afb3" font-family="ui-monospace, Consolas, monospace" font-size="19" text-anchor="middle">communion, read only</text>
-
-    <text x="1120" y="562" fill="#8a9095" font-family="ui-monospace, Consolas, monospace" font-size="18" text-anchor="end">github.com/patschmittdev/Ziggurat</text>
+  <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" fill="#8a9095">
+    <text x="474" y="440">bronze: canonicalized evidence &#183; silver: proposals only</text>
+    <text x="474" y="468">gold: externally key-authorized &#183; not instruction authority</text>
+    <text x="1146" y="66" text-anchor="end">v0.1.0 &#183; pre-release</text>
   </g>
 </svg>

@@ -66,31 +66,35 @@
     "shadows": [],
     "motion": {
       "easing": {
-        "standard": "cubic-bezier(0.2, 0, 0, 1)",
+        "standard": "ease",
         "exit": "cubic-bezier(0.4, 0, 1, 1)",
+        "reveal": "cubic-bezier(0.2, 0.7, 0.2, 1)",
         "datum": "cubic-bezier(0.16, 1, 0.3, 1)"
       },
       "duration": {
-        "tap": "120ms",
-        "state": "200ms",
+        "tap": "140ms",
+        "state": "160ms",
+        "rule": "180ms",
         "mark": "320ms",
-        "datum": "620ms"
+        "datum": "620ms",
+        "reveal-fade": "300ms",
+        "reveal-rise": "420ms"
       },
       "distance": {
-        "rise": "8px"
+        "rise": "14px"
       },
       "stagger": {
-        "step": "60ms",
+        "step": "90ms",
         "cap": 3
       },
       "rules": [
-        "Two tiers and no third. The signature is the datum cursor that tracks the level being read; orientation is grouped section entry and a root-only cross-document route fade.",
-        "Motion is additive. No fact is dimmed, withheld, or gated by scroll position or hover.",
-        "Nothing that carries a fact reveals: not the ascent steps, the ledger, the guarantee pair, the comparison artifacts, the command cards, any element containing a code block, or the first viewport. The limits never arrive after the guarantees.",
+        "The signature is the datum cursor that tracks the level being read. Orientation is section entry and a root-only cross-document route fade.",
+        "A reveal group carries data-reveal 1 to 3, its place in the entry rhythm, which becomes a 0ms, 90ms, or 180ms delay.",
         "The datum cursor runs only at or above 64rem, where the narrative figure is sticky, and its first appearance is a fade at the correct level rather than a traverse from zero.",
         "Hidden initial states exist only under html[data-motion], set synchronously in the head and self-revoking, so no scripting, a failed script, print, or a missing IntersectionObserver renders the complete page.",
-        "prefers-reduced-motion removes interpolation, not information: the cursor and focus ring still mark the level.",
-        "Only transform and opacity are animated. Colour, fill, background, border, size, and filter changes are instant, and an animated rule is a scaled pseudo-element.",
+        "prefers-reduced-motion removes interpolation, not information: the cursor and focus ring still mark the level, and every reveal renders complete.",
+        "Transitions animate transform, opacity, and the paint properties that carry the hover grammar: color, background-color, border-color, fill, and text-decoration-color. Nothing that affects layout is transitioned, and transition: all is never written.",
+        "Keyboard focus gets whatever the pointer gets. Every hover rule carries a focus-visible twin.",
         "Every duration and easing comes from a token. No component hardcodes a millisecond value.",
         "No scroll-jacking, no parallax, no shared-element route transition, no runtime dependency, no framework hydration."
       ]
@@ -111,8 +115,8 @@
       "Gold is externally authorized reference data. Never truth, safety, or instruction authority.",
       "Square corners, no shadow, no gradient, no glass.",
       "No third-party font, script, or asset is loaded at runtime.",
-      "The mark keeps a five-unit authorization void and an external key stub entering from the plate edge. A contiguous Bronze-to-Gold stack draws an automatic promotion and is forbidden.",
-      "Tier colour is visible at rest in every context. Identity is never a hover reward, and a fill is never animated."
+      "The mark is four contiguous stepped rectangles in a 32x32 viewBox: Bronze x2 y24 w28 h6, Silver x6 y16 w20 h6, Gold x10 y8 w12 h6, aperture x14 y4 w4 h2. The same four rectangles carry the wordmark, both mark assets, the favicon, and the social plate.",
+      "In the masthead the mark is ink at rest and takes its tier colours on hover or keyboard focus, with the aperture staying ink. Where hover is unavailable the tier colours are drawn permanently. The mark is decorative and aria-hidden, and the adjacent word is the accessible name."
     ],
     "dos": [
       "Let a tier colour own a whole region when the region is about that tier.",

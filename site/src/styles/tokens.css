@@ -130,26 +130,31 @@
   --zg-hair: 1px;
 
   /* --- Motion ------------------------------------------------------------
-     Two tiers, one vocabulary. `datum` is the signature traversal: the cursor
-     that tracks the level being read. Everything else is orientation only, and
-     orientation is never allowed to withhold a fact. Custom transitions animate
-     transform and opacity and nothing else; colour changes are instant.
+     One vocabulary, taken from the design export. `datum` is the signature
+     traversal: the cursor that tracks the level being read. `reveal` is section
+     entry. `tap`, `state`, and `rule` carry the hover grammar, which changes
+     paint properties rather than geometry so a hover never moves the layout.
   */
-  --zg-dur-tap: 120ms;
-  --zg-dur-state: 200ms;
+  --zg-dur-tap: 140ms;
+  --zg-dur-state: 160ms;
+  --zg-dur-rule: 180ms;
   --zg-dur-mark: 320ms;
   --zg-dur-datum: 620ms;
 
-  --zg-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --zg-dur-reveal-fade: 300ms;
+  --zg-dur-reveal-rise: 420ms;
+
+  --zg-ease-standard: ease;
   --zg-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --zg-ease-reveal: cubic-bezier(0.2, 0.7, 0.2, 1);
   --zg-ease-datum: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* The only authored travel distance. The datum cursor moves along its own
-     rail and is measured in the figure's user units instead. */
-  --zg-rise: 8px;
+  /* Section-entry travel. The datum cursor moves along its own rail and is
+     measured in the figure's user units instead. */
+  --zg-rise: 14px;
 
-  /* Sibling stagger, capped at three steps by the reveal controller. */
-  --zg-stagger: 60ms;
+  /* Reveal rhythm: 0ms, 90ms, 180ms. Capped at three steps by the controller. */
+  --zg-stagger: 90ms;
 }
 
 :root[data-theme='light'] {

@@ -1,17 +1,14 @@
 /*
-  Section-entry reveals.
+  Section-entry reveals, taken from the design export.
 
-  Orientation only. A reveal groups a band the way a reader already groups it
-  (a head, a plate), and it never withholds a fact from anyone. The narrative
-  steps, the ledger, the guarantee pair, the two comparison artifacts, and the
-  command cards are all deliberately excluded: those are the argument and the
-  evidence, and neither is delivered in instalments. No element containing a
-  code block reveals.
+  A group carries `data-reveal="1|2|3"`, which is its place in the entry rhythm:
+  0ms, 90ms, 180ms. Each group reveals once on its own entry and is then
+  unobserved.
 
   Hidden initial states exist only under html[data-motion], which is set
   synchronously in the head and removed again if the controller never reports
   in. With scripting disabled, blocked, or broken, every element renders exactly
-  as it does in the served markup.
+  as it does in the served markup, so no fact is ever gated behind a script.
 */
 
 html[data-motion] [data-reveal]:not(.is-in) {
@@ -23,8 +20,8 @@ html[data-motion] [data-reveal].is-in {
   opacity: 1;
   transform: none;
   transition:
-    opacity var(--zg-dur-state) var(--zg-ease-standard),
-    transform var(--zg-dur-mark) var(--zg-ease-standard);
+    opacity var(--zg-dur-reveal-fade) ease-out,
+    transform var(--zg-dur-reveal-rise) var(--zg-ease-reveal);
   transition-delay: calc(var(--zg-i, 0) * var(--zg-stagger));
 }
 

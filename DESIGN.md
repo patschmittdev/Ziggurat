@@ -277,43 +277,48 @@ Two tiers, and no third.
 runs only at or above `64rem`, where the plate is sticky. Its first appearance is a fade
 at the correct level, never a traverse up the plate from zero.
 
-**Orientation.** Grouped section entry and a root-only cross-document route fade. A
-reveal group is a unit the reader already groups: a band head, a plate. Siblings
-stagger by `--zg-stagger` (60ms), capped at three steps. Travel is `--zg-rise` (8px)
-and never more.
+**Orientation.** Section entry and a root-only cross-document route fade. A group
+carries `data-reveal="1|2|3"`, its place in the entry rhythm, which the stylesheet turns
+into a 0ms, 90ms, or 180ms delay (`--zg-stagger`). Travel is `--zg-rise` (14px), fading
+over `--zg-dur-reveal-fade` (300ms) and rising over `--zg-dur-reveal-rise` (420ms) on
+`--zg-ease-reveal` (`cubic-bezier(0.2, 0.7, 0.2, 1)`).
 
 Rules that do not bend:
 
-- Custom transitions animate `transform` and `opacity` only. Colour, fill, background,
-  border, size, and filter changes are instant. An animated rule is a scaled
-  pseudo-element, never a transitioned `text-decoration-color`.
+- Transitions animate `transform`, `opacity`, and the paint properties that carry the
+  hover grammar: `color`, `background-color`, `border-color`, `fill`, and
+  `text-decoration-color`. Nothing that affects layout is ever transitioned, and
+  `transition: all` is never written.
 - Every duration and easing comes from the tokens in `tokens.css`. No component
   hardcodes a millisecond value.
-- Nothing that carries a fact reveals: not the seven ascent steps, not the ledger, not
-  the guarantee pair, not the comparison artifacts, not the command cards, not any
-  element containing a code block, and not the first viewport. An argument is not
-  delivered in instalments, and the limits never arrive after the guarantees.
 - Hidden initial states exist only under `html[data-motion]`, set synchronously in the
   head and self-revoking if the controller never reports in. With no scripting, a failed
   script, reduced motion, print, or no `IntersectionObserver`, the page renders complete.
+  A reveal therefore delays a fact by at most 600ms and withholds it from nobody.
 - `prefers-reduced-motion` removes interpolation, not information. The reading cursor
   and its focus ring still mark the level; they simply arrive there.
-- No scroll-jacking, no parallax, no hover-only fact, no runtime dependency, no
-  framework hydration, and no shared-element route transition. A name that carried an
-  element from a Silver context into a Gold context would animate a promotion this
-  system cannot perform.
+- Keyboard focus gets whatever the pointer gets. Every `:hover` rule carries a
+  `:focus-visible` twin.
+- No scroll-jacking, no parallax, no runtime dependency, no framework hydration, and no
+  shared-element route transition.
 
 ## The mark
 
-A section through the structure, drawn in five rects: a Bronze base, a Silver course, a
-five-unit authorization void, an external Gold key stub entering from the right edge of
-the plate, the Gold course above the void, and the summit aperture. The void is the
-load-bearing idea and is spent as negative space so it survives to 16px; the key stub
-degrades to a tick below 24px, which is acceptable because the gap does not.
+A clean stepped section drawn in four rectangles inside a `32x32` viewBox: a Bronze base
+at `x2 y24 w28 h6`, a Silver course at `x6 y16 w20 h6`, a Gold course at `x10 y8 w12 h6`,
+and the summit aperture at `x14 y4 w4 h2`. The same four rectangles carry the inline
+wordmark, both mark assets, the favicon, and the social plate, so the identity is one
+shape at every size.
 
-The tiers are coloured at rest in every context, including the masthead. Identity is
-never a hover reward, and a fill is never animated. A contiguous Bronze-to-Gold stack is
-forbidden: it draws an automatic promotion.
+In the masthead the mark sits in ink at rest and takes its tier colours on hover or
+keyboard focus; the aperture stays ink in every state. Where hover is unavailable there
+is no rest state to reward, so the tier colours are drawn permanently. The mark is
+decorative and `aria-hidden` in that context, and the word beside it is the accessible
+name, so nothing about wayfinding depends on either state.
+
+The favicon carries both a presentation-attribute fill and a class-based
+`prefers-color-scheme` rule, so it adapts where CSS in SVG is honoured and still renders
+in colour where it is not.
 
 ## Do's and Don'ts
 

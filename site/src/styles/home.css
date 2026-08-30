@@ -67,6 +67,7 @@ p {
 a {
   color: var(--zg-link);
   text-underline-offset: 0.2em;
+  transition: color var(--zg-dur-tap) ease;
 }
 
 a:hover {
@@ -167,6 +168,50 @@ svg {
   flex: none;
 }
 
+/*
+  The masthead mark, taken from the design export. It sits in ink at rest and
+  takes its tier colours on hover or keyboard focus; the summit aperture stays
+  ink in every state.
+
+  Where hover is unavailable there is no rest state to reward, so the mark is
+  drawn in its tier colours permanently. Nothing about wayfinding depends on
+  either state: the mark is decorative, `aria-hidden`, and the word "Ziggurat"
+  is the accessible name of the link.
+*/
+.wordmark svg rect {
+  fill: currentcolor;
+  transition: fill var(--zg-dur-rule) ease;
+}
+
+.wordmark:hover svg rect:nth-of-type(1),
+.wordmark:focus-visible svg rect:nth-of-type(1) {
+  fill: var(--zg-bronze);
+}
+
+.wordmark:hover svg rect:nth-of-type(2),
+.wordmark:focus-visible svg rect:nth-of-type(2) {
+  fill: var(--zg-silver);
+}
+
+.wordmark:hover svg rect:nth-of-type(3),
+.wordmark:focus-visible svg rect:nth-of-type(3) {
+  fill: var(--zg-gold);
+}
+
+@media (hover: none) {
+  .wordmark svg rect:nth-of-type(1) {
+    fill: var(--zg-bronze);
+  }
+
+  .wordmark svg rect:nth-of-type(2) {
+    fill: var(--zg-silver);
+  }
+
+  .wordmark svg rect:nth-of-type(3) {
+    fill: var(--zg-gold);
+  }
+}
+
 .masthead__nav {
   display: flex;
   flex-wrap: wrap;
@@ -174,41 +219,30 @@ svg {
   gap: var(--zg-space-s) var(--zg-space-m);
 }
 
+/*
+  Hover grammar, taken from the design export. Hover states confirm
+  interactivity and never move layout: the rule is an underline whose colour
+  fades in from transparent, so the text box never changes size. Keyboard focus
+  gets the same treatment as the pointer.
+*/
 .masthead__nav a {
-  position: relative;
   color: var(--zg-ink-2);
-  text-decoration: none;
   font-size: var(--zg-text--1);
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-}
-
-/*
-  The hover rule is drawn by a pseudo-element and scaled on the transform axis,
-  so nothing reflows and the transition stays on the compositor. Colour changes
-  are instant: a hover cue should confirm the pointer, not fade in behind it.
-*/
-.masthead__nav a::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0.7rem;
-  height: var(--zg-hair);
-  background: currentcolor;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform var(--zg-dur-tap) var(--zg-ease-standard);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.3em;
+  transition:
+    color var(--zg-dur-tap) ease,
+    text-decoration-color var(--zg-dur-rule) ease;
 }
 
 .masthead__nav a:hover,
 .masthead__nav a:focus-visible {
   color: var(--zg-ink);
-}
-
-.masthead__nav a:hover::after,
-.masthead__nav a:focus-visible::after {
-  transform: scaleX(1);
+  text-decoration-color: currentcolor;
 }
 
 .theme-toggle {
@@ -225,9 +259,13 @@ svg {
   font: inherit;
   font-size: var(--zg-text--2);
   cursor: pointer;
+  transition:
+    color var(--zg-dur-state) ease,
+    border-color var(--zg-dur-state) ease;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
   color: var(--zg-ink);
   border-color: var(--zg-ink-2);
 }
@@ -377,9 +415,14 @@ svg {
   text-decoration: none;
   font-weight: 600;
   font-size: var(--zg-text--1);
+  transition:
+    background-color var(--zg-dur-state) ease,
+    border-color var(--zg-dur-state) ease,
+    color var(--zg-dur-state) ease;
 }
 
-.action:hover {
+.action:hover,
+.action:focus-visible {
   border-color: var(--zg-ink);
   background: var(--zg-raised);
 }
@@ -395,7 +438,8 @@ svg {
   border-color: var(--zg-ink);
 }
 
-.action--primary:hover {
+.action--primary:hover,
+.action--primary:focus-visible {
   background: var(--zg-ink-2);
   border-color: var(--zg-ink-2);
   color: var(--zg-ground);
@@ -806,6 +850,14 @@ svg {
   color: var(--zg-ink-2);
 }
 
+.ledger tbody tr {
+  transition: background-color var(--zg-dur-tap) ease;
+}
+
+.ledger tbody tr:hover {
+  background: var(--zg-raised);
+}
+
 /*
   Below the tablet breakpoint a four-column ledger cannot fit without horizontal
   scrolling, so each row becomes a labelled block instead. The column headings move
@@ -997,34 +1049,22 @@ svg {
 }
 
 .site-footer nav a {
-  position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   color: var(--zg-ink-2);
-  text-decoration: none;
-}
-
-.site-footer nav a::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0.7rem;
-  height: var(--zg-hair);
-  background: currentcolor;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform var(--zg-dur-tap) var(--zg-ease-standard);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.3em;
+  transition:
+    color var(--zg-dur-tap) ease,
+    text-decoration-color var(--zg-dur-rule) ease;
 }
 
 .site-footer nav a:hover,
 .site-footer nav a:focus-visible {
   color: var(--zg-ink);
-}
-
-.site-footer nav a:hover::after,
-.site-footer nav a:focus-visible::after {
-  transform: scaleX(1);
+  text-decoration-color: currentcolor;
 }
 
 .site-footer p {
@@ -1093,5 +1133,30 @@ svg {
 
   .fig-label--datum {
     font-size: 17px;
+  }
+}
+
+/* ======================================================================
+   Reduced motion
+
+   The token layer already clamps every transition, but the hover grammar and
+   the press nudge state it locally too, so the intent travels with the rules
+   rather than depending on a backstop somewhere else. State still changes;
+   only the interpolation and the one-pixel travel are removed.
+   ====================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  a,
+  .wordmark svg rect,
+  .masthead__nav a,
+  .site-footer nav a,
+  .action,
+  .theme-toggle,
+  .ledger tbody tr {
+    transition: none;
+  }
+
+  .action:active {
+    transform: none;
   }
 }

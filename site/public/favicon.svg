@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Ziggurat">
+  <title>Ziggurat</title>
   <style>
-    .apex { fill: #14171a; }
     .bronze { fill: #8c4a22; }
     .silver { fill: #3b5a6b; }
     .gold { fill: #a87516; }
+    .apex { fill: #14171a; }
     @media (prefers-color-scheme: dark) {
-      .apex { fill: #eceeec; }
       .bronze { fill: #de9a6a; }
       .silver { fill: #96bad2; }
       .gold { fill: #e6b854; }
+      .apex { fill: #eceeec; }
     }
   </style>
-  <rect class="bronze" x="2" y="25" width="28" height="5" />
-  <rect class="silver" x="6" y="18" width="20" height="5" />
-  <rect class="gold" x="23" y="14" width="9" height="2" />
-  <rect class="gold" x="10" y="7" width="12" height="5" />
-  <rect class="apex" x="14" y="2" width="4" height="2" />
+  <rect class="bronze" x="2" y="24" width="28" height="6" fill="#8c4a22" />
+  <rect class="silver" x="6" y="16" width="20" height="6" fill="#3b5a6b" />
+  <rect class="gold" x="10" y="8" width="12" height="6" fill="#a87516" />
+  <rect class="apex" x="14" y="4" width="4" height="2" fill="#14171a" />
 </svg>

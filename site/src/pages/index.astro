@@ -169,11 +169,10 @@ const notGuaranteed = [
       <div class="wrap masthead__inner">
         <a class="wordmark" href={url('')}>
           <svg viewBox="0 0 32 32" aria-hidden="true">
-            <rect x="2" y="25" width="28" height="5" fill="var(--zg-bronze)"></rect>
-            <rect x="6" y="18" width="20" height="5" fill="var(--zg-silver)"></rect>
-            <rect x="23" y="14" width="9" height="2" fill="var(--zg-gold)"></rect>
-            <rect x="10" y="7" width="12" height="5" fill="var(--zg-gold)"></rect>
-            <rect x="14" y="2" width="4" height="2" fill="currentColor"></rect>
+            <rect x="2" y="24" width="28" height="6"></rect>
+            <rect x="6" y="16" width="20" height="6"></rect>
+            <rect x="10" y="8" width="12" height="6"></rect>
+            <rect x="14" y="4" width="4" height="2"></rect>
           </svg>
           Ziggurat
         </a>
@@ -263,8 +262,8 @@ const notGuaranteed = [
 
       <!-- 2. Durable memory is a repeated write -->
       <section class="band wrap" aria-labelledby="durable-title">
-        <div class="split" data-reveal-group>
-          <div class="prose" data-reveal>
+        <div class="split">
+          <div class="prose" data-reveal="1">
             <h2 id="durable-title">Durable memory turns one poisoned document into a repeated write</h2>
             <p class="pull">
               A prompt injection that fails is an incident. A prompt injection that persists is
@@ -283,7 +282,7 @@ const notGuaranteed = [
             </p>
           </div>
 
-          <figure class="figure persistence-fig" data-reveal>
+          <figure class="figure persistence-fig" data-reveal="2">
             <svg viewBox="0 0 480 216" role="img" aria-labelledby="blast-title blast-desc">
               <title id="blast-title">Blast radius of one poisoned write</title>
               <desc id="blast-desc">
@@ -338,7 +337,7 @@ const notGuaranteed = [
 
       <!-- 3. Metadata is not authority -->
       <section class="band wrap" aria-labelledby="metadata-title">
-        <div class="band__head prose" data-reveal>
+        <div class="band__head prose" data-reveal="1">
           <h2 id="metadata-title">A reviewed_by field is a claim. A receipt is a capability.</h2>
           <p>
             Anything that can write the page can write the string. Review metadata records that
@@ -348,7 +347,7 @@ const notGuaranteed = [
         </div>
 
         <div class="compare">
-          <article class="artifact">
+          <article class="artifact" data-reveal="2">
             <div class="artifact__head">
               <h3>knowledge/topic.md</h3>
               <span class="stamp stamp--refused">No authority</span>
@@ -364,7 +363,7 @@ retrieval_eligible: true
             </p>
           </article>
 
-          <article class="artifact">
+          <article class="artifact" data-reveal="3">
             <div class="artifact__head">
               <h3>authorizations/topic.md.authorization.json</h3>
               <span class="stamp stamp--admitted">Signed</span>
@@ -391,7 +390,7 @@ retrieval_eligible: true
 
       <!-- 4. The ascent -->
       <section class="band wrap ascent" id="ascent" aria-labelledby="ascent-title">
-        <div class="band__head prose" data-reveal>
+        <div class="band__head prose" data-reveal="1">
           <h2 id="ascent-title">Follow a poisoned memo up the structure</h2>
           <p>
             The seven levels below are the real path a hostile document takes through a vault.
@@ -402,7 +401,7 @@ retrieval_eligible: true
 
         <div class="ascent__body">
           <div class="ascent__stage">
-            <figure class="figure">
+            <figure class="figure" data-reveal="2">
               <AscentFigure />
               <figcaption class="figure__caption">
                 <b>Figure 3.</b> Gold is externally authorized reference data. It is not truth,
@@ -411,7 +410,7 @@ retrieval_eligible: true
             </figure>
           </div>
 
-          <ol class="ascent__steps">
+          <ol class="ascent__steps" data-reveal="3">
             {
               steps.map((step) => (
                 <li class="step" data-level={step.level} data-cursor={step.cursor}>
@@ -439,7 +438,7 @@ retrieval_eligible: true
 
       <!-- 5. Physical index separation -->
       <section class="band wrap" aria-labelledby="isolation-title">
-        <div class="band__head prose" data-reveal>
+        <div class="band__head prose" data-reveal="1">
           <h2 id="isolation-title">Three indexes, physically separate</h2>
           <p>
             build writes three separate version-2 index files rather than one store with filters.
@@ -448,7 +447,7 @@ retrieval_eligible: true
           </p>
         </div>
 
-        <table class="ledger">
+        <table class="ledger" data-reveal="2">
           <thead>
             <tr>
               <th scope="col">Index</th>
@@ -479,7 +478,7 @@ retrieval_eligible: true
           </tbody>
         </table>
 
-        <div class="split" style="margin-block-start: var(--zg-space-l)">
+        <div class="split" style="margin-block-start: var(--zg-space-l)" data-reveal="3">
           <p class="prose">
             Review and evidence access is advisory. It is never proof of a human identity or of
             an authorization decision, and neither index is opened by shipped MCP startup.
@@ -526,7 +525,7 @@ retrieval_eligible: true
 
       <!-- 6. Guarantees beside non-guarantees -->
       <section class="band wrap" aria-labelledby="guarantees-title">
-        <div class="band__head prose">
+        <div class="band__head prose" data-reveal="1">
           <h2 id="guarantees-title">What is enforced, and what is not</h2>
           <p>
             The second column is not a disclaimer. A boundary you cannot describe the edges of is
@@ -535,13 +534,13 @@ retrieval_eligible: true
         </div>
 
         <div class="ledger-pair">
-          <div>
+          <div data-reveal="2">
             <h3 class="is-enforced">Enforced in code</h3>
             <ul>
               {enforced.map((item) => <li set:html={item} />)}
             </ul>
           </div>
-          <div>
+          <div data-reveal="3">
             <h3 class="is-not">Explicitly not guaranteed</h3>
             <ul>
               {notGuaranteed.map((item) => <li set:html={item} />)}
@@ -552,12 +551,12 @@ retrieval_eligible: true
 
       <!-- 7. Evaluation paths -->
       <section class="band wrap" aria-labelledby="evaluate-title">
-        <div class="band__head prose" data-reveal>
+        <div class="band__head prose" data-reveal="1">
           <h2 id="evaluate-title">Three ways to check this yourself</h2>
         </div>
 
         <div class="paths">
-          <article class="path">
+          <article class="path" data-reveal="1">
             <div class="prose">
               <h3>Watch the boundary hold</h3>
               <p>
@@ -572,7 +571,7 @@ npm run build
 node scripts/run-garden-walkthrough.mjs</code></pre>
           </article>
 
-          <article class="path">
+          <article class="path" data-reveal="1">
             <div class="prose">
               <h3>Read the threat model</h3>
               <p>
@@ -589,7 +588,7 @@ node scripts/run-garden-walkthrough.mjs</code></pre>
             </div>
           </article>
 
-          <article class="path">
+          <article class="path" data-reveal="1">
             <div class="prose">
               <h3>Start a vault</h3>
               <p>
@@ -607,11 +606,11 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
       </section>
 
       <!-- 8. Honest status -->
-      <section class="band wrap" aria-labelledby="status-title" data-reveal-group>
-        <div class="band__head prose" data-reveal>
+      <section class="band wrap" aria-labelledby="status-title">
+        <div class="band__head prose" data-reveal="1">
           <h2 id="status-title">Where this actually is</h2>
         </div>
-        <div class="status__grid" data-reveal>
+        <div class="status__grid" data-reveal="2">
           <p>
             Version 0.1 is a pre-release, single-operator reference implementation. The package
             is private and source-distributed, so do not depend on the ziggurat npm package name.
@@ -624,7 +623,7 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
             deployments, third-party audits, or benchmarks to report, and none are claimed.
           </p>
         </div>
-        <div class="actions" data-reveal>
+        <div class="actions" data-reveal="3">
           <a class="action action--primary" href={url('getting-started/overview/')}>Read the documentation</a>
           <a class="action" href={repo}>Source on GitHub</a>
         </div>
@@ -783,9 +782,9 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
        * released by MotionScript if this controller never reports in, so no fact can
        * be stranded by a script that fails to run.
        *
-       * A group reveals its members together with a capped sibling stagger. Nothing
-       * that carries a fact is a member: the ascent steps, the ledger, the guarantee
-       * pair, the comparison artifacts, and the command cards all render immediately.
+       * `data-reveal` carries the group's place in the entry rhythm, 1 to 3, which the
+       * stylesheet turns into a 0ms, 90ms, or 180ms delay. Each group reveals once on
+       * its own entry and is then unobserved.
        */
       {
         const ready = (window as unknown as { __zgMotionReady?: (ok: boolean) => void })
@@ -794,11 +793,7 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
         if (!('IntersectionObserver' in window)) {
           ready?.(false);
         } else {
-          const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-group]'));
-          const loners = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]')).filter(
-            (element) => element.closest('[data-reveal-group]') === null,
-          );
-          const targets = [...groups, ...loners];
+          const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
 
           if (targets.length === 0) {
             ready?.(false);
@@ -806,16 +801,9 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
             const STAGGER_CAP = 2;
 
             const reveal = (target: HTMLElement) => {
-              if (target.hasAttribute('data-reveal-group')) {
-                const members = Array.from(
-                  target.querySelectorAll<HTMLElement>('[data-reveal]'),
-                ).filter((member) => member.closest('[data-reveal-group]') === target);
-                members.forEach((member, index) => {
-                  member.style.setProperty('--zg-i', `${Math.min(index, STAGGER_CAP)}`);
-                  member.classList.add('is-in');
-                });
-                return;
-              }
+              const place = Number(target.dataset.reveal);
+              const step = Number.isFinite(place) ? Math.min(Math.max(place - 1, 0), STAGGER_CAP) : 0;
+              target.style.setProperty('--zg-i', `${step}`);
               target.classList.add('is-in');
             };
 
