@@ -37,6 +37,9 @@ Before opening a pull request, review the complete diff for generated artifacts,
 private data, unrelated formatting changes, undocumented compatibility breaks, and
 trust claims stronger than the implementation.
 
+Maintainers preparing a published build follow the
+[release checklist](docs/release-checklist.md).
+
 ## Nondelegable memory boundary
 
 - Models may return strict Silver proposal payloads only.
