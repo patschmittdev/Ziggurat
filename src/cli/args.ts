@@ -7,6 +7,8 @@ export interface ParsedArgs {
   root: string;
   file?: string | undefined;
   query?: string | undefined;
+  /** Repeatable --source selections, currently used only by refine. */
+  sources?: string[] | undefined;
   json: boolean;
   help: boolean;
 }
@@ -21,6 +23,7 @@ export function parseCliArgs(args: string[]): ParsedArgs {
       root: { type: 'string' },
       file: { type: 'string' },
       query: { type: 'string', short: 'q' },
+      source: { type: 'string', multiple: true },
       json: { type: 'boolean' },
       'audit-clean-room': { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
@@ -36,6 +39,7 @@ export function parseCliArgs(args: string[]): ParsedArgs {
       root: values.root ?? process.cwd(),
       file: values.file,
       query: values.query,
+      sources: values.source,
       json: values.json ?? false,
       help: true,
     };
@@ -52,6 +56,7 @@ export function parseCliArgs(args: string[]): ParsedArgs {
     root,
     file: values.file,
     query: values.query,
+    sources: values.source,
     json: values.json ?? false,
     help: values.help ?? false,
   };

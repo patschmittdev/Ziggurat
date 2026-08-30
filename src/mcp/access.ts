@@ -31,18 +31,66 @@ interface StoredCitation {
 }
 
 /**
+ * Retrieval bounds for a single access session.
+ *
+ * A long-lived MCP server holds citations in process memory for the lifetime of the
+ * session, so an unbounded store lets a client with only read tools grow local memory
+ * without limit. These ceilings are conservative, fixed, and documented rather than
+ * configurable, because the only party who benefits from raising them is a caller
+ * trying to exhaust the host.
+ */
+export const ACCESS_LIMITS = {
+  /** Longest accepted query string. Longer queries are refused, never truncated. */
+  maxQueryChars: 1_024,
+  /** Highest-ranked results returned by one search. Lower-ranked hits are dropped. */
+  maxSearchResults: 20,
+  /** Citations retained per session. The oldest are revoked first when full. */
+  maxSessionCitations: 200,
+} as const;
+
+export type AccessLimits = { -readonly [K in keyof typeof ACCESS_LIMITS]: number };
+
+function resolveLimits(overrides: Partial<AccessLimits> | undefined): AccessLimits {
+  const resolved: AccessLimits = { ...ACCESS_LIMITS };
+  if (overrides === undefined) return resolved;
+  for (const key of Object.keys(resolved) as Array<keyof AccessLimits>) {
+    const value = overrides[key];
+    if (value === undefined) continue;
+    if (!Number.isInteger(value) || value <= 0) {
+      throw new Error(`ContextAccess: ${key} must be a positive integer`);
+    }
+    resolved[key] = value;
+  }
+  // A single search inserts up to maxSearchResults citations and only then evicts down
+  // to maxSessionCitations. If the result ceiling exceeded the session ceiling, that
+  // eviction would revoke citation IDs the same call is still returning, so search()
+  // would hand back IDs that read() rejects. Reject the combination instead.
+  if (resolved.maxSearchResults > resolved.maxSessionCitations) {
+    throw new Error(
+      `ContextAccess: maxSearchResults (${resolved.maxSearchResults}) must not exceed `
+      + `maxSessionCitations (${resolved.maxSessionCitations})`,
+    );
+  }
+  return resolved;
+}
+
+/**
  * Per-session, profile-bound citation store.
  * Citation IDs are opaque UUIDs valid only within the same instance.
  * Profile is fixed at creation and cannot be overridden by callers.
  */
 export class ContextAccess {
   private readonly citations = new Map<string, StoredCitation>();
+  private readonly limits: AccessLimits;
 
   constructor(
     private readonly root: string,
     private readonly profile: AccessProfile,
     private readonly index: GoldIndex | ProfileIndex,
-  ) {}
+    limits?: Partial<AccessLimits>,
+  ) {
+    this.limits = resolveLimits(limits);
+  }
 
   get accessProfile(): AccessProfile {
     return this.profile;
@@ -56,10 +104,19 @@ export class ContextAccess {
    * to itself would accept both a stale corpus and injected chunks.
    */
   async search(query: string): Promise<SearchHit[]> {
+    if (query.length === 0) {
+      throw new Error('Query must not be empty.');
+    }
+    if (query.length > this.limits.maxQueryChars) {
+      throw new Error(
+        `Query is ${query.length} characters, exceeding the ${this.limits.maxQueryChars} character limit.`,
+      );
+    }
+
     const current = await this.reloadIndex();
     await assertIndexTrustworthy(this.root, this.profile, current);
 
-    const results = this.runSearch(current, query);
+    const results = this.runSearch(current, query).slice(0, this.limits.maxSearchResults);
     const hits: SearchHit[] = [];
 
     for (const result of results) {
@@ -84,7 +141,26 @@ export class ContextAccess {
       hits.push({ ...result, citation_id: id });
     }
 
+    this.evictOldestCitations();
     return hits;
+  }
+
+  /**
+   * Drops the oldest citations once the session store is full.
+   *
+   * Eviction revokes: a dropped ID stops resolving and `read` fails closed with the
+   * same unknown-citation error as a forged ID. Bounded memory is preferred over an
+   * unbounded store that a client can grow one search at a time.
+   */
+  private evictOldestCitations(): void {
+    if (this.citations.size <= this.limits.maxSessionCitations) return;
+    const excess = this.citations.size - this.limits.maxSessionCitations;
+    let removed = 0;
+    for (const key of this.citations.keys()) {
+      if (removed >= excess) break;
+      this.citations.delete(key);
+      removed += 1;
+    }
   }
 
   /**
@@ -156,7 +232,11 @@ export class ContextAccess {
  * Creates a profile-bound access instance by loading the appropriate index from disk.
  * Throws if the index does not exist or fails schema validation.
  */
-export async function createContextAccess(root: string, profile: AccessProfile): Promise<ContextAccess> {
+export async function createContextAccess(
+  root: string,
+  profile: AccessProfile,
+  limits?: Partial<AccessLimits>,
+): Promise<ContextAccess> {
   let index: GoldIndex | ProfileIndex;
   if (profile === 'communion') {
     index = await loadGoldIndex(root);
@@ -165,5 +245,5 @@ export async function createContextAccess(root: string, profile: AccessProfile):
   }
   // Refuse to start at all on a stale, tampered, or profile-mismatched index.
   await assertIndexTrustworthy(root, profile, index);
-  return new ContextAccess(root, profile, index);
+  return new ContextAccess(root, profile, index, limits);
 }
