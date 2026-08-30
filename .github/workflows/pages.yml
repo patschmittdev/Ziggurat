@@ -1,0 +1,87 @@
+# Publish the documentation site to GitHub Pages.
+#
+# This workflow is deliberately inert while the repository is private. Both jobs are
+# gated on `github.event.repository.visibility == 'public'`.
+#
+# The string comparison is deliberate. GitHub Actions `==` coerces loosely, and both
+# `null` and `false` coerce to `0`, so a boolean check such as
+# `github.event.repository.private == false` would evaluate to TRUE when the field is
+# missing from the payload. Comparing against the literal `'public'` fails closed
+# instead: an absent field coerces to `0`, `'public'` coerces to `NaN`, and `NaN` is
+# never equal to anything, so a missing or unexpected payload skips deployment. An
+# `internal` repository is likewise not `public` and does not deploy.
+#
+# The gate is security-relevant rather than cosmetic. Pages for a private repository
+# may be unavailable on some plans and publicly served on others, so the decision to
+# publish is tied to repository visibility instead of to a workflow trigger.
+#
+# Post-publication activation, once the repository is public:
+#   1. Settings > Pages > Build and deployment > Source: GitHub Actions.
+#   2. Optionally add environment protection rules to `github-pages`.
+#   3. Run this workflow from the Actions tab using "Run workflow"
+#      (workflow_dispatch), or push to main.
+#   4. Verify https://patschmittdev.github.io/Ziggurat/ loads, then spot-check a
+#      documentation route and the search index under the /Ziggurat/ base path.
+#   5. Only then add the live site URL to README.md and the repository metadata.
+#
+# `actions/configure-pages` is intentionally not used. The site origin and base path
+# are pinned in site/astro.config.mjs, so the build needs none of its outputs, and
+# omitting it keeps the build job at `contents: read`.
+
+name: pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build site
+    if: ${{ github.event.repository.visibility == 'public' }}
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          # Paths for `uses` steps are workspace-relative; the working-directory
+          # default above applies only to `run` steps.
+          path: site/dist
+
+  deploy:
+    name: deploy to github pages
+    if: ${{ github.event.repository.visibility == 'public' }}
+    needs: build
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

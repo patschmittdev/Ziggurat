@@ -10,6 +10,11 @@ Every item is verifiable locally and must pass before a publication commit merge
 
 - [ ] `npm ci` installs cleanly and reports no vulnerabilities.
 - [ ] `npm run check` passes. It cleans, builds, and runs the full compiled suite.
+- [ ] `npm run site:check` passes. It type-checks the documentation site, produces the
+      production build, and validates the built output for broken internal links, missing
+      heading targets, missing assets, and root-relative URLs that escape the
+      `/Ziggurat/` base path.
+- [ ] `npm ci` inside `site/` installs cleanly and reports no vulnerabilities.
 - [ ] `node dist/src/cli/main.js check --root . --audit-clean-room` reports PASS.
       The flag names the clean-room audit and is accepted only by `check`; other
       commands reject it so a misplaced flag cannot exit zero without auditing.
@@ -21,10 +26,11 @@ Every item is verifiable locally and must pass before a publication commit merge
 - [ ] Every relative link in README.md, ARCHITECTURE.md, SECURITY.md, CONTRIBUTING.md,
       SUPPORT.md, CODE_OF_CONDUCT.md, and `docs/` resolves to a tracked file.
 - [ ] Public claims match enforced behavior. Bounds, limits, flag names, paths, and
-      guarantees in documentation are traceable to code or tests.
+      guarantees in documentation *and in `site/`* are traceable to code or tests.
 - [ ] No signer, apply, approve, or promote command exists, and `--promote` is still
       rejected.
-- [ ] `package.json` keeps `"private": true` while the project is source-distributed.
+- [ ] `package.json` and `site/package.json` both keep `"private": true` while the
+      project is source-distributed.
 - [ ] No generated retrieval state, credentials, private keys, personal paths, or
       private vault content is tracked.
 
@@ -62,10 +68,33 @@ claimed as done.
       request review.
 - [ ] Confirm Actions permissions are read-only by default.
 - [ ] Rerun CI on `main` and confirm the full matrix passes on Linux, macOS, and Windows
-      for Node.js 22 and 24.
+      for Node.js 22 and 24, plus the `docs site` job.
 - [ ] Set the repository description, topics, and social preview.
 
-## 5. First tagged pre-release
+## 5. Documentation site publication
+
+The `pages` workflow is inert while the repository is private. Both of its jobs are gated
+on `github.event.repository.visibility == 'public'`, which fails closed on a missing or
+unexpected payload field, so nothing publishes until visibility actually changes. Work
+through this section only after section 4.
+
+- [ ] Settings > Pages > Build and deployment > Source is set to **GitHub Actions**.
+- [ ] Optional environment protection rules are configured on the `github-pages`
+      environment.
+- [ ] The `pages` workflow has been run once, either by pushing to `main` or from the
+      Actions tab using **Run workflow** (`workflow_dispatch`), and both jobs succeeded.
+- [ ] <https://patschmittdev.github.io/Ziggurat/> loads and the homepage renders.
+- [ ] A documentation route such as
+      <https://patschmittdev.github.io/Ziggurat/security/threat-model/> loads, its
+      stylesheet and logo resolve, and in-page navigation works.
+- [ ] Site search returns results, confirming the Pagefind index published under the
+      `/Ziggurat/` base path.
+- [ ] The site renders correctly in both light and dark themes, and the scroll narrative
+      degrades to a stacked reading sequence at mobile width.
+- [ ] Only after the live site is verified, add the site URL to README.md and to the
+      repository metadata (description and homepage).
+
+## 6. First tagged pre-release
 
 Only after the previous sections pass:
 

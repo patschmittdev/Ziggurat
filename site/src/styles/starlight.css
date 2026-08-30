@@ -1,0 +1,192 @@
+/*
+  Starlight bound to the Ziggurat world.
+
+  The documentation is the same instrument as the homepage: mineral or graphite
+  field, hairline rule work, square corners, and monospace reserved for machine
+  facts (paths, digests, field values, commands) rather than used as decoration.
+*/
+
+:root {
+  --sl-font: var(--zg-font-sans);
+  --sl-font-mono: var(--zg-font-mono);
+
+  --sl-color-white: var(--zg-ink);
+  --sl-color-gray-1: var(--zg-ink);
+  --sl-color-gray-2: var(--zg-ink-2);
+  --sl-color-gray-3: var(--zg-ink-3);
+  --sl-color-gray-4: var(--zg-rule-strong);
+  --sl-color-gray-5: var(--zg-rule);
+  --sl-color-gray-6: var(--zg-raised);
+  --sl-color-black: var(--zg-ground);
+
+  --sl-color-accent-low: var(--zg-silver-field);
+  --sl-color-accent: #5f89b8;
+  --sl-color-accent-high: var(--zg-link);
+
+  --sl-color-bg: var(--zg-ground);
+  --sl-color-bg-nav: var(--zg-ground);
+  --sl-color-bg-sidebar: var(--zg-ground);
+  --sl-color-bg-inline-code: var(--zg-raised);
+  --sl-color-hairline: var(--zg-rule);
+  --sl-color-hairline-light: var(--zg-rule);
+  --sl-color-hairline-shade: var(--zg-rule);
+
+  --sl-content-width: 47rem;
+  --sl-sidebar-width: 17.5rem;
+  --sl-line-height: var(--zg-leading-body);
+  --sl-line-height-headings: 1.18;
+  --sl-text-body: var(--zg-text-0);
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: var(--zg-silver-field);
+  --sl-color-accent: var(--zg-link);
+  --sl-color-accent-high: #143a6b;
+  --sl-color-bg-inline-code: var(--zg-sunk);
+}
+
+/* Square the interface. This world is drawn with rules, not with rounded chrome. */
+.card,
+.sl-markdown-content :not(pre) > code,
+.sl-markdown-content pre,
+.starlight-aside,
+dialog,
+site-search button,
+site-search dialog {
+  border-radius: 0 !important;
+}
+
+/* --- Reading surface --------------------------------------------------- */
+
+.sl-markdown-content {
+  --sl-content-pad-x: var(--zg-gutter);
+}
+
+.sl-markdown-content h2 {
+  margin-top: var(--zg-space-xl);
+  padding-top: var(--zg-space-s);
+  border-top: var(--zg-hair) solid var(--zg-rule-strong);
+  letter-spacing: -0.018em;
+}
+
+.sl-markdown-content h3 {
+  margin-top: var(--zg-space-l);
+  letter-spacing: -0.012em;
+}
+
+.sl-markdown-content h2 + *,
+.sl-markdown-content h3 + *,
+.sl-markdown-content h4 + * {
+  margin-top: var(--zg-space-xs) !important;
+}
+
+.sl-markdown-content :not(pre) > code {
+  border: var(--zg-hair) solid var(--zg-rule);
+  padding-inline: 0.3em;
+  font-size: 0.9em;
+}
+
+.sl-markdown-content pre {
+  border: var(--zg-hair) solid var(--zg-rule) !important;
+}
+
+/* Tables read as instrument plates: ruled, dense, no zebra fill. */
+.sl-markdown-content table {
+  border-collapse: collapse;
+  font-size: var(--zg-text--1);
+}
+
+.sl-markdown-content :is(th, td) {
+  border: 0;
+  border-bottom: var(--zg-hair) solid var(--zg-rule);
+  padding: var(--zg-space-2xs) var(--zg-space-s) var(--zg-space-2xs) 0;
+  vertical-align: top;
+}
+
+.sl-markdown-content thead th {
+  border-bottom: var(--zg-hair) solid var(--zg-rule-strong);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: var(--zg-text--2);
+  color: var(--zg-ink-3);
+}
+
+.sl-markdown-content blockquote {
+  border-inline-start: var(--zg-hair) solid var(--zg-rule-strong);
+  padding-inline-start: var(--zg-space-s);
+  font-style: normal;
+  color: var(--zg-ink-2);
+}
+
+/* --- Tier vocabulary ---------------------------------------------------- */
+
+.tier-bronze {
+  color: var(--zg-bronze);
+  font-weight: 600;
+}
+
+.tier-silver {
+  color: var(--zg-silver);
+  font-weight: 600;
+}
+
+.tier-gold {
+  color: var(--zg-gold);
+  font-weight: 600;
+}
+
+/*
+  Gold is authorized reference data. It is never truth, safety, or instruction
+  authority, so the label is drawn as a boundary marker rather than an approval
+  badge, and it always carries the word "authorized" beside it in the copy.
+*/
+.sl-markdown-content .starlight-aside {
+  border-inline-start-width: var(--zg-hair);
+  border: var(--zg-hair) solid currentcolor;
+  padding: var(--zg-space-s);
+}
+
+.sl-markdown-content .starlight-aside__title {
+  letter-spacing: 0.01em;
+}
+
+/* --- Chrome ------------------------------------------------------------- */
+
+header.header {
+  border-bottom: var(--zg-hair) solid var(--zg-rule-strong);
+}
+
+.sidebar-pane {
+  border-inline-end: var(--zg-hair) solid var(--zg-rule);
+}
+
+.site-title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Sidebar groups read as a measured index rather than a stack of pills. */
+.sidebar-content summary,
+.sidebar-content .large {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--zg-text--2);
+  color: var(--zg-ink-3);
+}
+
+.sidebar-content a[aria-current='page'] {
+  background: transparent;
+  color: var(--zg-ink);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 0 var(--zg-ink);
+}
+
+:where(a, button, summary, input, select):focus-visible {
+  outline: 2px solid var(--zg-link);
+  outline-offset: 2px;
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+  text-underline-offset: 0.2em;
+}

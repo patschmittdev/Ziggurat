@@ -1,0 +1,43 @@
+---
+/** Theme toggle. Hidden until the controller enables it, so a scripting-free
+ * visitor is never shown a control that cannot work; that visitor is served by
+ * the prefers-color-scheme rule in tokens.css instead. */
+---
+
+<button class="theme-toggle" type="button" data-theme-toggle hidden>
+  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="8" cy="8" r="3.25"></circle>
+    <path d="M8 1v1.75M8 13.25V15M1 8h1.75M13.25 8H15M3 3l1.25 1.25M11.75 11.75L13 13M13 3l-1.25 1.25M4.25 11.75L3 13"></path>
+  </svg>
+  <span data-theme-toggle-label>Light</span>
+</button>
+
+<script>
+  const KEY = 'starlight-theme';
+  const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const label = document.querySelector<HTMLElement>('[data-theme-toggle-label]');
+
+  if (button && label) {
+    const paint = (theme: 'light' | 'dark') => {
+      document.documentElement.dataset.theme = theme;
+      const next = theme === 'dark' ? 'light' : 'dark';
+      label.textContent = next === 'light' ? 'Light' : 'Dark';
+      button.setAttribute('aria-label', `Switch to ${next} theme`);
+    };
+
+    const current = () => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
+
+    paint(current());
+    button.hidden = false;
+
+    button.addEventListener('click', () => {
+      const next = current() === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem(KEY, next);
+      } catch {
+        /* Storage is unavailable; the choice still applies to this page. */
+      }
+      paint(next);
+    });
+  }
+</script>

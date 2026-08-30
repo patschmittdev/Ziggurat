@@ -1,0 +1,10 @@
+# Build output
+dist/
+.astro/
+
+# Dependencies
+node_modules/
+
+# Local environment
+.env
+.env.production

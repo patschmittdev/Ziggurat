@@ -1,0 +1,74 @@
+---
+title: Contributing
+description: Development workflow, the boundary rules a change must not break, and how to work on the docs site.
+---
+
+The canonical contributor guide is
+[CONTRIBUTING.md](https://github.com/patschmittdev/Ziggurat/blob/main/CONTRIBUTING.md).
+This page is a working summary.
+
+## Core development loop
+
+```bash
+npm ci
+npm run check
+node dist/src/cli/main.js check --root . --audit-clean-room
+git diff --check
+```
+
+`npm run check` cleans, builds, and runs the full compiled suite. The `check` command
+audits the tree for clean-room and key-material violations before publication.
+
+Tests use real temporary files. Do not mock the filesystem.
+
+## Boundary rules a change must not break
+
+These are not style preferences. A change that violates one of them is wrong regardless
+of how well it is written.
+
+- No model path may write Bronze, knowledge pages, reviewed metadata, trust
+  configuration, authorization receipts, or indexes.
+- No signer, apply, approve, or promote command may be added. `--promote` must not exist.
+- Gold admission must continue to require a detached Ed25519 receipt from a configured
+  human key.
+- Every retrieved chunk must continue to report `content_role: reference` and
+  `instruction_authority: none`.
+- Model and embedding endpoints must remain HTTP loopback only.
+- Shipped MCP must remain communion-only and read-only.
+- The communion, review, and evidence indexes must remain physically separate.
+
+## Documentation site
+
+The site is a standalone project under `site/` with its own `package.json` and lockfile,
+so documentation dependencies never affect the core runtime package.
+
+```bash
+cd site
+npm ci
+npm run dev        # local development server
+npm run check      # type check, production build, and built-output validation
+```
+
+From the repository root, `npm run site:dev`, `npm run site:check`, and
+`npm run site:build` do the same without changing directory.
+
+`npm run check` inside `site/` runs `astro check`, then a production build, then
+`scripts/validate-build.mjs`, which verifies every internal link, heading anchor, and
+asset reference in the built output and fails on any root-relative URL that escapes the
+`/Ziggurat/` base path.
+
+### Site content rules
+
+- `SECURITY.md`, `ARCHITECTURE.md`, and `docs/authorization-protocol.md` stay canonical at
+  their repository paths. Site pages explain and link to them; they never copy the full
+  normative text.
+- Authored Markdown links must include the base path, as in
+  `/Ziggurat/concepts/tiers/`. Starlight prefixes its own navigation but not hand-written
+  links, and the validator enforces this.
+- Never claim users, deployments, audits, benchmarks, or production maturity.
+- Never describe Gold as truth, safety, or instruction authority.
+
+## Related
+
+- [Project status](/Ziggurat/project/status/)
+- [Repository policies](/Ziggurat/project/policies/)

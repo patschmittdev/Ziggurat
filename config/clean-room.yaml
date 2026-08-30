@@ -28,4 +28,11 @@ project_names: []
 # justified: an exclusion is a promise that a human checked the file by hand.
 # Non-UTF-8 and binary files fail closed and require an explicit exclusion after
 # manual inspection.
-exclude_paths: []
+exclude_paths:
+  # Social preview card served as the og:image for the documentation site. It is a
+  # binary PNG, so the text scan cannot read it and fails closed by design. It is
+  # original artwork rendered deterministically at 1200x630 from the tracked source
+  # at site/public/social-preview.svg, which IS scanned. It contains only the project
+  # name, the public thesis line, the version, the tier labels, and the public
+  # repository URL. Re-render it from the SVG and re-inspect both files if either changes.
+  - site/public/social-preview.png

@@ -22,10 +22,32 @@ jobs:
         node: [22, 24]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - run: npm run check
+
+  # The documentation site is a standalone project with its own lockfile, so it is
+  # installed and validated separately and cannot affect the core runtime package.
+  docs:
+    name: docs site
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      # Type checks, produces the production build, then validates the built output
+      # for broken internal links, missing heading targets, missing assets, and any
+      # root-relative URL that escapes the /Ziggurat/ base path.
       - run: npm run check

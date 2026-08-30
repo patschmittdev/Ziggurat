@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T15:52:00Z",
+  "title": "Design System: Ziggurat Documentation Site",
+  "extensions": {
+    "colorMeta": {
+      "graphite-ground": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#101214",
+        "tonalRamp": ["#0a0c0d", "#101214", "#181b1e", "#2e3337", "#61686f", "#8a9095", "#a9afb3", "#eceeec"]
+      },
+      "mineral-ground": {
+        "role": "neutral",
+        "displayName": "Mineral White",
+        "canonical": "#f2f2ef",
+        "tonalRamp": ["#fafaf8", "#f2f2ef", "#e7e7e3", "#c3c6c1", "#7e837d", "#666c71", "#4c5257", "#14171a"]
+      },
+      "bronze-solid": {
+        "role": "tier",
+        "displayName": "Bronze",
+        "canonical": "#8c4a22",
+        "tonalRamp": ["#f3e9e2", "#8c4a22", "#de9a6a", "#221913"]
+      },
+      "silver-solid": {
+        "role": "tier",
+        "displayName": "Silver",
+        "canonical": "#3b5a6b",
+        "tonalRamp": ["#e6edf1", "#3b5a6b", "#96bad2", "#141d24"]
+      },
+      "gold-solid": {
+        "role": "tier",
+        "displayName": "Gold",
+        "canonical": "#c8921f",
+        "tonalRamp": ["#f3ecdb", "#7a5a0e", "#e6b854", "#221c0e"]
+      },
+      "refuse-solid": {
+        "role": "state",
+        "displayName": "Refused",
+        "canonical": "#9b2a1e",
+        "tonalRamp": ["#f6e6e3", "#9b2a1e", "#f49384", "#251311"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Thesis",
+        "purpose": "The homepage thesis only. One instance per page."
+      },
+      "heading": {
+        "displayName": "Section heading",
+        "purpose": "Band headings on the homepage and h2 in documentation."
+      },
+      "body": {
+        "displayName": "Explanation",
+        "purpose": "Human prose. Capped at a 68ch measure."
+      },
+      "machine": {
+        "displayName": "Machine fact",
+        "purpose": "Paths, digests, field names and values, command names, configuration keys, datum numerals. Never used for prose or as a technical costume."
+      },
+      "label": {
+        "displayName": "Plate label",
+        "purpose": "Uppercase tracked labels on figures, ledger headings, and the specification block."
+      }
+    },
+    "shadows": [],
+    "motion": {
+      "easing": {
+        "instrument": "cubic-bezier(0.16, 1, 0.3, 1)"
+      },
+      "duration": {
+        "cursor-travel": "620ms",
+        "focus-ring": "320ms",
+        "fade": "260ms"
+      },
+      "rules": [
+        "One authored moment per page: the datum cursor that tracks the level being read.",
+        "Motion is additive. Nothing is dimmed, hidden, or revealed by scroll position, so no text ever loses contrast.",
+        "Enabled only at or above 64rem, where the narrative figure is sticky.",
+        "Fully disabled under prefers-reduced-motion, which renders the static complete plate.",
+        "Only transform and opacity are animated."
+      ]
+    },
+    "breakpoints": {
+      "phone-masthead": "40rem",
+      "narrative-rail": "48rem",
+      "ledger-stack": "52rem",
+      "two-up": "60rem",
+      "sticky-narrative": "64rem"
+    },
+    "northStar": "Authority over durable memory is a capability the software does not have. The surface is the drawing that proves it: a sectioned structure whose only crossing enters from outside the frame.",
+    "rules": [
+      "A hairline rule must separate two genuinely different things. A rule used for texture is a defect.",
+      "Tier colour owns whole regions, never scattered accents.",
+      "Monospace marks machine facts only.",
+      "Every narrative fact is present in the served markup.",
+      "Gold is externally authorized reference data. Never truth, safety, or instruction authority.",
+      "Square corners, no shadow, no gradient, no glass.",
+      "No third-party font, script, or asset is loaded at runtime."
+    ],
+    "dos": [
+      "Let a tier colour own a whole region when the region is about that tier.",
+      "Put the non-guarantee beside the guarantee.",
+      "Give scrollable code regions a focusable stop and an accessible name.",
+      "Keep both themes deliberate and contrast-tested."
+    ],
+    "donts": [
+      "Do not use gold, or any tier colour, as a generic accent or success state.",
+      "Do not build a grid of equal icon-heading-text cards.",
+      "Do not put an eyebrow label above a heading.",
+      "Do not reproduce the poisoned fixture's instruction text.",
+      "Do not claim users, deployments, audits, benchmarks, or production maturity."
+    ]
+  }
+}
