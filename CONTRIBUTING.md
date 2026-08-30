@@ -1,5 +1,27 @@
 # Contributing
 
+Ziggurat welcomes focused bug fixes, tests, documentation improvements, and
+well-scoped proposals that preserve its human authority boundary. Participation is
+governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Use the repository issue forms before substantial work so the threat model,
+compatibility impact, and intended scope can be discussed. Follow
+[SECURITY.md](SECURITY.md) instead of opening a public issue for vulnerabilities.
+General setup and usage guidance is in [SUPPORT.md](SUPPORT.md).
+
+## Development setup
+
+Requirements: Git and Node.js 22 or newer.
+
+```bash
+npm ci
+npm run build
+node dist/src/cli/main.js --help
+```
+
+The package is private and source-distributed during the pre-release phase. Do not
+depend on the `ziggurat` npm package name.
+
 ## Development workflow
 
 1. Write failing tests first for every behavior change.
@@ -10,6 +32,10 @@
 6. Run `node dist/src/cli/main.js check --root . --audit-clean-room`.
 
 All changes must work on Windows, macOS, and Linux with Node.js 22 or newer.
+
+Before opening a pull request, review the complete diff for generated artifacts,
+private data, unrelated formatting changes, undocumented compatibility breaks, and
+trust claims stronger than the implementation.
 
 ## Nondelegable memory boundary
 
@@ -47,6 +73,10 @@ Invalid proposal state must fail closed.
   and evidence is Bronze plus curated Gold.
 - Verify stored index state against both its own contents and the live corpus at
   startup, search, and citation read.
+- Keep the byte-level contract in
+  [docs/authorization-protocol.md](docs/authorization-protocol.md) synchronized with
+  canonicalization and receipt changes. Introduce a new protocol version rather than
+  silently changing signed version-1 bytes.
 
 ## Clean-room requirements
 
@@ -59,6 +89,8 @@ The repository must not contain:
 
 Public reviewer keys and fictional fixtures are allowed. Configure project-name
 terms in `config/clean-room.yaml`; do not hard-code private names.
+Non-UTF-8 and binary files fail the audit unless their exact paths are explicitly
+excluded there after manual inspection.
 
 ## TypeScript and SDK
 

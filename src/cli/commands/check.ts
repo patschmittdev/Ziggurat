@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { TextDecoder } from 'node:util';
 import * as YAML from 'yaml';
 import type { CliIO } from '../main.js';
 import { GENERATED_ARTIFACTS, auditCleanRoom } from '../../eval/clean-room.js';
@@ -14,7 +15,16 @@ import { renderCleanRoomMarkdown } from '../../eval/report.js';
  * evidence.
  */
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', 'coverage']);
-const TEXT_FILE = /\.(ts|js|mjs|cjs|md|yaml|yml|json|txt)$/u;
+const UTF8_DECODER = new TextDecoder('utf-8', { fatal: true });
+
+export function decodeAuditedText(content: Buffer): string | null {
+  if (content.includes(0)) return null;
+  try {
+    return UTF8_DECODER.decode(content);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Paths excluded by default, for reasons that are about provenance rather than
@@ -34,27 +44,36 @@ async function collectTextFiles(
   root: string,
   dir: string = root,
   files: Array<{ path: string; content: string }> = [],
-): Promise<Array<{ path: string; content: string }>> {
+  unscannableFiles: string[] = [],
+): Promise<{
+  files: Array<{ path: string; content: string }>;
+  unscannableFiles: string[];
+}> {
   const entries = await readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       if (SKIP_DIRS.has(entry.name)) continue;
-      await collectTextFiles(root, full, files);
+      await collectTextFiles(root, full, files, unscannableFiles);
       continue;
     }
-    if (!entry.isFile() || !TEXT_FILE.test(entry.name)) continue;
+    if (!entry.isFile()) continue;
 
     const relPath = full
       .replace(/\\/g, '/')
       .replace(root.replace(/\\/g, '/') + '/', '');
+    const content = decodeAuditedText(await readFile(full));
+    if (content === null) {
+      unscannableFiles.push(relPath);
+      continue;
+    }
     // A file that cannot be read is reported rather than skipped: an unreadable file is
     // an unaudited file, and the gate must not pass on material it never inspected.
-    files.push({ path: relPath, content: await readFile(full, 'utf8') });
+    files.push({ path: relPath, content });
   }
 
-  return files;
+  return { files, unscannableFiles };
 }
 
 interface CleanRoomConfig {
@@ -96,11 +115,14 @@ async function findCommittedArtifacts(root: string): Promise<string[]> {
 export async function runCheck(root: string, json: boolean, io: CliIO): Promise<number> {
   const config = await loadCleanRoomConfig(root);
   const excluded = new Set(config.excludePaths);
-  const files = (await collectTextFiles(root)).filter((f) => !excluded.has(f.path));
+  const collected = await collectTextFiles(root);
+  const files = collected.files.filter((f) => !excluded.has(f.path));
+  const unscannableFiles = collected.unscannableFiles.filter(path => !excluded.has(path));
   const report = await auditCleanRoom(
     files,
     config.projectNames,
     await findCommittedArtifacts(root),
+    unscannableFiles,
   );
 
   if (json) {

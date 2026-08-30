@@ -19,8 +19,30 @@ const FORBIDDEN_PATTERNS: Array<{ pattern: RegExp; category: string }> = [
   { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/u, category: 'email-address' },
   { pattern: /(?:ghp_|gho_|github_pat_)[A-Za-z0-9_]{20,}/u, category: 'github-token' },
   { pattern: /-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/u, category: 'private-key-material' },
-  { pattern: /(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+(?:\.git)?/u, category: 'git-remote' },
 ];
+
+const GITHUB_HTTPS_REPOSITORY =
+  /(?:git\+)?https?:\/\/github\.com\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+(?:\.git)?/u;
+const GITHUB_SSH_REPOSITORY =
+  /(?:git@github\.com:[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+(?:\.git)?|ssh:\/\/git@github\.com\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+(?:\.git)?)/u;
+
+function containsGitRemote(line: string): boolean {
+  if (GITHUB_SSH_REPOSITORY.test(line)) return true;
+
+  const match = GITHUB_HTTPS_REPOSITORY.exec(line);
+  if (match === null) return false;
+  if (match[0].startsWith('git+') || match[0].endsWith('.git')) return true;
+
+  const prefix = line.slice(0, match.index);
+  const suffix = line.slice(match.index + match[0].length);
+  return (
+    /\bgit\s+(?:clone|fetch|pull)\b/u.test(prefix) ||
+    /\bgit\s+remote\s+(?:add|set-url)\b/u.test(prefix) ||
+    /(?:^|\s)(?:origin|upstream|remote)\s*$/u.test(prefix) ||
+    /^\s*(?:url|pushurl)\s*=\s*$/u.test(prefix) ||
+    /^\s+\((?:fetch|push)\)\s*$/u.test(suffix)
+  );
+}
 
 /**
  * Project-name detection is configured, never compiled in.
@@ -63,6 +85,7 @@ export async function auditCleanRoom(
   files: Array<{ path: string; content: string }>,
   projectNames: string[] = [],
   committedArtifacts: string[] = [],
+  unscannableFiles: string[] = [],
 ): Promise<CleanRoomReport> {
   const findings: CleanRoomFinding[] = [];
   const projectNamePattern = buildProjectNamePattern(projectNames);
@@ -79,11 +102,29 @@ export async function auditCleanRoom(
     });
   }
 
+  for (const path of unscannableFiles) {
+    findings.push({
+      path,
+      category: 'unscannable-file',
+      line: 0,
+      detail: `File is not valid UTF-8 text. Review it and add an explicit clean-room exclusion if it is safe: ${path}`,
+    });
+  }
+
   for (const file of files) {
     // Check for forbidden patterns
     const lines = file.content.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i] ?? '';
+      if (containsGitRemote(line)) {
+        findings.push({
+          path: file.path,
+          category: 'git-remote',
+          line: i + 1,
+          detail: 'Line contains git-remote pattern',
+        });
+        continue;
+      }
       for (const { pattern, category } of patterns) {
         if (pattern.test(line)) {
           findings.push({

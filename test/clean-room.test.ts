@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { decodeAuditedText } from '../src/cli/commands/check.js';
 import { auditCleanRoom } from '../src/eval/clean-room.js';
 import { renderCleanRoomMarkdown } from '../src/eval/report.js';
 
@@ -64,6 +65,59 @@ test('auditCleanRoom: detects git remote', async () => {
   ]);
   assert.equal(report.pass, false);
   assert(report.findings.some(f => f.category === 'git-remote'));
+});
+
+test('auditCleanRoom: allows public GitHub web links that are not clone remotes', async () => {
+  const report = await auditCleanRoom([
+    {
+      path: 'SECURITY.md',
+      content: 'Report privately at https://github.com/patschmittdev/Ziggurat/security/advisories/new\n',
+    },
+  ]);
+  assert.equal(report.pass, true);
+});
+
+test('auditCleanRoom: detects SSH git remotes', async () => {
+  const report = await auditCleanRoom([
+    { path: 'notes.md', content: 'origin git@github.com:example/private-vault.git\n' },
+  ]);
+  assert(report.findings.some(f => f.category === 'git-remote'));
+});
+
+test('auditCleanRoom: detects extensionless HTTPS remotes in remote output', async () => {
+  const report = await auditCleanRoom([
+    { path: 'notes.md', content: 'origin https://github.com/example/private-vault (fetch)\n' },
+  ]);
+  assert(report.findings.some(f => f.category === 'git-remote'));
+});
+
+test('auditCleanRoom: detects extensionless HTTPS remotes in clone commands', async () => {
+  for (const content of [
+    'git clone https://github.com/example/private-vault\n',
+    'git clone --depth=1 "https://github.com/example/private-vault"\n',
+    'git remote set-url upstream https://github.com/example/private-vault\n',
+    'url = https://github.com/example/private-vault\n',
+    'private-vault https://github.com/example/private-vault (fetch)\n',
+  ]) {
+    const report = await auditCleanRoom([{ path: 'notes.md', content }]);
+    assert(
+      report.findings.some(f => f.category === 'git-remote'),
+      `expected git remote finding for: ${content}`,
+    );
+  }
+});
+
+test('clean-room text detection scans all UTF-8 files and skips binary content', () => {
+  assert.equal(decodeAuditedText(Buffer.from('secret in a Dockerfile\n')), 'secret in a Dockerfile\n');
+  assert.equal(decodeAuditedText(Buffer.from('secret in a script\n')), 'secret in a script\n');
+  assert.equal(decodeAuditedText(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00])), null);
+  assert.equal(decodeAuditedText(Buffer.from([0xff, 0xfe, 0x00, 0x00])), null);
+});
+
+test('auditCleanRoom: fails closed for unscannable files', async () => {
+  const report = await auditCleanRoom([], [], [], ['assets/logo.png']);
+  assert.equal(report.pass, false);
+  assert(report.findings.some(f => f.category === 'unscannable-file'));
 });
 
 test('auditCleanRoom: detects a configured project name', async () => {

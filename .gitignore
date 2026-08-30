@@ -1,6 +1,13 @@
 node_modules/
 dist/
+coverage/
 *.tmp
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
 .ziggurat/gold-index.json
 .ziggurat/review-index.json
 .ziggurat/evidence-index.json
