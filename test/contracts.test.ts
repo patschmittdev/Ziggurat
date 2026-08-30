@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 import {
   BronzeRecordSchema,
   CuratedPageSchema,
+  RefinementProposalPayloadSchema,
   RefinementProposalSchema,
+  TrustConfigSchema,
   ZigguratConfigSchema,
   parseZigguratConfig,
 } from '../src/contracts/index.js';
@@ -18,9 +20,16 @@ const VALID_ZIGGURAT = 'schema_version: 1\nlifecycle:\n  review_queue_limit: 50\
 const VALID_DOMAIN = 'domain:\n  page_types:\n    - entity\n  tags:\n    - ai\n';
 const VALID_PRIVACY = 'privacy:\n  default_sensitivity: restricted\n  default_pii: unknown\n';
 const VALID_ADAPTERS = 'adapters: {}\n';
+const VALID_TRUST = 'trust:\n  reviewers: []\n';
 
 async function withTempConfig(
-  overrides: { ziggurat?: string; domain?: string; privacy?: string; adapters?: string },
+  overrides: {
+    ziggurat?: string;
+    domain?: string;
+    privacy?: string;
+    adapters?: string;
+    trust?: string;
+  },
   fn: (root: string) => Promise<void>,
 ): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), 'ziggurat-test-'));
@@ -31,6 +40,7 @@ async function withTempConfig(
     await writeFile(join(configDir, 'domain.yaml'), overrides.domain ?? VALID_DOMAIN);
     await writeFile(join(configDir, 'privacy.yaml'), overrides.privacy ?? VALID_PRIVACY);
     await writeFile(join(configDir, 'adapters.yaml'), overrides.adapters ?? VALID_ADAPTERS);
+    await writeFile(join(configDir, 'trust.yaml'), overrides.trust ?? VALID_TRUST);
     await fn(root);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -64,19 +74,249 @@ test('reviewed pages require review identity and Bronze lineage', () => {
     visibility: 'internal',
     egress: 'local-only',
   });
+
   assert.equal(result.success, false);
 });
 
-test('proposal evidence requires body hash, range, quote, and digest', () => {
-  const result = RefinementProposalSchema.safeParse({
+test('curated review timestamps require canonical UTC datetimes', () => {
+  const result = CuratedPageSchema.safeParse({
     schema_version: 1,
+    title: 'Irrigation decision',
+    type: 'decision',
+    sources: ['bronze/source.md'],
+    confidence: 'high',
+    status: 'reviewed',
+    retrieval_eligible: true,
+    pii: 'false',
+    sensitivity: 'public',
+    visibility: 'internal',
+    egress: 'approved-cloud',
+    reviewed_by: 'reviewer',
+    reviewed_at: '2026-08-29T00:00:00',
+    last_verified: '2026-08-29',
+  });
+  assert.equal(result.success, false);
+});
+
+test('proposal payload requires a complete evidence-backed candidate', () => {
+  const result = RefinementProposalPayloadSchema.safeParse({
+    schema_version: 2,
     operation: 'create',
     target_path: 'knowledge/irrigation.md',
+    candidate: {
+      schema_version: 1,
+      title: 'Irrigation',
+      type: 'concept',
+      sources: ['bronze/report.md'],
+      confidence: 'medium',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: '# Irrigation\n',
+    },
     evidence: [{ source_path: 'bronze/report.md' }],
+    confidence: 'medium',
+    contradictions: [],
+    affected_paths: [],
+    related_paths: [],
+    unresolved_questions: [],
+  });
+  assert.equal(result.success, false);
+});
+
+test('proposal candidate rejects human admission fields', () => {
+  const evidence = {
+    source_path: 'bronze/report.md',
+    body_sha256: 'a'.repeat(64),
+    line_start: 1,
+    line_end: 1,
+    quote: 'Evidence',
+    quote_sha256: 'b'.repeat(64),
+  };
+  const result = RefinementProposalPayloadSchema.safeParse({
+    schema_version: 2,
+    operation: 'create',
+    target_path: 'knowledge/irrigation.md',
+    candidate: {
+      schema_version: 1,
+      title: 'Irrigation',
+      type: 'concept',
+      sources: ['bronze/report.md'],
+      confidence: 'medium',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: '# Irrigation\n',
+      status: 'reviewed',
+      reviewed_by: 'model',
+    },
+    evidence: [evidence],
+    confidence: 'medium',
+    contradictions: [],
+    affected_paths: [],
+    related_paths: [],
+    unresolved_questions: [],
+  });
+
+  assert.equal(result.success, false);
+});
+
+test('proposal paths reject terminal control characters', () => {
+  const result = RefinementProposalPayloadSchema.safeParse({
+    schema_version: 2,
+    operation: 'create',
+    target_path: 'knowledge/\u001b[2Jfake.md',
+    candidate: {
+      schema_version: 1,
+      title: 'Candidate',
+      type: 'concept',
+      sources: ['bronze/report.md'],
+      confidence: 'medium',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: 'Candidate body.',
+    },
+    evidence: [{
+      source_path: 'bronze/report.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'Evidence',
+      quote_sha256: 'b'.repeat(64),
+    }],
+    contradictions: [],
     confidence: 'medium',
     affected_paths: [],
     related_paths: [],
     unresolved_questions: [],
+  });
+
+  assert.equal(result.success, false);
+});
+
+test('proposal targets reject case aliases, nested paths, and non-Markdown files', () => {
+  const base = {
+    schema_version: 2,
+    operation: 'create',
+    candidate: {
+      schema_version: 1,
+      title: 'Candidate',
+      type: 'concept',
+      sources: ['bronze/report.md'],
+      confidence: 'medium',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: 'Candidate body.',
+    },
+    evidence: [{
+      source_path: 'bronze/report.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'Evidence',
+      quote_sha256: 'b'.repeat(64),
+    }],
+    contradictions: [],
+    confidence: 'medium',
+    affected_paths: [],
+    related_paths: [],
+    unresolved_questions: [],
+  };
+  for (const target_path of [
+    'knowledge/Policy.md',
+    'knowledge/nested/policy.md',
+    'knowledge/policy.txt',
+    'knowledge/con.md',
+    'knowledge/topic..md',
+  ]) {
+    assert.equal(
+      RefinementProposalPayloadSchema.safeParse({ ...base, target_path }).success,
+      false,
+    );
+  }
+});
+
+test('proposal evidence rejects unknown nested fields', () => {
+  const result = RefinementProposalPayloadSchema.safeParse({
+    schema_version: 2,
+    operation: 'create',
+    target_path: 'knowledge/candidate.md',
+    candidate: {
+      schema_version: 1,
+      title: 'Candidate',
+      type: 'concept',
+      sources: ['bronze/report.md'],
+      confidence: 'medium',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: 'Candidate body.',
+    },
+    evidence: [{
+      source_path: 'bronze/report.md',
+      body_sha256: 'a'.repeat(64),
+      line_start: 1,
+      line_end: 1,
+      quote: 'Evidence',
+      quote_sha256: 'b'.repeat(64),
+      reviewed: true,
+    }],
+    contradictions: [],
+    confidence: 'medium',
+    affected_paths: [],
+    related_paths: [],
+    unresolved_questions: [],
+  });
+  assert.equal(result.success, false);
+});
+
+test('staged proposal requires locally assigned audit fields', () => {
+  const result = RefinementProposalSchema.safeParse({
+    schema_version: 2,
+    operation: 'create',
+    target_path: 'knowledge/irrigation.md',
+  });
+  assert.equal(result.success, false);
+});
+
+test('trust config rejects private and unknown fields', () => {
+  const result = TrustConfigSchema.safeParse({
+    trust: {
+      reviewers: [{
+        reviewer_id: 'reviewer',
+        key_id: 'primary',
+        algorithm: 'ed25519',
+        public_key_pem: '-----BEGIN PUBLIC KEY-----\ninvalid\n-----END PUBLIC KEY-----',
+        private_key_pem: 'forbidden',
+      }],
+    },
+  });
+
+  assert.equal(result.success, false);
+});
+
+test('trust config rejects malformed public key material', () => {
+  const result = TrustConfigSchema.safeParse({
+    trust: {
+      reviewers: [{
+        reviewer_id: 'reviewer',
+        key_id: 'primary',
+        algorithm: 'ed25519',
+        public_key_pem: '-----BEGIN PUBLIC KEY-----\ninvalid\n-----END PUBLIC KEY-----\n',
+      }],
+    },
   });
   assert.equal(result.success, false);
 });
@@ -90,6 +330,7 @@ test('ZigguratConfigSchema is exported and validates a valid config', () => {
     domain: { page_types: ['entity'], tags: ['ai'] },
     privacy: { default_sensitivity: 'restricted', default_pii: 'unknown' },
     adapters: {},
+    trust: { reviewers: [] },
   });
   assert.equal(result.success, true);
 });
@@ -154,5 +395,13 @@ test('parseZigguratConfig: rejects non-loopback adapter endpoint', async () => {
   const remoteAdapters = 'adapters:\n  model_endpoint: http://example.com/api\n';
   await withTempConfig({ adapters: remoteAdapters }, async (root) => {
     await assert.rejects(() => parseZigguratConfig(root), /loopback/i);
+  });
+
+});
+
+test('parseZigguratConfig: rejects non-HTTP schemes even on loopback', async () => {
+  const adapters = 'adapters:\n  embedding_endpoint: https://localhost/embeddings\n';
+  await withTempConfig({ adapters }, async (root) => {
+    await assert.rejects(() => parseZigguratConfig(root), /http.*loopback|loopback.*http/iu);
   });
 });

@@ -1,8 +1,8 @@
-import type { ReviewStatus } from '../contracts/index.js';
-
 export type Tier = 'bronze' | 'silver' | 'gold';
+export type TierArtifact = 'bronze-record' | 'staged-proposal' | 'authorized-page';
 
-// Only curated (Silver/Gold) statuses are valid inputs; raw/Bronze records have no ReviewStatus.
-export function classifyTier(status: ReviewStatus): 'silver' | 'gold' {
-  return status === 'reviewed' ? 'gold' : 'silver';
+export function classifyTier(artifact: TierArtifact): Tier {
+  if (artifact === 'bronze-record') return 'bronze';
+  if (artifact === 'staged-proposal') return 'silver';
+  return 'gold';
 }

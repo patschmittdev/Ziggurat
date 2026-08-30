@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { AccessProfile } from '../contracts/index.js';
 import type { GoldIndex, ProfileIndex, SearchResult } from '../contracts/gold-index.js';
 import { sha256Text } from '../bronze/canonical.js';
-import { loadGoldIndex, searchGoldIndex } from '../retrieval/gold-index.js';
+import { loadGoldIndex } from '../retrieval/gold-index.js';
 import { loadProfileIndex, searchProfileIndex } from '../retrieval/profile-index.js';
 import { bm25Search } from '../retrieval/bm25.js';
 import { assertIndexTrustworthy } from '../retrieval/verify.js';
@@ -16,10 +16,18 @@ export interface CitationPayload {
   bronze_lineage: Array<{ path: string; sha256: string }>;
   status: string;
   tier: string;
+  content_role: 'reference';
+  instruction_authority: 'none';
 }
 
 export interface SearchHit extends SearchResult {
   citation_id: string;
+}
+
+interface StoredCitation {
+  payload: CitationPayload;
+  chunk_id: string;
+  corpus_fingerprint: string;
 }
 
 /**
@@ -28,7 +36,7 @@ export interface SearchHit extends SearchResult {
  * Profile is fixed at creation and cannot be overridden by callers.
  */
 export class ContextAccess {
-  private readonly citations = new Map<string, CitationPayload>();
+  private readonly citations = new Map<string, StoredCitation>();
 
   constructor(
     private readonly root: string,
@@ -65,8 +73,14 @@ export class ContextAccess {
         bronze_lineage: this.extractLineage(current, result.chunk_id),
         status: result.status,
         tier: result.tier,
+        content_role: result.content_role,
+        instruction_authority: result.instruction_authority,
       };
-      this.citations.set(id, payload);
+      this.citations.set(id, {
+        payload,
+        chunk_id: result.chunk_id,
+        corpus_fingerprint: current.corpus_fingerprint,
+      });
       hits.push({ ...result, citation_id: id });
     }
 
@@ -77,12 +91,25 @@ export class ContextAccess {
    * Returns the citation payload for an ID issued by this access instance.
    * Throws if the ID is unknown, forged, or from a different instance.
    */
-  read(citationId: string): CitationPayload {
-    const payload = this.citations.get(citationId);
-    if (payload === undefined) {
+  async read(citationId: string): Promise<CitationPayload> {
+    const current = await this.reloadIndex();
+    await assertIndexTrustworthy(this.root, this.profile, current);
+    const stored = this.citations.get(citationId);
+    if (stored === undefined) {
       throw new Error(`Unknown citation ID. IDs are valid only within the issuing access session.`);
     }
-    return payload;
+    if (stored.corpus_fingerprint !== current.corpus_fingerprint) {
+      throw new Error('Citation was issued from a different corpus state and is no longer valid.');
+    }
+    const currentChunk = current.chunks.find(chunk => chunk.id === stored.chunk_id);
+    if (
+      currentChunk === undefined
+      || currentChunk.path !== stored.payload.path
+      || sha256Text(currentChunk.body) !== stored.payload.body_sha256
+    ) {
+      throw new Error('Citation content is no longer present in the verified index.');
+    }
+    return stored.payload;
   }
 
   private async reloadIndex(): Promise<GoldIndex | ProfileIndex> {
@@ -98,7 +125,18 @@ export class ContextAccess {
       for (const { id, score } of ranked) {
         const chunk = chunkMap.get(id);
         if (chunk === undefined) continue;
-        results.push({ chunk_id: id, path: chunk.path, heading: chunk.heading, score, tier: chunk.tier, profile: chunk.profile, status: chunk.status, body: chunk.body });
+        results.push({
+          chunk_id: id,
+          path: chunk.path,
+          heading: chunk.heading,
+          score,
+          tier: chunk.tier,
+          profile: chunk.profile,
+          status: chunk.status,
+          body: chunk.body,
+          content_role: chunk.content_role,
+          instruction_authority: chunk.instruction_authority,
+        });
       }
       return results;
     }

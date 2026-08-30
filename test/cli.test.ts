@@ -32,6 +32,7 @@ const STUB_CONFIG_FILES = {
   'config/domain.yaml': 'domain:\n  page_types: [concept]\n  tags: [ai]\n',
   'config/privacy.yaml': 'privacy:\n  default_sensitivity: restricted\n  default_pii: unknown\n',
   'config/adapters.yaml': 'adapters: {}\n',
+  'config/trust.yaml': 'trust:\n  reviewers: []\n',
 };
 
 // ---------------------------------------------------------------------------
@@ -63,6 +64,23 @@ test('no command returns exit code 1', async () => {
   assert.equal(code, 1);
 });
 
+test('global help lists the communion-only and proposal-only surfaces', async () => {
+  const { io, captured } = makeIO();
+  const code = await runCli(['--help'], io);
+  assert.equal(code, 0);
+  assert.match(captured.out, /ziggurat mcp --root/iu);
+  assert.match(captured.out, /Silver proposal/iu);
+  assert(!captured.out.includes('--profile'));
+  assert(!captured.out.includes('--promote'));
+});
+
+test('command help uses the same parser and does not execute the command', async () => {
+  const { io, captured } = makeIO();
+  const code = await runCli(['review', '--help'], io);
+  assert.equal(code, 0);
+  assert.match(captured.out, /ziggurat review/iu);
+});
+
 // ---------------------------------------------------------------------------
 // init command
 // ---------------------------------------------------------------------------
@@ -77,8 +95,10 @@ test('init creates starter directories', async () => {
     const { access } = await import('node:fs/promises');
     await access(join(root, 'bronze'));
     await access(join(root, 'knowledge'));
+    await access(join(root, 'authorizations'));
     await access(join(root, '.ziggurat', 'proposals'));
     await access(join(root, 'config', 'ziggurat.yaml'));
+    await access(join(root, 'config', 'trust.yaml'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -89,6 +109,25 @@ test('init is idempotent', async () => {
   try {
     assert.equal(await runCli(['init', '--root', root], makeIO().io), 0);
     assert.equal(await runCli(['init', '--root', root], makeIO().io), 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('concurrent init calls never truncate starter trust policy', async () => {
+  const root = await makeVault();
+  try {
+    const [left, right] = await Promise.all([
+      runCli(['init', '--root', root], makeIO().io),
+      runCli(['init', '--root', root], makeIO().io),
+    ]);
+    assert.equal(left, 0);
+    assert.equal(right, 0);
+    const { readFile } = await import('node:fs/promises');
+    assert.equal(
+      await readFile(join(root, 'config', 'trust.yaml'), 'utf8'),
+      'trust:\n  reviewers: []\n',
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -184,25 +223,25 @@ test('refine requires model endpoint in config', async () => {
 // mcp command
 // ---------------------------------------------------------------------------
 
-test('mcp requires --profile', async () => {
+test('mcp is communion-only and does not require a profile selector', async () => {
   const root = await makeVault();
   try {
     const { io, captured } = makeIO();
     const code = await runCli(['mcp', '--root', root], io);
     assert.equal(code, 1);
-    assert.match(captured.err, /--profile/u);
+    assert(!captured.err.includes('--profile'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test('mcp rejects unknown profile', async () => {
+test('mcp rejects every profile selector', async () => {
   const root = await makeVault();
   try {
     const { io, captured } = makeIO();
-    const code = await runCli(['mcp', '--root', root, '--profile', 'admin'], io);
+    const code = await runCli(['mcp', '--root', root, '--profile', 'review'], io);
     assert.equal(code, 1);
-    assert.match(captured.err, /unknown profile/iu);
+    assert.match(captured.err, /unknown option|profile/iu);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -280,6 +319,24 @@ test('build --json outputs index statistics', async () => {
     assert(typeof parsed.gold_chunks === 'number');
     assert(typeof parsed.review_chunks === 'number');
     assert(typeof parsed.evidence_chunks === 'number');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('eval exercises the production Gold eligibility path', async () => {
+  const root = await makeVault(STUB_CONFIG_FILES);
+  try {
+    const { io, captured } = makeIO();
+    const code = await runCli(['eval', '--root', root, '--json'], io);
+    assert.equal(code, 0, captured.err);
+    const report = JSON.parse(captured.out) as {
+      pass: boolean;
+      findings: Array<{ case_id: string; passed: boolean }>;
+    };
+    assert.equal(report.pass, true);
+    assert(report.findings.some(finding =>
+      finding.case_id === 'C004' && finding.passed));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

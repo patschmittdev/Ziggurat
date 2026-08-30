@@ -1,27 +1,19 @@
+import { isDeepStrictEqual } from 'node:util';
 import type { AccessProfile } from '../contracts/index.js';
+import { parseZigguratConfig } from '../contracts/config.js';
 import type { GoldIndex, ProfileIndex } from '../contracts/gold-index.js';
-import { sha256Text } from '../bronze/canonical.js';
-import { piiBlocksModelAccess } from '../policy/privacy.js';
-import { goldEligibilityReport } from '../review/eligibility.js';
 import { collectBronzeFiles, collectCuratedPages } from '../corpus/collect.js';
-import { bronzeBlockedFromModelAccess } from './profile-index.js';
-import { computeCorpusFingerprint } from './fingerprint.js';
-
-/**
- * Index verification.
- *
- * A stored `corpus_fingerprint` is an assertion the index makes about itself, so
- * comparing it to itself proves nothing. Every served index is therefore checked
- * against two independent sources of truth:
- *
- *   1. its own chunks  — catches injected, replaced, or edited chunks;
- *   2. the live corpus — catches edited, newly ineligible, or newly private pages.
- *
- * Both run at server startup and again before every query, because a corpus can change
- * while a server is running.
- */
-
-const INDEX_VERSION = 1;
+import { collectStagedProposals } from '../refine/store.js';
+import { buildBm25 } from './bm25.js';
+import { collectEligibleGoldChunks } from './gold-index.js';
+import {
+  indexCorpusFingerprint,
+  trustPolicyFingerprint,
+} from './integrity.js';
+import {
+  collectEvidenceChunks,
+  collectReviewChunks,
+} from './profile-index.js';
 
 export class IndexVerificationError extends Error {
   constructor(reason: string, profile: AccessProfile) {
@@ -30,58 +22,50 @@ export class IndexVerificationError extends Error {
   }
 }
 
-/**
- * Recomputes the fingerprint from the index's own chunk contents. A tampered chunk
- * changes this value even when the stored `corpus_fingerprint` field is left untouched.
- */
 export function chunkDerivedFingerprint(index: GoldIndex | ProfileIndex): string {
-  const entries = index.chunks.map((chunk) => ({
-    path: chunk.path,
-    content_hash: sha256Text(chunk.body),
-  }));
-  return computeCorpusFingerprint(index.profile, INDEX_VERSION, entries);
+  return indexCorpusFingerprint(index.profile, index.chunks, index.policy_fingerprint);
 }
 
-/**
- * Recomputes the fingerprint the builder would produce from the corpus as it exists
- * right now, using the same eligibility rules the builder applied.
- */
 export async function computeLiveFingerprint(
   root: string,
   profile: AccessProfile,
   asOf: Date = new Date(),
 ): Promise<string> {
-  const curated = await collectCuratedPages(root);
-  const entries: Array<{ path: string; content_hash: string }> = [];
-
+  const [curated, bronze, proposals, config] = await Promise.all([
+    collectCuratedPages(root),
+    collectBronzeFiles(root),
+    collectStagedProposals(root),
+    parseZigguratConfig(root),
+  ]);
+  const policy = trustPolicyFingerprint(config);
   if (profile === 'communion') {
-    for (const { path, page, pageBody } of curated) {
-      const report = await goldEligibilityReport(root, path, page, asOf);
-      if (!report.eligible) continue;
-      entries.push({ path, content_hash: sha256Text(pageBody) });
-    }
-    return computeCorpusFingerprint('communion', INDEX_VERSION, entries);
+    const { chunks } = await collectEligibleGoldChunks(root, curated, {
+      asOf,
+      config,
+      proposals,
+    });
+    return indexCorpusFingerprint(profile, chunks, policy);
   }
-
-  if (profile === 'evidence') {
-    for (const record of await collectBronzeFiles(root)) {
-      if (bronzeBlockedFromModelAccess(record)) continue;
-      entries.push({ path: record.path, content_hash: record.sha256 });
-    }
+  if (profile === 'review') {
+    const { chunks } = await collectReviewChunks(root, {
+      curated,
+      bronze,
+      proposals,
+      config,
+      asOf,
+    });
+    return indexCorpusFingerprint(profile, chunks, policy);
   }
-
-  for (const { path, page, pageBody } of curated) {
-    if (piiBlocksModelAccess(page.pii)) continue;
-    entries.push({ path, content_hash: sha256Text(pageBody) });
-  }
-
-  return computeCorpusFingerprint(profile, INDEX_VERSION, entries);
+  const { chunks } = await collectEvidenceChunks(root, {
+    curated,
+    bronze,
+    proposals,
+    config,
+    asOf,
+  });
+  return indexCorpusFingerprint(profile, chunks, policy);
 }
 
-/**
- * Throws unless the index is internally consistent AND still matches the live corpus.
- * Serving nothing is the correct outcome for a stale or tampered index.
- */
 export async function assertIndexTrustworthy(
   root: string,
   profile: AccessProfile,
@@ -94,19 +78,25 @@ export async function assertIndexTrustworthy(
       profile,
     );
   }
-
   if (chunkDerivedFingerprint(index) !== index.corpus_fingerprint) {
     throw new IndexVerificationError(
-      'Index chunks do not match its recorded corpus fingerprint; the index has been altered.',
+      'Index chunks or trust labels do not match the corpus fingerprint.',
       profile,
     );
   }
-
+  const expectedBm25 = buildBm25(index.chunks.map(chunk => ({
+    id: chunk.id,
+    text: `${chunk.heading} ${chunk.body}`,
+  })));
+  if (!isDeepStrictEqual(expectedBm25, index.bm25)) {
+    throw new IndexVerificationError('Index search data has been altered.', profile);
+  }
+  const livePolicy = trustPolicyFingerprint(await parseZigguratConfig(root));
+  if (livePolicy !== index.policy_fingerprint) {
+    throw new IndexVerificationError('Trust policy changed after the index was built.', profile);
+  }
   const live = await computeLiveFingerprint(root, profile, asOf);
   if (live !== index.corpus_fingerprint) {
-    throw new IndexVerificationError(
-      'Corpus fingerprint mismatch: the index no longer matches the current corpus and is stale.',
-      profile,
-    );
+    throw new IndexVerificationError('Corpus fingerprint mismatch: the index is stale.', profile);
   }
 }

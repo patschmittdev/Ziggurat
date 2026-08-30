@@ -1,10 +1,12 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import * as YAML from 'yaml';
 import { CuratedPageSchema } from '../contracts/index.js';
 import type { CuratedPage } from '../contracts/index.js';
 import { BronzeRecordSchema } from '../contracts/bronze.js';
 import { sha256Text } from '../bronze/canonical.js';
+import { isKnowledgePath } from '../contracts/path.js';
+import { assertRealPathWithinRoot } from '../fs/boundary.js';
 
 /**
  * Shared corpus collection.
@@ -62,7 +64,7 @@ export async function collectCuratedPages(root: string): Promise<CuratedInput[]>
     return inputs;
   }
   for (const entry of entries.sort()) {
-    if (!entry.endsWith('.md')) continue;
+    if (!isKnowledgePath(`knowledge/${entry}`)) continue;
     const relPath = `knowledge/${entry}`;
     try {
       const raw = await readFile(join(root, relPath), 'utf8');
@@ -82,7 +84,14 @@ export async function collectCuratedPages(root: string): Promise<CuratedInput[]>
 
 export async function collectBronzeFiles(root: string): Promise<BronzeInput[]> {
   const inputs: BronzeInput[] = [];
-  await walkBronzeDir(root, join(root, 'bronze'), inputs);
+  const bronzeDir = join(root, 'bronze');
+  try {
+    await assertRealPathWithinRoot(root, bronzeDir, 'Bronze directory', false);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw error;
+  }
+  await walkBronzeDir(root, bronzeDir, inputs);
   return inputs.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
 
@@ -101,7 +110,7 @@ async function walkBronzeDir(root: string, dir: string, inputs: BronzeInput[]): 
     }
     if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
     try {
-      const relPath = fullPath.replace(/\\/g, '/').replace(root.replace(/\\/g, '/') + '/', '');
+      const relPath = relative(root, fullPath).replace(/\\/gu, '/');
       const content = (await readFile(fullPath, 'utf8')).replace(/\r\n/g, '\n');
       const split = splitFile(content);
       if (split === null) continue;

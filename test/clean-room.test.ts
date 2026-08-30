@@ -47,6 +47,17 @@ test('auditCleanRoom: detects GitHub token', async () => {
   assert(report.findings.some(f => f.category === 'github-token'));
 });
 
+test('auditCleanRoom: detects private signing key material', async () => {
+  const report = await auditCleanRoom([
+    {
+      path: 'config/trust.yaml',
+      content: 'private_key: "-----BEGIN PRIVATE KEY-----"\n',
+    },
+  ]);
+  assert.equal(report.pass, false);
+  assert(report.findings.some(f => f.category === 'private-key-material'));
+});
+
 test('auditCleanRoom: detects git remote', async () => {
   const report = await auditCleanRoom([
     { path: 'readme.md', content: 'origin https://github.com/patschmittdev/second-brain.git\n' },

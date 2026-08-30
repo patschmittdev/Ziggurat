@@ -4,8 +4,32 @@ export type { BronzeRecord } from './bronze.js';
 export { CuratedPageSchema } from './curated.js';
 export type { CuratedPage } from './curated.js';
 
-export { RefinementProposalSchema } from './proposal.js';
-export type { RefinementProposal } from './proposal.js';
+export {
+  ProposalContradictionSchema,
+  RefinementCandidateSchema,
+  RefinementProposalPayloadSchema,
+  RefinementProposalSchema,
+} from './proposal.js';
+export type {
+  ProposalContradiction,
+  RefinementCandidate,
+  RefinementProposal,
+  RefinementProposalPayload,
+} from './proposal.js';
+
+export {
+  AuthorizationReceiptSchema,
+  AuthorizationReceiptUnsignedSchema,
+  TrustedReviewerSchema,
+  TrustConfigSchema,
+  TrustPolicySchema,
+} from './authorization.js';
+export type {
+  AuthorizationReceipt,
+  AuthorizationReceiptUnsigned,
+  TrustedReviewer,
+  TrustPolicy,
+} from './authorization.js';
 
 export {
   PiiStateSchema,
@@ -13,6 +37,7 @@ export {
   ReviewStatusSchema,
   AccessProfileSchema,
   EvidenceCitationSchema,
+  UtcDateTimeSchema,
 } from './common.js';
 export type {
   PiiState,
