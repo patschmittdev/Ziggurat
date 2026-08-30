@@ -58,8 +58,14 @@ site-search dialog {
 
 /* --- Reading surface --------------------------------------------------- */
 
+/*
+  Starlight sizes its body copy from its own scale rather than from
+  `--sl-text-body`, which left the documentation reading a step smaller than the
+  homepage. Bind it so both surfaces share one body size.
+*/
 .sl-markdown-content {
   --sl-content-pad-x: var(--zg-gutter);
+  font-size: var(--sl-text-body);
 }
 
 .sl-markdown-content h2 {
@@ -164,6 +170,67 @@ header.header {
 .site-title {
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--zg-ink);
+}
+
+/*
+  The mark is one size across the site. Starlight defaults to a 2.5rem logo,
+  which read as a different mark from the 1.5rem masthead wordmark.
+*/
+.site-title img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/*
+  Expressive Code ships its own theme surface. Left alone it puts a blue-grey
+  plate and purple-grey code inside a mineral-white page, and sets a code size
+  that disagrees with the homepage. Bind it to the palette instead, and let code
+  be 0.9em of its context everywhere so both surfaces share one register.
+
+  Starlight re-declares several of these variables from a higher-specificity
+  theme block, so the selector below has to out-specify it, and the properties
+  that carry the visible surface are also set directly.
+*/
+.sl-markdown-content .expressive-code,
+.sl-markdown-content .expressive-code[data-theme] {
+  --ec-codeBg: var(--zg-sunk);
+  --ec-codeFg: var(--zg-ink);
+  --ec-brdCol: var(--zg-rule);
+  --ec-brdRad: 0;
+  --ec-codeFontFml: var(--zg-font-mono);
+  --ec-codeFontSize: 0.9em;
+  --ec-uiFontFml: var(--zg-font-sans);
+  --ec-frm-edBg: var(--zg-sunk);
+  --ec-frm-edTabBarBg: var(--zg-raised);
+  --ec-frm-edTabBarBrdCol: var(--zg-rule);
+  --ec-frm-edActTabBg: var(--zg-sunk);
+  --ec-frm-edActTabFg: var(--zg-ink-2);
+  --ec-frm-edActTabBrdCol: var(--zg-rule);
+  --ec-frm-edActTabIndTopCol: transparent;
+  --ec-frm-edActTabIndBtmCol: var(--zg-rule-strong);
+  --ec-frm-frameBoxShdCssVal: none;
+  --ec-frm-shdCol: transparent;
+  --ec-focusBrd: var(--zg-link);
+  --ec-sbThumbCol: var(--zg-rule-strong);
+  --ec-sbThumbHoverCol: var(--zg-ink-3);
+}
+
+.sl-markdown-content .expressive-code {
+  font-size: 0.9em;
+}
+
+.sl-markdown-content .expressive-code pre {
+  background: var(--zg-sunk);
+  border-color: var(--zg-rule);
+  font-family: var(--zg-font-mono);
+  font-size: inherit;
+}
+
+.sl-markdown-content .expressive-code .frame:not(.is-terminal) .header,
+.sl-markdown-content .expressive-code .frame.is-terminal .header {
+  background: var(--zg-raised);
+  color: var(--zg-ink-2);
 }
 
 /* Sidebar groups read as a measured index rather than a stack of pills. */
