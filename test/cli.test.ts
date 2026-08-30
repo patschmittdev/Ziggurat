@@ -128,11 +128,39 @@ test('a repeated --audit-clean-room collapses to true like a repeated --json', (
   assert.equal(json.json, true);
 });
 
-test('check --help still renders usage when the audit flag is present', async () => {
+test('check --help short-circuits with the audit flag parsed, not discarded', async () => {
+  // Asserting only on the usage text would be vacuous: the check usage line contains
+  // the flag name whether or not the flag was passed. Assert the parsed shape instead.
+  const parsed = parseCliArgs(['check', '--root', '.', '--audit-clean-room', '--help']);
+  assert.equal(parsed.auditCleanRoom, true);
+  assert.equal(parsed.help, true);
+
   const { io, captured } = makeIO();
   const code = await runCli(['check', '--root', '.', '--audit-clean-room', '--help'], io);
   assert.equal(code, 0);
-  assert.match(captured.out, /--audit-clean-room/u);
+  assert.match(captured.out, /Usage: ziggurat check/u);
+  assert.equal(captured.err, '');
+});
+
+test('a misplaced audit flag fails even when --help is requested', async () => {
+  // The scope check runs before the per-command help short-circuit on purpose: a
+  // misplaced release-gate flag must never produce a success exit code.
+  const { io, captured } = makeIO();
+  const code = await runCli(['build', '--root', '.', '--help', '--audit-clean-room'], io);
+  assert.equal(code, 1);
+  assert.match(captured.err, /applies only to the check command/iu);
+  assert.equal(captured.out, '');
+});
+
+test('global --help is unaffected by the audit flag scope check', async () => {
+  const parsed = parseCliArgs(['--help', '--audit-clean-room']);
+  assert.equal(parsed.command, null);
+  assert.equal(parsed.auditCleanRoom, true);
+
+  const { io, captured } = makeIO();
+  const code = await runCli(['--help', '--audit-clean-room'], io);
+  assert.equal(code, 0);
+  assert.match(captured.out, /Usage: ziggurat <command>/u);
 });
 
 // Composed at runtime so the literal never appears in this file. The audit scans this

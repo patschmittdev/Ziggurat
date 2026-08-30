@@ -65,6 +65,12 @@ export function parseCliArgs(args: string[]): ParsedArgs {
   // every command, so before this check `ziggurat build --audit-clean-room` exited 0
   // while auditing nothing. A release script that trusted that exit code would report
   // a clean gate it never ran.
+  //
+  // This deliberately runs before the per-command `--help` short-circuit in runCli, so
+  // `ziggurat build --help --audit-clean-room` is an error rather than a usage screen.
+  // A misplaced gate flag should never produce a success exit code, and help output is
+  // still reachable through the correct invocation. Global `ziggurat --help` is
+  // unaffected: it returns above, before any command is required.
   if (auditCleanRoom && command !== 'check') {
     throw new Error(
       `--audit-clean-room applies only to the check command, but was passed to "${command}". `

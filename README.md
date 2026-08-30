@@ -248,7 +248,7 @@ development-only global link.
 | `ziggurat query --root <vault> --query <text>` | Query authorized Gold communion |
 | `ziggurat mcp --root <vault>` | Start the communion-only read-only MCP server |
 | `ziggurat eval --root <vault>` | Run built-in conformance cases |
-| `ziggurat check --root <repo> --audit-clean-room` | Audit a tree you intend to publish for clean-room and key-material violations |
+| `ziggurat check --root <repo> [--audit-clean-room]` | Audit a tree you intend to publish for clean-room and key-material violations |
 
 `check` is a publication gate rather than a vault command. It scans a source tree for
 contributor machine paths, email addresses, tokens, private keys, personal Git remotes,
