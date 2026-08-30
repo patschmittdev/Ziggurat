@@ -1,0 +1,49 @@
+/*
+  Section-entry reveals, taken from the design export.
+
+  A group carries `data-reveal="1|2|3"`, which is its place in the entry rhythm:
+  0ms, 90ms, 180ms. Each group reveals once on its own entry and is then
+  unobserved.
+
+  Hidden initial states exist only under html[data-motion], which is set
+  synchronously in the head and removed again if the controller never reports
+  in. With scripting disabled, blocked, or broken, every element renders exactly
+  as it does in the served markup, so no fact is ever gated behind a script.
+*/
+
+html[data-motion] [data-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(var(--zg-rise));
+}
+
+html[data-motion] [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--zg-dur-reveal-fade) ease-out,
+    transform var(--zg-dur-reveal-rise) var(--zg-ease-reveal);
+  transition-delay: calc(var(--zg-i, 0) * var(--zg-stagger));
+}
+
+/*
+  Every state below renders the complete page. The reveal is an enhancement on
+  top of a document that is already finished.
+*/
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion] [data-reveal],
+  html[data-motion] [data-reveal]:not(.is-in),
+  html[data-motion] [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media print {
+  html[data-motion] [data-reveal],
+  html[data-motion] [data-reveal]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

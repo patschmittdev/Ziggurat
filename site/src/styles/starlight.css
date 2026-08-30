@@ -1,0 +1,288 @@
+/*
+  Starlight bound to the Ziggurat world.
+
+  The documentation is the same instrument as the homepage: mineral or graphite
+  field, hairline rule work, square corners, and monospace reserved for machine
+  facts (paths, digests, field values, commands) rather than used as decoration.
+*/
+
+:root {
+  --sl-font: var(--zg-font-sans);
+  --sl-font-mono: var(--zg-font-mono);
+
+  --sl-color-white: var(--zg-ink);
+  --sl-color-gray-1: var(--zg-ink);
+  --sl-color-gray-2: var(--zg-ink-2);
+  --sl-color-gray-3: var(--zg-ink-3);
+  --sl-color-gray-4: var(--zg-rule-strong);
+  --sl-color-gray-5: var(--zg-rule);
+  --sl-color-gray-6: var(--zg-raised);
+  --sl-color-black: var(--zg-ground);
+
+  --sl-color-accent-low: var(--zg-silver-field);
+  --sl-color-accent: #5f89b8;
+  --sl-color-accent-high: var(--zg-link);
+
+  --sl-color-bg: var(--zg-ground);
+  --sl-color-bg-nav: var(--zg-ground);
+  --sl-color-bg-sidebar: var(--zg-ground);
+  --sl-color-bg-inline-code: var(--zg-raised);
+  --sl-color-hairline: var(--zg-rule);
+  --sl-color-hairline-light: var(--zg-rule);
+  --sl-color-hairline-shade: var(--zg-rule);
+
+  --sl-content-width: 47rem;
+  --sl-sidebar-width: 17.5rem;
+  --sl-line-height: var(--zg-leading-body);
+  --sl-line-height-headings: 1.18;
+  --sl-text-body: var(--zg-text-0);
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: var(--zg-silver-field);
+  --sl-color-accent: var(--zg-link);
+  --sl-color-accent-high: #143a6b;
+  --sl-color-bg-inline-code: var(--zg-sunk);
+}
+
+/* Square the interface. This world is drawn with rules, not with rounded chrome. */
+.card,
+.sl-markdown-content :not(pre) > code,
+.sl-markdown-content pre,
+.starlight-aside,
+dialog,
+site-search button,
+site-search dialog {
+  border-radius: 0 !important;
+}
+
+/* --- Reading surface --------------------------------------------------- */
+
+/*
+  Starlight sizes its body copy from its own scale rather than from
+  `--sl-text-body`, which left the documentation reading a step smaller than the
+  homepage. Bind it so both surfaces share one body size.
+*/
+.sl-markdown-content {
+  --sl-content-pad-x: var(--zg-gutter);
+  font-size: var(--sl-text-body);
+}
+
+.sl-markdown-content h2 {
+  margin-top: var(--zg-space-xl);
+  padding-top: var(--zg-space-s);
+  border-top: var(--zg-hair) solid var(--zg-rule-strong);
+  letter-spacing: -0.018em;
+}
+
+.sl-markdown-content h3 {
+  margin-top: var(--zg-space-l);
+  letter-spacing: -0.012em;
+}
+
+.sl-markdown-content h2 + *,
+.sl-markdown-content h3 + *,
+.sl-markdown-content h4 + * {
+  margin-top: var(--zg-space-xs) !important;
+}
+
+.sl-markdown-content :not(pre) > code {
+  border: var(--zg-hair) solid var(--zg-rule);
+  padding-inline: 0.3em;
+  font-size: 0.9em;
+}
+
+.sl-markdown-content pre {
+  border: var(--zg-hair) solid var(--zg-rule) !important;
+}
+
+/* Tables read as instrument plates: ruled, dense, no zebra fill. */
+.sl-markdown-content table {
+  border-collapse: collapse;
+  font-size: var(--zg-text--1);
+}
+
+.sl-markdown-content :is(th, td) {
+  border: 0;
+  border-bottom: var(--zg-hair) solid var(--zg-rule);
+  padding: var(--zg-space-2xs) var(--zg-space-s) var(--zg-space-2xs) 0;
+  vertical-align: top;
+}
+
+.sl-markdown-content thead th {
+  border-bottom: var(--zg-hair) solid var(--zg-rule-strong);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: var(--zg-text--2);
+  color: var(--zg-ink-3);
+}
+
+.sl-markdown-content blockquote {
+  border-inline-start: var(--zg-hair) solid var(--zg-rule-strong);
+  padding-inline-start: var(--zg-space-s);
+  font-style: normal;
+  color: var(--zg-ink-2);
+}
+
+/* --- Tier vocabulary ---------------------------------------------------- */
+
+.tier-bronze {
+  color: var(--zg-bronze);
+  font-weight: 600;
+}
+
+.tier-silver {
+  color: var(--zg-silver);
+  font-weight: 600;
+}
+
+.tier-gold {
+  color: var(--zg-gold);
+  font-weight: 600;
+}
+
+/*
+  Gold is authorized reference data. It is never truth, safety, or instruction
+  authority, so the label is drawn as a boundary marker rather than an approval
+  badge, and it always carries the word "authorized" beside it in the copy.
+*/
+.sl-markdown-content .starlight-aside {
+  border-inline-start-width: var(--zg-hair);
+  border: var(--zg-hair) solid currentcolor;
+  padding: var(--zg-space-s);
+}
+
+.sl-markdown-content .starlight-aside__title {
+  letter-spacing: 0.01em;
+}
+
+/* --- Chrome ------------------------------------------------------------- */
+
+header.header {
+  border-bottom: var(--zg-hair) solid var(--zg-rule-strong);
+}
+
+.sidebar-pane {
+  border-inline-end: var(--zg-hair) solid var(--zg-rule);
+}
+
+.site-title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--zg-ink);
+}
+
+/*
+  The mark is one size across the site. Starlight defaults to a 2.5rem logo,
+  which read as a different mark from the 1.5rem masthead wordmark.
+*/
+.site-title img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/*
+  Expressive Code ships its own theme surface. Left alone it puts a blue-grey
+  plate and purple-grey code inside a mineral-white page, and sets a code size
+  that disagrees with the homepage. Bind it to the palette instead, and let code
+  be 0.9em of its context everywhere so both surfaces share one register.
+
+  Starlight re-declares several of these variables from a higher-specificity
+  theme block, so the selector below has to out-specify it, and the properties
+  that carry the visible surface are also set directly.
+*/
+.sl-markdown-content .expressive-code,
+.sl-markdown-content .expressive-code[data-theme] {
+  --ec-codeBg: var(--zg-sunk);
+  --ec-codeFg: var(--zg-ink);
+  --ec-brdCol: var(--zg-rule);
+  --ec-brdRad: 0;
+  --ec-codeFontFml: var(--zg-font-mono);
+  --ec-codeFontSize: 0.9em;
+  --ec-uiFontFml: var(--zg-font-sans);
+  --ec-frm-edBg: var(--zg-sunk);
+  --ec-frm-edTabBarBg: var(--zg-raised);
+  --ec-frm-edTabBarBrdCol: var(--zg-rule);
+  --ec-frm-edActTabBg: var(--zg-sunk);
+  --ec-frm-edActTabFg: var(--zg-ink-2);
+  --ec-frm-edActTabBrdCol: var(--zg-rule);
+  --ec-frm-edActTabIndTopCol: transparent;
+  --ec-frm-edActTabIndBtmCol: var(--zg-rule-strong);
+  --ec-frm-frameBoxShdCssVal: none;
+  --ec-frm-shdCol: transparent;
+  --ec-focusBrd: var(--zg-link);
+  --ec-sbThumbCol: var(--zg-rule-strong);
+  --ec-sbThumbHoverCol: var(--zg-ink-3);
+}
+
+.sl-markdown-content .expressive-code {
+  font-size: 0.9em;
+}
+
+.sl-markdown-content .expressive-code pre {
+  background: var(--zg-sunk);
+  border-color: var(--zg-rule);
+  font-family: var(--zg-font-mono);
+  font-size: inherit;
+}
+
+.sl-markdown-content .expressive-code .frame:not(.is-terminal) .header,
+.sl-markdown-content .expressive-code .frame.is-terminal .header {
+  background: var(--zg-raised);
+  color: var(--zg-ink-2);
+}
+
+/* Sidebar groups read as a measured index rather than a stack of pills. */
+.sidebar-content summary,
+.sidebar-content .large {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--zg-text--2);
+  color: var(--zg-ink-3);
+}
+
+.sidebar-content a[aria-current='page'] {
+  background: transparent;
+  color: var(--zg-ink);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 0 var(--zg-ink);
+}
+
+:where(a, button, summary, input, select):focus-visible {
+  outline: 2px solid var(--zg-link);
+  outline-offset: 2px;
+}
+
+/*
+  Expressive Code hides the copy control until hover or focus and fades it in.
+  A focus indicator must not fade: a keyboard visitor arriving on the control
+  needs to see it in the frame the focus lands. The hover fade is kept but
+  narrowed to opacity, so this site never interpolates a colour.
+*/
+.expressive-code .copy button {
+  transition-property: opacity !important;
+}
+
+.expressive-code .copy button:focus-visible {
+  opacity: 1 !important;
+  transition: none !important;
+}
+
+/*
+  Anchor parity with the homepage. The documentation and the homepage should not
+  disagree about what following a link inside a page feels like.
+*/
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+  text-underline-offset: 0.2em;
+}

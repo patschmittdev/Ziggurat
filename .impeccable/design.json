@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T15:52:00Z",
+  "title": "Design System: Ziggurat Documentation Site",
+  "extensions": {
+    "colorMeta": {
+      "graphite-ground": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#101214",
+        "tonalRamp": ["#0a0c0d", "#101214", "#181b1e", "#2e3337", "#61686f", "#8a9095", "#a9afb3", "#eceeec"]
+      },
+      "mineral-ground": {
+        "role": "neutral",
+        "displayName": "Mineral White",
+        "canonical": "#f2f2ef",
+        "tonalRamp": ["#fafaf8", "#f2f2ef", "#e7e7e3", "#c3c6c1", "#7e837d", "#666c71", "#4c5257", "#14171a"]
+      },
+      "bronze-solid": {
+        "role": "tier",
+        "displayName": "Bronze",
+        "canonical": "#8c4a22",
+        "tonalRamp": ["#f3e9e2", "#8c4a22", "#de9a6a", "#221913"]
+      },
+      "silver-solid": {
+        "role": "tier",
+        "displayName": "Silver",
+        "canonical": "#3b5a6b",
+        "tonalRamp": ["#e6edf1", "#3b5a6b", "#96bad2", "#141d24"]
+      },
+      "gold-solid": {
+        "role": "tier",
+        "displayName": "Gold",
+        "canonical": "#c8921f",
+        "tonalRamp": ["#f3ecdb", "#7a5a0e", "#e6b854", "#221c0e"]
+      },
+      "refuse-solid": {
+        "role": "state",
+        "displayName": "Refused",
+        "canonical": "#9b2a1e",
+        "tonalRamp": ["#f6e6e3", "#9b2a1e", "#f49384", "#251311"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Thesis",
+        "purpose": "The homepage thesis only. One instance per page."
+      },
+      "heading": {
+        "displayName": "Section heading",
+        "purpose": "Band headings on the homepage and h2 in documentation."
+      },
+      "body": {
+        "displayName": "Explanation",
+        "purpose": "Human prose. Capped at a 68ch measure."
+      },
+      "machine": {
+        "displayName": "Machine fact",
+        "purpose": "Paths, digests, field names and values, command names, configuration keys, datum numerals. Never used for prose or as a technical costume."
+      },
+      "label": {
+        "displayName": "Plate label",
+        "purpose": "Uppercase tracked labels on figures, ledger headings, and the specification block."
+      }
+    },
+    "shadows": [],
+    "motion": {
+      "easing": {
+        "standard": "ease",
+        "exit": "cubic-bezier(0.4, 0, 1, 1)",
+        "reveal": "cubic-bezier(0.2, 0.7, 0.2, 1)",
+        "datum": "cubic-bezier(0.16, 1, 0.3, 1)"
+      },
+      "duration": {
+        "tap": "140ms",
+        "state": "160ms",
+        "rule": "180ms",
+        "mark": "320ms",
+        "datum": "620ms",
+        "reveal-fade": "300ms",
+        "reveal-rise": "420ms"
+      },
+      "distance": {
+        "rise": "14px"
+      },
+      "stagger": {
+        "step": "90ms",
+        "cap": 3
+      },
+      "rules": [
+        "The signature is the datum cursor that tracks the level being read. Orientation is section entry and a root-only cross-document route fade.",
+        "A reveal group carries data-reveal 1 to 3, its place in the entry rhythm, which becomes a 0ms, 90ms, or 180ms delay.",
+        "The datum cursor runs only at or above 64rem, where the narrative figure is sticky, and its first appearance is a fade at the correct level rather than a traverse from zero.",
+        "Hidden initial states exist only under html[data-motion], set synchronously in the head and self-revoking, so no scripting, a failed script, print, or a missing IntersectionObserver renders the complete page.",
+        "prefers-reduced-motion removes interpolation, not information: the cursor and focus ring still mark the level, and every reveal renders complete.",
+        "Transitions animate transform, opacity, and the paint properties that carry the hover grammar: color, background-color, border-color, fill, and text-decoration-color. Nothing that affects layout is transitioned, and transition: all is never written.",
+        "Keyboard focus gets whatever the pointer gets. Every hover rule carries a focus-visible twin.",
+        "Every duration and easing comes from a token. No component hardcodes a millisecond value.",
+        "No scroll-jacking, no parallax, no shared-element route transition, no runtime dependency, no framework hydration."
+      ]
+    },
+    "breakpoints": {
+      "phone-masthead": "40rem",
+      "narrative-rail": "48rem",
+      "ledger-stack": "52rem",
+      "two-up": "60rem",
+      "sticky-narrative": "64rem"
+    },
+    "northStar": "Authority over durable memory is a capability the software does not have. The surface is the drawing that proves it: a sectioned structure whose only crossing enters from outside the frame.",
+    "rules": [
+      "A hairline rule must separate two genuinely different things. A rule used for texture is a defect.",
+      "Tier colour owns whole regions, never scattered accents.",
+      "Monospace marks machine facts only.",
+      "Every narrative fact is present in the served markup.",
+      "Gold is externally authorized reference data. Never truth, safety, or instruction authority.",
+      "Square corners, no shadow, no gradient, no glass.",
+      "No third-party font, script, or asset is loaded at runtime.",
+      "The mark is four contiguous stepped rectangles in a 32x32 viewBox: Bronze x2 y24 w28 h6, Silver x6 y16 w20 h6, Gold x10 y8 w12 h6, aperture x14 y4 w4 h2. The same four rectangles carry the wordmark, both mark assets, the favicon, and the social plate.",
+      "In the masthead the mark is ink at rest and takes its tier colours on hover or keyboard focus, with the aperture staying ink. Where hover is unavailable the tier colours are drawn permanently. The mark is decorative and aria-hidden, and the adjacent word is the accessible name."
+    ],
+    "dos": [
+      "Let a tier colour own a whole region when the region is about that tier.",
+      "Put the non-guarantee beside the guarantee.",
+      "Give scrollable code regions a focusable stop and an accessible name.",
+      "Keep both themes deliberate and contrast-tested."
+    ],
+    "donts": [
+      "Do not use gold, or any tier colour, as a generic accent or success state.",
+      "Do not build a grid of equal icon-heading-text cards.",
+      "Do not put an eyebrow label above a heading.",
+      "Do not reproduce the poisoned fixture's instruction text.",
+      "Do not claim users, deployments, audits, benchmarks, or production maturity."
+    ]
+  }
+}

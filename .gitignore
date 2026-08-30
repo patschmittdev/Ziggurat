@@ -12,3 +12,6 @@ Thumbs.db
 .ziggurat/review-index.json
 .ziggurat/evidence-index.json
 debug-output.txt
+
+# Browser automation scratch output
+.playwright-mcp/
