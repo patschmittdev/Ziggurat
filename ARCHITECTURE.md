@@ -25,8 +25,8 @@ verifiable human capability before content becomes durable communion context.
 | Actor or process | Read | Write | Cannot do |
 |---|---|---|---|
 | Untrusted source | none | Inbox input | Authorize persistence |
-| `ingest` | Inbox, Bronze hashes | New immutable Bronze | Change existing Bronze, Silver, Gold, or indexes |
-| Loopback refine model | Prompt content supplied by host | JSON response only | Access filesystem or tools through Ziggurat |
+| `ingest` | Real regular files under `inbox/`, Bronze hashes | New immutable Bronze | Read or delete anything outside the real `inbox/` directory |
+| Loopback refine model | A bounded host-built reference block of Bronze bytes | JSON response only | Access filesystem or tools through Ziggurat, or name its own sources |
 | `refine` host pathway | Bronze citations, target base | One Silver proposal | Write Bronze, knowledge, receipts, trust, reviewed metadata, or indexes |
 | Human reviewer | Bronze, Silver, knowledge | Manual page and external signed receipt | Gain factual certainty from a signature |
 | `build` | Corpus, receipts, public keys | Generated indexes | Admit a page without valid authorization |
@@ -76,10 +76,16 @@ allowed to exercise the admission capability.
 ## State transitions
 
 1. `inbox/*.md` -> `bronze/<kind>/<date>-<slug>.md`
-2. Bronze evidence -> `.ziggurat/proposals/<proposal-id>.json`
+2. Bronze evidence -> host-built bounded reference block -> model JSON ->
+   `.ziggurat/proposals/<proposal-id>.json`
 3. Silver proposal -> manual `knowledge/*.md` plus detached receipt
 4. Authorized page -> Gold chunk during `build`
 5. Gold chunk -> citation-scoped, read-only communion result
+
+Step 2 is the only place model output crosses into stored state, and it crosses
+through the strict proposal schema and the evidence validator. The model never holds
+a path it can dereference; the host reads Bronze on its behalf and revalidates every
+returned citation against the same files afterward.
 
 There is no automated Silver-to-knowledge transition and no promote command.
 Contradiction proposals remain immutable. A reviewer resolves one by listing its ID
@@ -89,16 +95,21 @@ in the page and signing that exact page.
 
 | Enforcement point | Control |
 |---|---|
+| Inbox boundary | Real-path resolution to a regular file under `inbox/`; symlink, reparse, hard-link, traversal, and escape refusal before any read or delete |
 | Bronze store | Atomic no-overwrite write and body SHA-256 |
+| Refine reference builder | Host-selected sources, hash-verified, bounded per record and in total, omitted rather than truncated, labeled non-instructional |
+| Adapter transport | Loopback-only URL, redirects disabled, request deadline, bounded request and streamed response bytes |
 | Proposal contract | Strict v2 schema excludes admission fields |
 | Evidence validator | Exact Bronze path, body hash, line range, quote, and quote hash |
 | Proposal store | Atomic, root-constrained write; strict fail-closed reads |
+| Corpus collector | Unreadable, unparsable, or schema-invalid entries rejected and reported by path without content |
 | Page canonicalizer | Stable semantic JSON and LF-normalized body |
 | Receipt verifier | Trusted Ed25519 key, strict schema, exact page/path/identity/time binding |
 | Gold eligibility | Status, retrieval, privacy, sensitivity, egress, age, lineage, contradiction, authorization |
 | Profile builders | Physical separation and policy-safe source selection |
 | Index verifier | Chunk labels, content, provenance, BM25, trust policy, and live corpus |
-| MCP server | Communion-only startup, two read-only tools, session-scoped citations |
+| MCP server | Communion-only startup, two read-only tools, strict tool inputs, bounded query, result, and session citation counts |
+| Clean-room audit | Present-but-invalid configuration fails the audit instead of defaulting |
 
 ## Physical index isolation
 

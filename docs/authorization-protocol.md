@@ -75,6 +75,12 @@ absent optional scalar fields and `[]` for absent `resolved_proposals`. Do not a
 a newline to the compact JSON. The receipt's `content_sha256` is the lowercase
 hexadecimal SHA-256 digest of these UTF-8 bytes.
 
+`visibility` is uninterpreted operator metadata. It is included in the signed bytes
+so a reviewer approves the exact label a page carries, but Ziggurat enforces no
+access control from it. Retrieval eligibility is decided by `status`,
+`retrieval_eligible`, `pii`, `sensitivity`, `egress`, verification age, lineage,
+contradictions, and the receipt. Do not treat `visibility` as a permission.
+
 The authoritative implementation is
 [`canonicalPageContent`](../src/authorization/canonical.ts).
 
@@ -148,6 +154,29 @@ Gold admission verifies all of the following:
 
 Any failure leaves the page out of Gold. Trust-policy, receipt, page, or corpus
 changes also invalidate existing indexes until they are rebuilt.
+
+## Interoperability test vectors
+
+[`fixtures/authorization/receipt-vectors.json`](../fixtures/authorization/receipt-vectors.json)
+is a deterministic vector file for independent signer implementations. It contains:
+
+- `page.frontmatter` and `page.body`, plus the exact `page.canonical_page_content`
+  string and its `page.canonical_page_content_sha256` digest
+- `page.receipt_path`, the deterministic receipt location
+- `signing.unsigned_receipt`, the exact `signing.signing_payload` string, and its
+  base64 encoding
+- `trusted_reviewer.public_key_pem` and the detached `signing.signature`
+- `cases[]`, each with a page body, a receipt, the trust policy to load, and the
+  expected `{ valid, reasons }` verification result
+
+No private key material is published. Verification, which is the only operation
+Ziggurat performs, needs only the public key. A signer implementation is conformant
+when it reproduces `canonical_page_content`, `content_sha256`, and `signing_payload`
+byte for byte from the frontmatter and body alone, and when its own signature over
+that payload verifies against the published public key.
+
+`test/authorization-vectors.test.ts` runs every case against the shipped verifier, so
+the vectors and the implementation cannot drift apart silently.
 
 ## Rotation and revocation
 

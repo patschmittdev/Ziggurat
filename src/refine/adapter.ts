@@ -128,43 +128,182 @@ export const RefinementProposalJsonSchema = {
 };
 
 /**
+ * Adapter resource limits.
+ *
+ * These are deliberately conservative and fixed in code rather than configurable: a
+ * configurable ceiling is an attacker-reachable knob once configuration is writable,
+ * and the refine pathway has no legitimate need for an unbounded response.
+ */
+export const ADAPTER_LIMITS = {
+  /** Whole-request deadline, including connect, headers, and body streaming. */
+  requestTimeoutMs: 30_000,
+  /** Maximum bytes accepted from the model endpoint before the response is refused. */
+  maxResponseBytes: 1_048_576,
+  /** Maximum serialized request body sent to the model endpoint. */
+  maxRequestBytes: 1_048_576,
+} as const;
+
+function assertLoopbackUrl(endpoint: string, label: string): URL {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw new Error(`${label}: endpoint is not a valid URL: ${endpoint}`);
+  }
+  if (url.protocol !== 'http:' || !LOOPBACK_HOSTS.has(url.hostname)) {
+    throw new Error(
+      `${label}: endpoint must be http: with a loopback host (localhost/127.0.0.1/::1), got ${endpoint}`,
+    );
+  }
+  return url;
+}
+
+/**
+ * Reads a response body with a hard byte ceiling.
+ *
+ * `response.text()` buffers whatever the peer sends, so a hostile or broken endpoint
+ * on the loopback interface can exhaust memory with a single reply. Streaming with a
+ * running total fails closed at the limit and cancels the body instead.
+ */
+async function readBoundedText(response: Response, limit: number): Promise<string> {
+  const declared = response.headers.get('content-length');
+  if (declared !== null) {
+    const declaredBytes = Number(declared);
+    if (Number.isFinite(declaredBytes) && declaredBytes > limit) {
+      throw new Error(
+        `LoopbackChatAdapter: response declares ${declaredBytes} bytes, exceeding the ${limit} byte limit`,
+      );
+    }
+  }
+
+  const body = response.body;
+  if (body === null) return '';
+
+  const reader = body.getReader();
+  const decoder = new TextDecoder('utf-8', { fatal: false });
+  let total = 0;
+  let text = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > limit) {
+        throw new Error(
+          `LoopbackChatAdapter: response exceeded the ${limit} byte limit`,
+        );
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+  }
+  return text + decoder.decode();
+}
+
+/** Per-instance overrides for the adapter's resource ceilings. */
+export interface LoopbackChatAdapterOptions {
+  /** Whole-request deadline in milliseconds. Defaults to `ADAPTER_LIMITS.requestTimeoutMs`. */
+  readonly requestTimeoutMs?: number;
+  /** Response byte ceiling. Defaults to `ADAPTER_LIMITS.maxResponseBytes`. */
+  readonly maxResponseBytes?: number;
+}
+
+function boundedLimit(value: number | undefined, fallback: number, label: string): number {
+  if (value === undefined) return fallback;
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`LoopbackChatAdapter: ${label} must be a positive integer`);
+  }
+  return value;
+}
+
+/**
  * Sends chat-completion requests to a loopback HTTP endpoint.
- * Construction fails if the endpoint is not a loopback address.
+ *
+ * Construction fails if the endpoint is not a loopback address. Redirects are never
+ * followed: a loopback endpoint that answers with `Location: https://evil.example`
+ * would otherwise turn the adapter into a server-side request forgery primitive that
+ * ships prompt content off the machine. A redirect response is refused before the
+ * destination is contacted, and every request is bounded by an explicit timeout and
+ * request/response size ceilings.
  */
 export class LoopbackChatAdapter implements StructuredChatAdapter {
   private readonly endpoint: string;
+  private readonly requestTimeoutMs: number;
+  private readonly maxResponseBytes: number;
 
-  constructor(endpoint: string) {
-    const url = new URL(endpoint);
-    if (url.protocol !== 'http:' || !LOOPBACK_HOSTS.has(url.hostname)) {
-      throw new Error(
-        `LoopbackChatAdapter: endpoint must be http: with a loopback host (localhost/127.0.0.1/::1), got ${endpoint}`,
-      );
-    }
+  constructor(endpoint: string, options: LoopbackChatAdapterOptions = {}) {
+    assertLoopbackUrl(endpoint, 'LoopbackChatAdapter');
     this.endpoint = endpoint;
+    this.requestTimeoutMs = boundedLimit(
+      options.requestTimeoutMs, ADAPTER_LIMITS.requestTimeoutMs, 'requestTimeoutMs',
+    );
+    this.maxResponseBytes = boundedLimit(
+      options.maxResponseBytes, ADAPTER_LIMITS.maxResponseBytes, 'maxResponseBytes',
+    );
   }
 
   async completeJson(messages: readonly ChatMessage[]): Promise<unknown> {
-    const response = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'ziggurat_refinement_proposal',
-            strict: true,
-            schema: RefinementProposalJsonSchema,
-          },
+    const requestBody = JSON.stringify({
+      messages,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'ziggurat_refinement_proposal',
+          strict: true,
+          schema: RefinementProposalJsonSchema,
         },
-      }),
+      },
     });
+
+    const requestBytes = Buffer.byteLength(requestBody, 'utf8');
+    if (requestBytes > ADAPTER_LIMITS.maxRequestBytes) {
+      throw new Error(
+        `LoopbackChatAdapter: request body is ${requestBytes} bytes, exceeding the `
+        + `${ADAPTER_LIMITS.maxRequestBytes} byte limit`,
+      );
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(this.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+        // 'manual' surfaces the redirect as an ordinary response so it can be refused
+        // with an actionable message. The destination is never fetched.
+        redirect: 'manual',
+        signal: AbortSignal.timeout(this.requestTimeoutMs),
+      });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `LoopbackChatAdapter: request to ${this.endpoint} failed or timed out after `
+        + `${this.requestTimeoutMs}ms: ${reason}`,
+      );
+    }
+
+    if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+      const location = response.headers.get('location');
+      throw new Error(
+        `LoopbackChatAdapter: refusing HTTP ${response.status} redirect from ${this.endpoint}`
+        + `${location === null ? '' : ` to ${location}`}. Redirects are not followed.`,
+      );
+    }
+
     if (!response.ok) {
       throw new Error(
         `LoopbackChatAdapter: HTTP ${response.status} from ${this.endpoint}`,
       );
     }
-    return response.json() as Promise<unknown>;
+
+    const text = await readBoundedText(response, this.maxResponseBytes);
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      throw new Error(
+        `LoopbackChatAdapter: response from ${this.endpoint} is not valid JSON`,
+      );
+    }
   }
 }

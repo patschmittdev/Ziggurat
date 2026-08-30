@@ -48,7 +48,13 @@ that authorizes persistence.
 ### Enforced guarantees
 
 - `ingest` is the only Bronze writer. Captures are immutable and body-hash verified.
+- An `ingest` source must resolve to a real regular file physically under `inbox/`.
+  Absolute paths, `..` traversal, symlinks, junctions, other reparse points, hard
+  links, directories, and anything outside `inbox/` are refused before the file is
+  read, copied, or deleted.
 - `refine` can write only strict version-2 artifacts under `.ziggurat/proposals/`.
+- The refine model receives Bronze bytes the host selected, in a bounded, labeled
+  reference block. It is given no path it can fetch and no filesystem capability.
 - Silver candidates cannot contain status, reviewer, receipt, or admission metadata.
 - Every Silver citation must match exact Bronze bytes, hashes, and line ranges.
 - No shipped function writes knowledge pages, reviewed metadata, trusted reviewer
@@ -64,15 +70,29 @@ that authorizes persistence.
   both search and citation reads.
 - Shipped MCP startup is communion-only and exposes exactly `search_context` and
   `read_context`.
+- Retrieval is bounded: at most 1024 query characters, 20 results per search, and
+  200 citations retained per session. Older citation IDs are revoked when the
+  session ceiling is reached.
 - Every returned chunk says `content_role: reference` and
   `instruction_authority: none`.
-- Model and embedding endpoints are limited to HTTP loopback addresses.
+- Model and embedding endpoints are limited to HTTP loopback addresses. The adapter
+  never follows redirects, bounds every request with a 30 second timeout, and refuses
+  request or response bodies over 1 MiB.
+- Bronze records, configuration files, proposals, receipts, and indexes all reject
+  unknown fields, including unknown fields inside nested configuration objects.
+- A present but malformed or unreadable `config/clean-room.yaml` fails the release
+  audit instead of falling back to defaults.
 
 ### Explicit non-guarantees
 
 - Ziggurat is not an OS sandbox or a multi-tenant authorization service.
 - A malicious operator with arbitrary vault filesystem access can replace the trust
   policy, source files, receipts, and indexes, then rebuild.
+- Path checks resolve real paths before use, but no application-level check closes
+  every time-of-check to time-of-use window against an attacker who can rename vault
+  directories concurrently. The operator owns vault permissions.
+- `visibility` on a curated page is uninterpreted metadata bound by the signature. It
+  is not access control and grants or denies nothing.
 - A stolen reviewer private key, compromised reviewer, or inattentive approval can
   authorize harmful or false content.
 - A valid signature proves control of a configured key and exact-content approval.
@@ -97,6 +117,23 @@ memory authority.
 
 `ziggurat refine` accepts structured JSON from a loopback model, validates it, adds
 local audit metadata, and atomically stages it under `.ziggurat/proposals/`.
+
+The host, not the model, reads Bronze. Each request carries a bounded reference block
+containing the selected records' verified `body_sha256` and their bodies as 1-based
+lines, labeled `content_role: reference` and `instruction_authority: none`. That is
+what makes the advertised contract satisfiable: a model can compute exact quotes,
+digests, and line ranges without ever being handed a path it could fetch. At most 12
+records, 32 KiB per record, and 256 KiB in total are included. Oversize records are
+omitted, never truncated, because a truncated body would produce citations that fail
+validation for reasons no operator could diagnose. Every omission is reported with a
+reason.
+
+Name records with `--source <bronze-path>`, repeated once per record. Without
+`--source`, the same privacy policy that governs the model-readable evidence index is
+applied, which excludes fresh captures while their privacy state is unresolved.
+Returned proposals are still validated against the real files on disk, so a
+fabricated quote or digest fails staging.
+
 A canonical Silver artifact contains:
 
 - a complete proposed page body and non-authoritative candidate metadata
@@ -247,7 +284,7 @@ development-only global link.
 |---|---|
 | `ziggurat init --root <vault>` | Create vault directories and an empty trust policy |
 | `ziggurat ingest --root <vault> --file <inbox-file>` | Capture immutable Bronze evidence |
-| `ziggurat refine --root <vault> --query <request>` | Stage a strict Silver proposal through a loopback model |
+| `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...` | Stage a strict Silver proposal through a loopback model |
 | `ziggurat review --root <vault>` | Render human review packets from staged proposals |
 | `ziggurat build --root <vault>` | Rebuild all three isolated indexes |
 | `ziggurat query --root <vault> --query <text>` | Query authorized Gold communion |
@@ -263,6 +300,22 @@ binding in `.vscode/mcp.json` starts communion without a selectable profile.
 Version 0.1 is a pre-release, single-operator reference implementation. Contracts,
 index formats, and CLI behavior may change before 1.0. It is not a hosted service,
 an OS sandbox, or a substitute for external key custody.
+
+### Pre-release compatibility notes
+
+Unknown-field rejection is now enforced everywhere the documentation claims it,
+which is a deliberate break with earlier pre-release tolerance:
+
+- A Bronze record carrying frontmatter fields outside the documented set no longer
+  validates. It is reported by `build` as a rejected corpus entry and is treated as
+  restricted, PII-unknown, and hash-unverified, so it stays out of every index.
+  Remove the extra fields to restore it.
+- A configuration file carrying an unknown key, including an unknown key inside
+  `lifecycle`, `domain`, `privacy`, `adapters`, or `trust`, now fails to load rather
+  than being silently ignored.
+- A `config/clean-room.yaml` that exists but is malformed, unreadable, not a mapping,
+  or carries unknown keys now fails `ziggurat check`. Delete the file to use
+  documented defaults.
 
 Before contributing or filing a report, read:
 

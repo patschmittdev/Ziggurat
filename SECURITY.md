@@ -59,6 +59,32 @@ The model endpoint receives messages and returns structured JSON. Ziggurat does 
 give that endpoint filesystem or tool capabilities. The refine pathway owns only a
 root-constrained Silver writer.
 
+The host reads Bronze and places the selected bytes into the request as an explicit,
+bounded, labeled reference block: at most 12 records, 32 KiB per record, 256 KiB in
+total, each carrying its verified body digest and 1-based lines. The model receives
+data, never a path, handle, or fetch capability, and the proposal it returns is still
+revalidated against the real Bronze files before staging. Oversize records are
+omitted rather than truncated so a citation can never be computed against bytes that
+differ from the stored record.
+
+The adapter reaches only HTTP loopback endpoints. It never follows redirects, so a
+loopback endpoint answering with an off-machine `Location` cannot turn the adapter
+into a server-side request forgery primitive. Every request carries a 30 second
+deadline, and request and response bodies are capped at 1 MiB, with the response
+ceiling enforced while streaming rather than after buffering.
+
+`ingest` reads and deletes its source, so its source path is a combined arbitrary-read
+and arbitrary-delete primitive if it escapes. A source must resolve to a real regular
+file physically under `inbox/`. Absolute paths, `..` traversal, empty segments,
+control characters, directories, symlinks, junctions, other reparse points, hard
+links, and real-parent escapes are all refused before the file is opened, so a
+refused source is never read, copied, or unlinked.
+
+Retrieval is bounded per session: 1024 query characters, 20 results per search, and
+200 retained citations. Over-long queries are refused rather than truncated. When the
+citation ceiling is reached the oldest IDs are evicted, which revokes them: a read
+against an evicted ID fails closed with the same error as a forged ID.
+
 No production module writes knowledge pages, reviewed metadata, trusted reviewer
 keys, or authorization receipts. `init` can create an empty trust policy but never
 adds or replaces keys. `build` can write generated indexes, but Gold construction
@@ -92,15 +118,16 @@ to prevent every prompt-injection or model-behavior failure.
 | Source approval | Sources remain isolated Bronze; extracted claims require separate admission |
 | Provenance | Exact Bronze citations, body hashes, quote hashes, and Gold lineage |
 | Memory write governance | External human signing capability required for Gold |
-| Schema-bound memory | Strict Zod v4 contracts and unknown-field rejection |
-| Review and diff visibility | Complete Silver candidates and evidence in `review` |
+| Schema-bound memory | Strict Zod v4 contracts reject unknown fields on Bronze records, configuration and its nested objects, proposals, receipts, and indexes |
+| Review and diff transparency | Complete Silver candidates and evidence in `review` |
 | Presentation sanitization | Candidate bodies are indented; quoted fields and control characters are escaped |
 | Integrity | Receipt binding plus complete chunk, BM25, policy, and live-corpus verification |
 | Isolation | Separate communion, review, and evidence indexes |
 | Revalidation | Verification age and signed page metadata |
 | Versioning and rollback | Source artifacts in Git; generated indexes rebuilt |
-| Least privilege | Model writes Silver only; MCP reads communion only |
+| Least privilege | Model writes Silver only; MCP reads communion only; refine payloads are host-selected and bounded |
 | Suspicious instruction handling | Preserved as evidence and always labeled non-instructional |
+| Resource bounds | Adapter timeout and 1 MiB body caps; bounded refine reference; bounded query, result, and citation counts |
 
 ## Fail-closed behavior
 
@@ -112,6 +139,18 @@ Proposal corruption makes Silver and contradiction state unverifiable. Index sch
 chunk, provenance, trust-label, BM25, trust-policy, or live-corpus mismatch prevents
 startup or the next search/read. Rebuilding from current authoritative artifacts is
 required.
+
+A corpus entry that is unreadable, lacks frontmatter, has invalid YAML, or fails its
+schema is never admitted. It is reported by path with a category and structural
+detail so an operator can repair it. Rejection diagnostics deliberately carry no file
+content and no parsed values: for schema failures they name field paths and issue
+codes only, so a restricted page is never quoted back through build output or logs.
+
+A `config/clean-room.yaml` that exists but is unreadable, is not valid YAML, is not a
+mapping, carries an unknown key, or carries a malformed list fails `ziggurat check`
+with an actionable diagnostic. A release gate that silently defaults when its own
+configuration is broken would report "clean" while ignoring every exclusion and
+project name a human configured. An absent file still uses documented defaults.
 
 ## Provenance is not instruction authority
 
@@ -129,6 +168,18 @@ approved reference data, not executable instruction and not guaranteed truth.
 - Arbitrary local filesystem access defeats application-level path and process
   boundaries. An attacker who replaces trust configuration and rebuilds can create a
   new trust root.
+- The `visibility` field on a curated page is uninterpreted operator metadata. It is
+  bound by the signature so a reviewer approves the exact label, but Ziggurat enforces
+  no access control from it and it grants or denies nothing. Retrieval eligibility
+  comes from status, `retrieval_eligible`, privacy, sensitivity, egress, verification
+  age, lineage, contradictions, and the receipt.
+- Path validation resolves real paths before use, but application-level checks cannot
+  fully close time-of-check to time-of-use windows. An attacker able to swap vault
+  directories concurrently with a command is inside the operator trust assumption,
+  not outside it.
+- `ingest` refuses a source with more than one hard link, because a hard link makes
+  the deletion step ambiguous. On filesystems that report a link count above one for
+  ordinary files, move the file into `inbox/` as a fresh copy.
 - An AI process granted arbitrary shell, filesystem, or reviewer-key access is outside
   this boundary and can act with the authority the operator delegated to it.
 - Stolen or misused reviewer private keys can authorize poisoned content.

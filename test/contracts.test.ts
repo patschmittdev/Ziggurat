@@ -405,3 +405,98 @@ test('parseZigguratConfig: rejects non-HTTP schemes even on loopback', async () 
     await assert.rejects(() => parseZigguratConfig(root), /http.*loopback|loopback.*http/iu);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Strict unknown-field rejection
+// ---------------------------------------------------------------------------
+
+const VALID_BRONZE_RECORD = {
+  schema_version: 1,
+  source_id: 'test-doc',
+  source_kind: 'article',
+  captured_at: '2026-01-01T00:00:00.000Z',
+  sha256: 'a'.repeat(64),
+  sensitivity: 'restricted',
+  pii: 'unknown',
+};
+
+const VALID_CONFIG_OBJECT = {
+  schema_version: 1,
+  lifecycle: { review_queue_limit: 50 },
+  domain: { page_types: ['entity'], tags: ['ai'] },
+  privacy: { default_sensitivity: 'restricted', default_pii: 'unknown' },
+  adapters: {},
+  trust: { reviewers: [] },
+};
+
+test('BronzeRecordSchema: accepts the documented field set', () => {
+  assert.equal(BronzeRecordSchema.safeParse(VALID_BRONZE_RECORD).success, true);
+});
+
+test('BronzeRecordSchema: rejects an unknown top-level field', () => {
+  const result = BronzeRecordSchema.safeParse({
+    ...VALID_BRONZE_RECORD,
+    retrieval_eligible: true,
+  });
+  assert.equal(result.success, false);
+});
+
+test('BronzeRecordSchema: rejects a near-miss typo instead of dropping it', () => {
+  const result = BronzeRecordSchema.safeParse({
+    ...VALID_BRONZE_RECORD,
+    sensitivty: 'public',
+  });
+  assert.equal(result.success, false);
+});
+
+test('ZigguratConfigSchema: accepts the documented field set', () => {
+  assert.equal(ZigguratConfigSchema.safeParse(VALID_CONFIG_OBJECT).success, true);
+});
+
+test('ZigguratConfigSchema: rejects an unknown top-level field', () => {
+  const result = ZigguratConfigSchema.safeParse({
+    ...VALID_CONFIG_OBJECT,
+    promote: true,
+  });
+  assert.equal(result.success, false);
+});
+
+test('ZigguratConfigSchema: rejects unknown fields inside nested objects', () => {
+  const nested: Array<[string, Record<string, unknown>]> = [
+    ['lifecycle', { review_queue_limit: 50, auto_admit: true }],
+    ['domain', { page_types: ['entity'], tags: ['ai'], extra: [] }],
+    ['privacy', {
+      default_sensitivity: 'restricted',
+      default_pii: 'unknown',
+      default_sensitvity: 'public',
+    }],
+    ['adapters', { fallback_endpoint: 'http://127.0.0.1:1/x' }],
+  ];
+  for (const [key, value] of nested) {
+    const result = ZigguratConfigSchema.safeParse({ ...VALID_CONFIG_OBJECT, [key]: value });
+    assert.equal(result.success, false, `${key} must reject unknown fields`);
+  }
+});
+
+test('ZigguratConfigSchema: rejects unknown fields inside the trust policy', () => {
+  const result = ZigguratConfigSchema.safeParse({
+    ...VALID_CONFIG_OBJECT,
+    trust: { reviewers: [], allow_unsigned: true },
+  });
+  assert.equal(result.success, false);
+});
+
+test('parseZigguratConfig: rejects an unknown key in a config file', async () => {
+  const ziggurat = VALID_ZIGGURAT + 'auto_admit: true\n';
+  await withTempConfig({ ziggurat }, async (root) => {
+    await assert.rejects(() => parseZigguratConfig(root));
+  });
+});
+
+test('parseZigguratConfig: rejects an unknown nested key in a config file', async () => {
+  const privacy =
+    'privacy:\n  default_sensitivity: restricted\n  default_pii: unknown\n  allow_export: true\n';
+  await withTempConfig({ privacy }, async (root) => {
+    await assert.rejects(() => parseZigguratConfig(root));
+  });
+});

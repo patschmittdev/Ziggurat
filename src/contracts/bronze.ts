@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { PiiStateSchema, SensitivitySchema } from './common.js';
 
+/**
+ * Bronze frontmatter is strict: an unknown field is either corruption or an attempt to
+ * smuggle admission metadata into evidence, and neither should be silently preserved.
+ */
 export const BronzeRecordSchema = z.object({
   schema_version: z.literal(1),
   source_id: z.string().min(1),
@@ -13,6 +17,6 @@ export const BronzeRecordSchema = z.object({
   origin: z.string().url().optional(),
   sensitivity: SensitivitySchema,
   pii: PiiStateSchema,
-});
+}).strict();
 
 export type BronzeRecord = z.infer<typeof BronzeRecordSchema>;

@@ -1,0 +1,221 @@
+{
+  "protocol": "ziggurat-authorization-receipt-v1",
+  "canonicalization": "ziggurat-curated-page-v1",
+  "schema_version": 1,
+  "description": "Deterministic interoperability vectors for the Ziggurat external authorization protocol. An independent signer implementation can reproduce every value here from the page frontmatter and body alone, except the signatures, which require the matching private key. No private key material is published: verification, which is what Ziggurat performs, needs only the public key.",
+  "trusted_reviewer": {
+    "reviewer_id": "committee-chair",
+    "key_id": "committee-chair-2026",
+    "algorithm": "ed25519",
+    "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW//k2uPmnAu1NI0N4Sl6cwTOFamDYV7UN7jGGHYil88=\n-----END PUBLIC KEY-----\n"
+  },
+  "untrusted_reviewer_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAUvas5UXmS1EPjE/PyVOw4r22lJWhbz7nEtCKEBt0a80=\n-----END PUBLIC KEY-----\n",
+  "page": {
+    "target_path": "knowledge/water-rates.md",
+    "receipt_path": "authorizations/water-rates.md.authorization.json",
+    "frontmatter": {
+      "schema_version": 1,
+      "title": "Municipal water rates",
+      "type": "reference",
+      "sources": [
+        "bronze/article/2026-01-02-revised-water-rates.md"
+      ],
+      "confidence": "high",
+      "status": "reviewed",
+      "retrieval_eligible": true,
+      "pii": "false",
+      "sensitivity": "public",
+      "visibility": "shared",
+      "egress": "approved-cloud",
+      "reviewed_by": "committee-chair",
+      "reviewed_at": "2026-08-29T21:00:00Z",
+      "last_verified": "2026-08-29T21:00:00Z",
+      "resolved_proposals": []
+    },
+    "body": "# Municipal water rates\n\nThe published rate is 4.20 per unit.\n",
+    "file": "---\nschema_version: 1\ntitle: Municipal water rates\ntype: reference\nsources:\n  - bronze/article/2026-01-02-revised-water-rates.md\nconfidence: high\nstatus: reviewed\nretrieval_eligible: true\npii: \"false\"\nsensitivity: public\nvisibility: shared\negress: approved-cloud\nreviewed_by: committee-chair\nreviewed_at: 2026-08-29T21:00:00Z\nlast_verified: 2026-08-29T21:00:00Z\nresolved_proposals: []\n---\n# Municipal water rates\n\nThe published rate is 4.20 per unit.\n",
+    "canonical_page_content": "{\"domain\":\"ziggurat-curated-page-v1\",\"target_path\":\"knowledge/water-rates.md\",\"page\":{\"schema_version\":1,\"title\":\"Municipal water rates\",\"type\":\"reference\",\"sources\":[\"bronze/article/2026-01-02-revised-water-rates.md\"],\"confidence\":\"high\",\"status\":\"reviewed\",\"retrieval_eligible\":true,\"pii\":\"false\",\"sensitivity\":\"public\",\"visibility\":\"shared\",\"egress\":\"approved-cloud\",\"reviewed_by\":\"committee-chair\",\"reviewed_at\":\"2026-08-29T21:00:00Z\",\"last_verified\":\"2026-08-29T21:00:00Z\",\"review_after\":null,\"resolved_proposals\":[]},\"body\":\"# Municipal water rates\\n\\nThe published rate is 4.20 per unit.\\n\"}",
+    "canonical_page_content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729"
+  },
+  "signing": {
+    "unsigned_receipt": {
+      "schema_version": 1,
+      "decision": "admit",
+      "target_path": "knowledge/water-rates.md",
+      "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+      "reviewer_id": "committee-chair",
+      "reviewed_at": "2026-08-29T21:00:00Z",
+      "key_id": "committee-chair-2026",
+      "algorithm": "ed25519"
+    },
+    "signing_payload": "{\"domain\":\"ziggurat-authorization-receipt-v1\",\"schema_version\":1,\"decision\":\"admit\",\"target_path\":\"knowledge/water-rates.md\",\"content_sha256\":\"f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729\",\"reviewer_id\":\"committee-chair\",\"reviewed_at\":\"2026-08-29T21:00:00Z\",\"key_id\":\"committee-chair-2026\",\"algorithm\":\"ed25519\"}",
+    "signing_payload_base64": "eyJkb21haW4iOiJ6aWdndXJhdC1hdXRob3JpemF0aW9uLXJlY2VpcHQtdjEiLCJzY2hlbWFfdmVyc2lvbiI6MSwiZGVjaXNpb24iOiJhZG1pdCIsInRhcmdldF9wYXRoIjoia25vd2xlZGdlL3dhdGVyLXJhdGVzLm1kIiwiY29udGVudF9zaGEyNTYiOiJmOTZjZGE3MjFkMmQxMTExMmU5YWM4MmU2ZDg3OWNkNzg5OWNlMWU0ZGUyNjk0MjIxZDI4OWM2NzhkZjQwNzI5IiwicmV2aWV3ZXJfaWQiOiJjb21taXR0ZWUtY2hhaXIiLCJyZXZpZXdlZF9hdCI6IjIwMjYtMDgtMjlUMjE6MDA6MDBaIiwia2V5X2lkIjoiY29tbWl0dGVlLWNoYWlyLTIwMjYiLCJhbGdvcml0aG0iOiJlZDI1NTE5In0=",
+    "signature": "ADRD+RMss+cl/5hk0raw0pzASJnHE0wMDgdVXt598sWRLVdccM2A+7B3PqQWyek43EZc6cdkA8lQYd7w2bYABw=="
+  },
+  "cases": [
+    {
+      "name": "valid-receipt-admits",
+      "trust_reviewers": [
+        {
+          "reviewer_id": "committee-chair",
+          "key_id": "committee-chair-2026",
+          "algorithm": "ed25519",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW//k2uPmnAu1NI0N4Sl6cwTOFamDYV7UN7jGGHYil88=\n-----END PUBLIC KEY-----\n"
+        }
+      ],
+      "page_body": "# Municipal water rates\n\nThe published rate is 4.20 per unit.\n",
+      "receipt": {
+        "schema_version": 1,
+        "decision": "admit",
+        "target_path": "knowledge/water-rates.md",
+        "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+        "reviewer_id": "committee-chair",
+        "reviewed_at": "2026-08-29T21:00:00Z",
+        "key_id": "committee-chair-2026",
+        "algorithm": "ed25519",
+        "signature": "ADRD+RMss+cl/5hk0raw0pzASJnHE0wMDgdVXt598sWRLVdccM2A+7B3PqQWyek43EZc6cdkA8lQYd7w2bYABw=="
+      },
+      "expected": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "name": "crlf-body-normalizes-to-the-same-digest",
+      "trust_reviewers": [
+        {
+          "reviewer_id": "committee-chair",
+          "key_id": "committee-chair-2026",
+          "algorithm": "ed25519",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW//k2uPmnAu1NI0N4Sl6cwTOFamDYV7UN7jGGHYil88=\n-----END PUBLIC KEY-----\n"
+        }
+      ],
+      "page_body": "# Municipal water rates\r\n\r\nThe published rate is 4.20 per unit.\r\n",
+      "receipt": {
+        "schema_version": 1,
+        "decision": "admit",
+        "target_path": "knowledge/water-rates.md",
+        "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+        "reviewer_id": "committee-chair",
+        "reviewed_at": "2026-08-29T21:00:00Z",
+        "key_id": "committee-chair-2026",
+        "algorithm": "ed25519",
+        "signature": "ADRD+RMss+cl/5hk0raw0pzASJnHE0wMDgdVXt598sWRLVdccM2A+7B3PqQWyek43EZc6cdkA8lQYd7w2bYABw=="
+      },
+      "expected": {
+        "valid": true,
+        "reasons": []
+      }
+    },
+    {
+      "name": "tampered-body-fails-digest-binding",
+      "trust_reviewers": [
+        {
+          "reviewer_id": "committee-chair",
+          "key_id": "committee-chair-2026",
+          "algorithm": "ed25519",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW//k2uPmnAu1NI0N4Sl6cwTOFamDYV7UN7jGGHYil88=\n-----END PUBLIC KEY-----\n"
+        }
+      ],
+      "page_body": "# Municipal water rates\n\nThe published rate is 9.99 per unit.\n",
+      "receipt": {
+        "schema_version": 1,
+        "decision": "admit",
+        "target_path": "knowledge/water-rates.md",
+        "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+        "reviewer_id": "committee-chair",
+        "reviewed_at": "2026-08-29T21:00:00Z",
+        "key_id": "committee-chair-2026",
+        "algorithm": "ed25519",
+        "signature": "ADRD+RMss+cl/5hk0raw0pzASJnHE0wMDgdVXt598sWRLVdccM2A+7B3PqQWyek43EZc6cdkA8lQYd7w2bYABw=="
+      },
+      "expected": {
+        "valid": false,
+        "reasons": [
+          "authorization content digest does not match page"
+        ]
+      }
+    },
+    {
+      "name": "untrusted-key-fails",
+      "trust_reviewers": [],
+      "page_body": "# Municipal water rates\n\nThe published rate is 4.20 per unit.\n",
+      "receipt": {
+        "schema_version": 1,
+        "decision": "admit",
+        "target_path": "knowledge/water-rates.md",
+        "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+        "reviewer_id": "committee-chair",
+        "reviewed_at": "2026-08-29T21:00:00Z",
+        "key_id": "committee-chair-2026",
+        "algorithm": "ed25519",
+        "signature": "ADRD+RMss+cl/5hk0raw0pzASJnHE0wMDgdVXt598sWRLVdccM2A+7B3PqQWyek43EZc6cdkA8lQYd7w2bYABw=="
+      },
+      "expected": {
+        "valid": false,
+        "reasons": [
+          "authorization reviewer key is not trusted"
+        ]
+      }
+    },
+    {
+      "name": "signature-from-a-key-outside-the-trust-policy-fails",
+      "trust_reviewers": [
+        {
+          "reviewer_id": "committee-chair",
+          "key_id": "committee-chair-2026",
+          "algorithm": "ed25519",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW//k2uPmnAu1NI0N4Sl6cwTOFamDYV7UN7jGGHYil88=\n-----END PUBLIC KEY-----\n"
+        }
+      ],
+      "page_body": "# Municipal water rates\n\nThe published rate is 4.20 per unit.\n",
+      "receipt": {
+        "schema_version": 1,
+        "decision": "admit",
+        "target_path": "knowledge/water-rates.md",
+        "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+        "reviewer_id": "committee-chair",
+        "reviewed_at": "2026-08-29T21:00:00Z",
+        "key_id": "committee-chair-2026",
+        "algorithm": "ed25519",
+        "signature": "VyyKBBlK3OsbXKezBDiyrO4hz6gnHA/801pwK3ZZaZOYOFDf3SyERoi/9vfDHsrw+79QfQRxsbnp7+lr0deYDw=="
+      },
+      "expected": {
+        "valid": false,
+        "reasons": [
+          "authorization signature verification failed"
+        ]
+      }
+    },
+    {
+      "name": "unknown-receipt-field-fails-strict-schema",
+      "trust_reviewers": [
+        {
+          "reviewer_id": "committee-chair",
+          "key_id": "committee-chair-2026",
+          "algorithm": "ed25519",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW//k2uPmnAu1NI0N4Sl6cwTOFamDYV7UN7jGGHYil88=\n-----END PUBLIC KEY-----\n"
+        }
+      ],
+      "page_body": "# Municipal water rates\n\nThe published rate is 4.20 per unit.\n",
+      "receipt": {
+        "schema_version": 1,
+        "decision": "admit",
+        "target_path": "knowledge/water-rates.md",
+        "content_sha256": "f96cda721d2d11112e9ac82e6d879cd7899ce1e4de2694221d289c678df40729",
+        "reviewer_id": "committee-chair",
+        "reviewed_at": "2026-08-29T21:00:00Z",
+        "key_id": "committee-chair-2026",
+        "algorithm": "ed25519",
+        "signature": "ADRD+RMss+cl/5hk0raw0pzASJnHE0wMDgdVXt598sWRLVdccM2A+7B3PqQWyek43EZc6cdkA8lQYd7w2bYABw==",
+        "promoted": true
+      },
+      "expected": {
+        "valid": false,
+        "reasons": [
+          "authorization receipt failed strict schema validation"
+        ]
+      }
+    }
+  ]
+}

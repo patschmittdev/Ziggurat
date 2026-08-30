@@ -29,7 +29,7 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
     return 1;
   }
 
-  const { command, root, file, query, json, help } = parsed;
+  const { command, root, file, query, sources, json, help } = parsed;
   if (help) {
     io.stdout(renderHelp(command));
     return 0;
@@ -39,7 +39,7 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
     switch (command) {
       case 'init':    return await runInit(root, io);
       case 'ingest':  return await runIngest(root, file, json, io);
-      case 'refine':  return await runRefine(root, query, json, io);
+      case 'refine':  return await runRefine(root, query, json, io, { sources });
       case 'review':  return await runReview(root, json, io);
       case 'build':   return await runBuild(root, json, io);
       case 'query':   return await runQuery(root, query, json, io);
@@ -59,7 +59,7 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
       const usage: Record<import('./args.js').CliCommand, string> = {
         init: 'ziggurat init --root <vault>',
         ingest: 'ziggurat ingest --root <vault> --file <inbox-file>',
-        refine: 'ziggurat refine --root <vault> --query <request>',
+        refine: 'ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...',
         review: 'ziggurat review --root <vault>',
         build: 'ziggurat build --root <vault>',
         query: 'ziggurat query --root <vault> --query <text>',

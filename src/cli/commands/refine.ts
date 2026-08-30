@@ -2,8 +2,25 @@ import type { CliIO } from '../main.js';
 import { stageProposal } from '../../refine/proposal.js';
 import { parseZigguratConfig } from '../../contracts/config.js';
 import { LoopbackChatAdapter } from '../../refine/adapter.js';
+import { buildBronzeReference, buildRefineMessages } from '../../refine/context.js';
+import { inertSingleLineText } from '../../presentation/inert.js';
 
-export async function runRefine(root: string, query: string | undefined, json: boolean, io: CliIO): Promise<number> {
+export interface RefineOptions {
+  /**
+   * Explicit Bronze paths the operator chose to place in the request. Omitting this
+   * uses the conservative default: only Bronze the model-access privacy policy already
+   * allows. Naming sources is a deliberate human decision to widen that set.
+   */
+  sources?: readonly string[] | undefined;
+}
+
+export async function runRefine(
+  root: string,
+  query: string | undefined,
+  json: boolean,
+  io: CliIO,
+  options: RefineOptions = {},
+): Promise<number> {
   if (!query) {
     io.stderr('error: --query is required for the refine command\n');
     return 1;
@@ -16,17 +33,20 @@ export async function runRefine(root: string, query: string | undefined, json: b
     return 1;
   }
 
+  const reference = await buildBronzeReference(root, { sourcePaths: options.sources });
+  if (reference.sources.length === 0) {
+    io.stderr(
+      'error: no Bronze evidence is available for this request. A model cannot produce '
+      + 'exact citations without it.\n',
+    );
+    for (const omission of reference.omitted) {
+      io.stderr(`  omitted ${inertSingleLineText(omission.source_path)}: ${omission.reason}\n`);
+    }
+    return 1;
+  }
+
   const adapter = new LoopbackChatAdapter(endpoint);
-  const raw = await adapter.completeJson([
-    {
-      role: 'system',
-      content:
-        'Return a strict RefinementProposalPayload version 2 with a complete candidate, ' +
-        'exact Bronze citations, contradictions, confidence, and unresolved questions. ' +
-        'Never include reviewed status, reviewer identity, authorization, or admission metadata.',
-    },
-    { role: 'user', content: query },
-  ]);
+  const raw = await adapter.completeJson(buildRefineMessages({ topic: query }, reference));
 
   const staged = await stageProposal(root, raw);
 
@@ -35,9 +55,18 @@ export async function runRefine(root: string, query: string | undefined, json: b
       staged: staged.path,
       proposal_id: staged.proposal.proposal_id,
       staged_at: staged.proposal.staged_at,
+      reference_sources: reference.sources.map(source => source.source_path),
+      omitted_sources: reference.omitted,
     }, null, 2) + '\n');
   } else {
     io.stdout(`Staged proposal: ${staged.path}\n`);
+    io.stdout(`Bronze reference sources: ${reference.sources.length}\n`);
+  }
+
+  for (const omission of reference.omitted) {
+    io.stderr(
+      `warning: omitted Bronze source ${inertSingleLineText(omission.source_path)}: ${omission.reason}\n`,
+    );
   }
   return 0;
 }
