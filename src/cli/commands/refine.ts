@@ -18,16 +18,26 @@ export async function runRefine(root: string, query: string | undefined, json: b
 
   const adapter = new LoopbackChatAdapter(endpoint);
   const raw = await adapter.completeJson([
-    { role: 'system', content: 'You are a knowledge refinement assistant. Output a RefinementProposal JSON object.' },
+    {
+      role: 'system',
+      content:
+        'Return a strict RefinementProposalPayload version 2 with a complete candidate, ' +
+        'exact Bronze citations, contradictions, confidence, and unresolved questions. ' +
+        'Never include reviewed status, reviewer identity, authorization, or admission metadata.',
+    },
     { role: 'user', content: query },
   ]);
 
-  const stagePath = await stageProposal(root, raw);
+  const staged = await stageProposal(root, raw);
 
   if (json) {
-    io.stdout(JSON.stringify({ staged: stagePath }, null, 2) + '\n');
+    io.stdout(JSON.stringify({
+      staged: staged.path,
+      proposal_id: staged.proposal.proposal_id,
+      staged_at: staged.proposal.staged_at,
+    }, null, 2) + '\n');
   } else {
-    io.stdout(`Staged proposal: ${stagePath}\n`);
+    io.stdout(`Staged proposal: ${staged.path}\n`);
   }
   return 0;
 }

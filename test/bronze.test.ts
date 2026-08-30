@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, sep } from 'node:path';
 import test from 'node:test';
 import { canonicalBronzeBody, sha256Text } from '../src/bronze/canonical.js';
 import { ingestCapture } from '../src/bronze/ingest.js';
 import { BronzeCorruptionError, collectBronzeHashes, verifyBronzeFile } from '../src/bronze/store.js';
+import { collectBronzeFiles } from '../src/corpus/collect.js';
 
 async function makeVault(files: Record<string, string>): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'ziggurat-bronze-'));
@@ -156,6 +157,7 @@ test('verifyBronzeFile detects a one-character body mutation', async () => {
       now: new Date('2026-01-02T00:00:00Z'),
       sourceKind: 'article',
     });
+
     const bronzePath = join(root, result.source_path);
     const clean = await verifyBronzeFile(bronzePath);
     assert.equal(clean.valid, true);
@@ -167,6 +169,22 @@ test('verifyBronzeFile detects a one-character body mutation', async () => {
     const corrupted = await verifyBronzeFile(bronzePath);
     assert.equal(corrupted.valid, false);
     assert.notEqual(corrupted.expected, corrupted.actual);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('collectBronzeFiles returns vault-relative paths when root has a trailing separator', async () => {
+  const root = await makeVault({ 'inbox/doc.md': '# Doc\n\nContent.\n' });
+  try {
+    await ingestCapture(root, 'inbox/doc.md', {
+      now: new Date('2026-01-02T00:00:00Z'),
+      sourceKind: 'article',
+    });
+    const records = await collectBronzeFiles(`${root}${sep}`);
+    assert.equal(records.length, 1);
+    assert.match(records[0]!.path, /^bronze\//u);
+    assert(!records[0]!.path.includes(root));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

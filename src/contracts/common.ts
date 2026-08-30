@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export const UtcDateTimeSchema = z.string().regex(
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u,
+  'must be a UTC ISO-8601 datetime',
+);
+
 export type PiiState = 'true' | 'false' | 'unknown';
 export type Sensitivity = 'public' | 'internal' | 'restricted';
 export type ReviewStatus = 'draft' | 'in-review' | 'reviewed';
@@ -47,4 +52,12 @@ export const EvidenceCitationSchema = z.object({
   line_end: z.number().int().min(1),
   quote: z.string().min(1),
   quote_sha256: hexSha256,
+}).strict().superRefine((citation, ctx) => {
+  if (citation.line_end < citation.line_start) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['line_end'],
+      message: 'line_end must be greater than or equal to line_start',
+    });
+  }
 });

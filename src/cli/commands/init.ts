@@ -1,14 +1,22 @@
-import { access, copyFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CliIO } from '../main.js';
 
-const STARTER_DIRS = ['bronze', 'knowledge', '.ziggurat/proposals', 'inbox', 'config'];
+const STARTER_DIRS = [
+  'bronze',
+  'knowledge',
+  'authorizations',
+  '.ziggurat/proposals',
+  'inbox',
+  'config',
+];
 
 const STARTER_CONFIGS: Record<string, string> = {
   'config/ziggurat.yaml': `schema_version: 1\nlifecycle:\n  review_queue_limit: 20\n`,
   'config/domain.yaml': `domain:\n  page_types:\n    - concept\n    - entity\n    - comparison\n    - query\n  tags:\n    - general\n`,
   'config/privacy.yaml': `privacy:\n  default_sensitivity: restricted\n  default_pii: unknown\n`,
   'config/adapters.yaml': `adapters: {}\n`,
+  'config/trust.yaml': `trust:\n  reviewers: []\n`,
 };
 
 const SCHEMA_VERSION_RE = /^schema_version:\s*(\d+)/m;
@@ -37,10 +45,9 @@ export async function runInit(root: string, io: CliIO): Promise<number> {
   for (const [relPath, content] of Object.entries(STARTER_CONFIGS)) {
     const fullPath = join(root, relPath);
     try {
-      await access(fullPath);
-      // File exists - do not overwrite
-    } catch {
-      await writeFile(fullPath, content, 'utf8');
+      await writeFile(fullPath, content, { encoding: 'utf8', flag: 'wx' });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
     }
   }
 

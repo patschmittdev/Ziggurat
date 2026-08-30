@@ -3,18 +3,45 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { sha256Text } from '../src/bronze/canonical.js';
 import { buildGoldIndex } from '../src/retrieval/gold-index.js';
-import { buildReviewIndex } from '../src/retrieval/profile-index.js';
 import { createContextAccess, ContextAccess } from '../src/mcp/access.js';
 import { createMcpServer } from '../src/mcp/server.js';
 import * as YAML from 'yaml';
 import type { CuratedPage } from '../src/contracts/index.js';
+import {
+  authorizeTestPage,
+  createTestReviewer,
+} from './helpers/authorization.js';
+
+const TEST_REVIEWER = createTestReviewer('mcp-reviewer', 'mcp-reviewer-primary');
+const MAIN_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'cli', 'main.js');
+const FIXED_DATE = new Date();
+const RECENT_REVIEW = new Date(FIXED_DATE.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
 async function makeVault(files: Record<string, string>): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'ziggurat-mcp-'));
-  for (const [relPath, content] of Object.entries(files)) {
+  const configFiles = {
+    'config/ziggurat.yaml': 'schema_version: 1\nlifecycle:\n  review_queue_limit: 10\n',
+    'config/domain.yaml': 'domain:\n  page_types: [concept]\n  tags: [security]\n',
+    'config/privacy.yaml': 'privacy:\n  default_sensitivity: restricted\n  default_pii: unknown\n',
+    'config/adapters.yaml': 'adapters: {}\n',
+    'config/trust.yaml': YAML.stringify({
+      trust: {
+        reviewers: [{
+          reviewer_id: TEST_REVIEWER.reviewerId,
+          key_id: TEST_REVIEWER.keyId,
+          algorithm: 'ed25519',
+          public_key_pem: TEST_REVIEWER.publicKeyPem,
+        }],
+      },
+    }),
+  };
+  for (const [relPath, content] of Object.entries({ ...configFiles, ...files })) {
     const fullPath = join(root, relPath);
     await mkdir(dirname(fullPath), { recursive: true });
     await writeFile(fullPath, content, 'utf8');
@@ -41,13 +68,12 @@ function makeGoldPage(): CuratedPage {
     sensitivity: 'public',
     visibility: 'internal',
     egress: 'approved-cloud',
-    reviewed_by: 'human',
-    reviewed_at: '2026-07-01T00:00:00Z',
-    last_verified: '2026-07-01T00:00:00Z',
+    reviewed_by: TEST_REVIEWER.reviewerId,
+    reviewed_at: RECENT_REVIEW,
+    last_verified: RECENT_REVIEW,
+    resolved_proposals: [],
   };
 }
-
-const FIXED_DATE = new Date('2026-07-30T00:00:00Z');
 
 /**
  * Writes a curated page to disk so the live corpus matches what the index was built
@@ -74,6 +100,7 @@ async function buildTestVaultWithGoldIndex(root: string): Promise<void> {
   const page = makeGoldPage();
   const body = 'Gold content about irrigation and water supply.';
   await writeCuratedPage(root, 'knowledge/gold.md', page, body);
+  await authorizeTestPage(root, 'knowledge/gold.md', page, body, TEST_REVIEWER);
   await buildGoldIndex(root, [
     { path: 'knowledge/gold.md', page, pageBody: body },
   ], { asOf: FIXED_DATE });
@@ -146,7 +173,7 @@ test('read: rejects forged citation ID not from search', async () => {
   try {
     await buildTestVaultWithGoldIndex(root);
     const access = await createContextAccess(root, 'communion');
-    assert.throws(
+    await assert.rejects(
       () => access.read(randomUUID()),
       /unknown citation/iu,
     );
@@ -162,9 +189,11 @@ test('read: accepts citation ID returned by search on the same instance', async 
     const access = await createContextAccess(root, 'communion');
     const hits = await access.search('irrigation');
     assert(hits.length >= 1);
-    const payload = access.read(hits[0]!.citation_id);
+    const payload = await access.read(hits[0]!.citation_id);
     assert.equal(payload.profile, 'communion');
     assert.equal(typeof payload.body, 'string');
+    assert.equal(payload.content_role, 'reference');
+    assert.equal(payload.instruction_authority, 'none');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -184,9 +213,45 @@ test('read: rejects citation ID from a different access instance', async () => {
     const hitsA = await instanceA.search('irrigation');
     assert(hitsA.length >= 1);
 
-    assert.throws(
+    await assert.rejects(
       () => instanceB.read(hitsA[0]!.citation_id),
       /unknown citation/iu,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('read: fails closed when the live authorized corpus changes after search', async () => {
+  const root = await makeVault({});
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    const access = await createContextAccess(root, 'communion');
+    const hits = await access.search('irrigation');
+    assert(hits.length >= 1);
+    await writeFile(
+      join(root, 'knowledge', 'gold.md'),
+      '---\nschema_version: 1\n---\nTampered.\n',
+      'utf8',
+    );
+    await assert.rejects(() => access.read(hits[0]!.citation_id), /stale|fingerprint/iu);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('read: rejects a cached citation after revocation and a valid rebuild', async () => {
+  const root = await makeVault({});
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    const access = await createContextAccess(root, 'communion');
+    const hits = await access.search('irrigation');
+    assert(hits.length >= 1);
+    await writeFile(join(root, 'config', 'trust.yaml'), 'trust:\n  reviewers: []\n', 'utf8');
+    await buildGoldIndex(root, [], { asOf: FIXED_DATE });
+    await assert.rejects(
+      () => access.read(hits[0]!.citation_id),
+      /citation|fingerprint|revoked/iu,
     );
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -236,27 +301,6 @@ test('communion access does not expose review profile label', async () => {
   }
 });
 
-test('review access loads review index independently', async () => {
-  const root = await makeVault({});
-  try {
-    const page: CuratedPage = { ...makeGoldPage(), status: 'in-review', reviewed_by: undefined, reviewed_at: undefined, last_verified: undefined } as unknown as CuratedPage;
-    const body = 'Silver review content.';
-    await writeCuratedPage(root, 'knowledge/silver.md', page, body);
-    await buildReviewIndex(root, {
-      curated: [{ path: 'knowledge/silver.md', page, pageBody: body }],
-      bronze: [],
-    });
-
-    const access = await createContextAccess(root, 'review');
-    assert.equal(access.accessProfile, 'review');
-    const hits = await access.search('silver review');
-    assert(hits.length >= 1);
-    assert.equal(hits[0]?.profile, 'review');
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
 // ---------------------------------------------------------------------------
 // MCP server tool listing
 // ---------------------------------------------------------------------------
@@ -265,7 +309,7 @@ test('createMcpServer: registers exactly two tools', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const server = await createMcpServer(root, 'communion');
+    const server = await createMcpServer(root);
     const tools = (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools;
     const names = Object.keys(tools);
     assert.equal(names.length, 2);
@@ -280,7 +324,7 @@ test('createMcpServer: tools are read-only and non-destructive', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const server = await createMcpServer(root, 'communion');
+    const server = await createMcpServer(root);
     const tools = (server as unknown as { _registeredTools: Record<string, { annotations?: Record<string, unknown> }> })._registeredTools;
 
     for (const [name, tool] of Object.entries(tools)) {
@@ -298,10 +342,32 @@ test('createMcpServer: cannot call startMcpServer without index', async () => {
   const root = await makeVault({});
   try {
     await assert.rejects(
-      () => createMcpServer(root, 'communion'),
+      () => createMcpServer(root),
       /ENOENT|no such file|not found/iu,
     );
   } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('mcp executable remains alive after stdio transport connects', async () => {
+  const root = await makeVault({});
+  let child: ReturnType<typeof spawn> | undefined;
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    child = spawn(process.execPath, [MAIN_PATH, 'mcp', '--root', root], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    await Promise.race([
+      once(child, 'exit'),
+      new Promise(resolve => setTimeout(resolve, 150)),
+    ]);
+    assert.equal(child.exitCode, null);
+  } finally {
+    if (child !== undefined && child.exitCode === null) {
+      child.kill();
+      await once(child, 'exit');
+    }
     await rm(root, { recursive: true, force: true });
   }
 });

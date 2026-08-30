@@ -7,9 +7,7 @@
         "${workspaceFolder}/dist/src/cli/main.js",
         "mcp",
         "--root",
-        "${workspaceFolder}",
-        "--profile",
-        "communion"
+        "${workspaceFolder}"
       ]
     }
   }

@@ -29,7 +29,11 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
     return 1;
   }
 
-  const { command, root, file, query, profile, json } = parsed;
+  const { command, root, file, query, json, help } = parsed;
+  if (help) {
+    io.stdout(renderHelp(command));
+    return 0;
+  }
 
   try {
     switch (command) {
@@ -39,13 +43,52 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
       case 'review':  return await runReview(root, json, io);
       case 'build':   return await runBuild(root, json, io);
       case 'query':   return await runQuery(root, query, json, io);
-      case 'mcp':     return await runMcp(root, profile, json, io);
+      case 'mcp':     return await runMcp(root, json, io);
       case 'check':   return await runCheck(root, json, io);
       case 'eval':    return await runEval(root, json, io);
     }
+    io.stderr('error: command is required\n');
+    return 1;
   } catch (err) {
     io.stderr(`error: ${err instanceof Error ? err.message : String(err)}\n`);
     return 1;
+  }
+
+  function renderHelp(command: import('./args.js').CliCommand | null): string {
+    if (command !== null) {
+      const usage: Record<import('./args.js').CliCommand, string> = {
+        init: 'ziggurat init --root <vault>',
+        ingest: 'ziggurat ingest --root <vault> --file <inbox-file>',
+        refine: 'ziggurat refine --root <vault> --query <request>',
+        review: 'ziggurat review --root <vault>',
+        build: 'ziggurat build --root <vault>',
+        query: 'ziggurat query --root <vault> --query <text>',
+        mcp: 'ziggurat mcp --root <vault>',
+        check: 'ziggurat check --root <vault> --audit-clean-room',
+        eval: 'ziggurat eval --root <vault>',
+      };
+      return `Usage: ${usage[command]}\n`;
+    }
+    return [
+      'Ziggurat: Models propose. Humans decide what persists.',
+      '',
+      'Usage: ziggurat <command> [options]',
+      '',
+      'Commands:',
+      '  init     Initialize a vault with an empty human trust policy',
+      '  ingest   Capture immutable Bronze evidence',
+      '  refine   Stage an evidence-backed Silver proposal',
+      '  review   Render staged Silver proposals for human review',
+      '  build    Rebuild isolated indexes; unsigned content stays out of Gold',
+      '  query    Query authorized Gold communion',
+      '  mcp      Start the communion-only read-only MCP server',
+      '  check    Audit clean-room and key-material policy',
+      '  eval     Run conformance checks',
+      '',
+      'Communion MCP: ziggurat mcp --root <vault>',
+      'Common options: --root <vault> --json --help',
+      '',
+    ].join('\n');
   }
 }
 
@@ -57,5 +100,5 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
 // runCli() directly, which is why CI stayed green on all three platforms.
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const exitCode = await runCli(process.argv.slice(2));
-  process.exit(exitCode);
+  process.exitCode = exitCode;
 }

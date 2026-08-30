@@ -2,10 +2,11 @@ import { readFile, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { posix } from 'node:path';
 import type { EvidenceCitation } from '../contracts/index.js';
-import { sha256Text } from '../bronze/canonical.js';
+import { canonicalBronzeBody, sha256Text } from '../bronze/canonical.js';
 import { parseBronzeRecord, BronzeCorruptionError } from '../bronze/store.js';
+import { assertRealPathWithinRoot } from '../fs/boundary.js';
 
-export type EvidenceFailedField = 'body_sha256' | 'quote' | 'quote_sha256';
+export type EvidenceFailedField = 'body_sha256' | 'line_range' | 'quote' | 'quote_sha256';
 
 export interface EvidenceValidationError {
   source_path: string;
@@ -26,7 +27,13 @@ function extractBronzeBody(content: string): string {
  * Resolves real paths to detect symlink escapes.
  * Throws on: absolute paths, backslashes, dot segments, traversal, paths outside bronze/.
  */
-async function assertBronzeSourcePath(root: string, sourcePath: string): Promise<string> {
+export async function resolveBronzeSourcePath(
+  root: string,
+  sourcePath: string,
+): Promise<string> {
+  if (/[\x00-\x1f\x7f-\x9f]/u.test(sourcePath)) {
+    throw new Error('source_path must not contain control characters');
+  }
   if (sourcePath.includes('\\')) {
     throw new Error(`source_path must use forward slashes only: ${sourcePath}`);
   }
@@ -48,6 +55,7 @@ async function assertBronzeSourcePath(root: string, sourcePath: string): Promise
 
   const absolutePath = join(root, sourcePath);
   const bronzeRootAbs = join(root, 'bronze');
+  await assertRealPathWithinRoot(root, bronzeRootAbs, 'Bronze directory', false);
 
   const [realFile, realBronze] = await Promise.all([
     realpath(absolutePath),
@@ -74,10 +82,10 @@ export async function validateEvidenceCitation(
   root: string,
   citation: EvidenceCitation,
 ): Promise<EvidenceValidationError | null> {
-  const filePath = await assertBronzeSourcePath(root, citation.source_path);
+  const filePath = await resolveBronzeSourcePath(root, citation.source_path);
 
   const rawContent = await readFile(filePath, 'utf8');
-  const content = rawContent.replace(/\r\n/g, '\n');
+  const content = canonicalBronzeBody(rawContent);
 
   const bronzeRecord = parseBronzeRecord(content);
   const body = extractBronzeBody(content);
@@ -96,6 +104,18 @@ export async function validateEvidenceCitation(
   }
 
   const lines = body.split('\n');
+  const lineCount = body.endsWith('\n') ? lines.length - 1 : lines.length;
+  if (
+    citation.line_end < citation.line_start
+    || citation.line_start > lineCount
+    || citation.line_end > lineCount
+  ) {
+    return {
+      source_path: citation.source_path,
+      failed_field: 'line_range',
+      message: `line range ${citation.line_start}-${citation.line_end} exceeds body line count ${lineCount}`,
+    };
+  }
   const extracted = lines.slice(citation.line_start - 1, citation.line_end).join('\n');
 
   if (extracted !== citation.quote) {
