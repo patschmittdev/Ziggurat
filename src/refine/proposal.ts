@@ -12,6 +12,7 @@ import type {
 import { sha256Text } from '../bronze/canonical.js';
 import { normalizeText } from '../authorization/canonical.js';
 import { validateEvidenceCitation } from './evidence.js';
+import { buildBronzeReference, buildRefineMessages } from './context.js';
 import type { StructuredChatAdapter, ChatMessage } from './adapter.js';
 import type { z } from 'zod';
 import { assertRealPathWithinRoot } from '../fs/boundary.js';
@@ -142,31 +143,26 @@ export async function stageProposal(
 /**
  * Requests a Silver refinement from the adapter, then delegates to stageProposal
  * which parses, validates all evidence citations, and atomically stages on disk.
+ *
+ * The host reads Bronze and puts the selected bytes in the request. The adapter never
+ * receives a path it can fetch, and the returned proposal is still validated against
+ * the real files on disk, so a fabricated quote or digest fails staging.
  */
 export async function requestRefinement(
   adapter: StructuredChatAdapter,
   input: RefinementInput,
 ): Promise<RefinementProposal> {
-  const messages: ChatMessage[] = [
+  const reference = await buildBronzeReference(input.root, {
+    sourcePaths: input.bronze_source_paths,
+  });
+  const messages: ChatMessage[] = buildRefineMessages(
     {
-      role: 'system',
-      content:
-        'You are a knowledge curation assistant. ' +
-        'Return a JSON object matching the RefinementProposalPayload schema version 2. ' +
-        'Include a complete candidate, exact Bronze evidence, structured contradictions, ' +
-        'confidence, affected paths, related paths, and unresolved questions. Never include ' +
-        'status, reviewed_by, reviewed_at, authorization, or other admission metadata.',
+      topic: input.topic,
+      target_path: input.target_path,
+      existing_content: input.existing_content,
     },
-    {
-      role: 'user',
-      content: JSON.stringify({
-        topic: input.topic,
-        target_path: input.target_path,
-        bronze_source_paths: input.bronze_source_paths,
-        existing_content: input.existing_content,
-      }),
-    },
-  ];
+    reference,
+  );
 
   const raw = await adapter.completeJson(messages);
   return (await stageProposal(input.root, raw)).proposal;

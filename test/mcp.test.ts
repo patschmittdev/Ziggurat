@@ -9,7 +9,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { sha256Text } from '../src/bronze/canonical.js';
 import { buildGoldIndex } from '../src/retrieval/gold-index.js';
-import { createContextAccess, ContextAccess } from '../src/mcp/access.js';
+import { createContextAccess, ContextAccess, ACCESS_LIMITS } from '../src/mcp/access.js';
 import { createMcpServer } from '../src/mcp/server.js';
 import * as YAML from 'yaml';
 import type { CuratedPage } from '../src/contracts/index.js';
@@ -368,6 +368,135 @@ test('mcp executable remains alive after stdio transport connects', async () => 
       child.kill();
       await once(child, 'exit');
     }
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Retrieval bounds
+// ---------------------------------------------------------------------------
+
+test('ACCESS_LIMITS: documented conservative ceilings', () => {
+  assert.equal(ACCESS_LIMITS.maxQueryChars, 1024);
+  assert.equal(ACCESS_LIMITS.maxSearchResults, 20);
+  assert.equal(ACCESS_LIMITS.maxSessionCitations, 200);
+});
+
+test('search: rejects an empty query', async () => {
+  const root = await makeVault({});
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    const access = await createContextAccess(root, 'communion');
+    await assert.rejects(() => access.search(''), /must not be empty/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('search: refuses an over-long query rather than truncating it', async () => {
+  const root = await makeVault({});
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    const access = await createContextAccess(root, 'communion');
+    const query = 'irrigation '.repeat(200).slice(0, ACCESS_LIMITS.maxQueryChars + 1);
+    assert.equal(query.length, ACCESS_LIMITS.maxQueryChars + 1);
+    await assert.rejects(
+      () => access.search(query),
+      /exceeding the 1024 character limit/u,
+    );
+    // The boundary value itself is still accepted.
+    const ok = await access.search(query.slice(0, ACCESS_LIMITS.maxQueryChars));
+    assert.ok(Array.isArray(ok));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('search: caps returned results at the documented maximum', async () => {
+  const root = await makeVault({});
+  try {
+    const bronzeBody = '# Source\n\nTest evidence for irrigation systems.\n';
+    await mkdir(join(root, 'bronze'), { recursive: true });
+    await writeFile(join(root, 'bronze', 'src.md'), makeBronzeContent(bronzeBody), 'utf8');
+
+    const total = ACCESS_LIMITS.maxSearchResults + 5;
+    const entries: Array<{ path: string; page: CuratedPage; pageBody: string }> = [];
+    for (let i = 0; i < total; i++) {
+      const relPath = `knowledge/gold-${String(i).padStart(2, '0')}.md`;
+      const page = { ...makeGoldPage(), title: `Gold Page ${i}` };
+      const pageBody = `Gold content number ${i} about irrigation and water supply.`;
+      await writeCuratedPage(root, relPath, page, pageBody);
+      await authorizeTestPage(root, relPath, page, pageBody, TEST_REVIEWER);
+      entries.push({ path: relPath, page, pageBody });
+    }
+    await buildGoldIndex(root, entries, { asOf: FIXED_DATE });
+
+    const access = await createContextAccess(root, 'communion');
+    const hits = await access.search('irrigation');
+    assert.equal(hits.length, ACCESS_LIMITS.maxSearchResults);
+    assert.equal(new Set(hits.map(h => h.citation_id)).size, hits.length);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('search: evicting an old citation revokes it and keeps newer ones valid', async () => {
+  const root = await makeVault({});
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    const access = await createContextAccess(root, 'communion', {
+      maxSearchResults: 1,
+      maxSessionCitations: 2,
+    });
+
+    const first = (await access.search('irrigation'))[0]?.citation_id;
+    const second = (await access.search('irrigation'))[0]?.citation_id;
+    assert.ok(first !== undefined && second !== undefined);
+
+    // Both fit inside the session ceiling.
+    assert.equal((await access.read(first)).path, 'knowledge/gold.md');
+    assert.equal((await access.read(second)).path, 'knowledge/gold.md');
+
+    const third = (await access.search('irrigation'))[0]?.citation_id;
+    assert.ok(third !== undefined);
+
+    await assert.rejects(() => access.read(first), /Unknown citation ID/u);
+    assert.equal((await access.read(second)).path, 'knowledge/gold.md');
+    assert.equal((await access.read(third)).path, 'knowledge/gold.md');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('ContextAccess: rejects unusable limit overrides', async () => {
+  const root = await makeVault({});
+  try {
+    await buildTestVaultWithGoldIndex(root);
+    await assert.rejects(
+      () => createContextAccess(root, 'communion', { maxSessionCitations: 0 }),
+      /maxSessionCitations must be a positive integer/u,
+    );
+    // A result ceiling above the session ceiling would let one search insert citations
+    // and then immediately evict the IDs it is returning, so search() would hand back
+    // IDs that read() rejects. Reject the combination at construction instead.
+    await assert.rejects(
+      () => createContextAccess(root, 'communion', {
+        maxSearchResults: 10,
+        maxSessionCitations: 5,
+      }),
+      /maxSearchResults \(10\) must not exceed maxSessionCitations \(5\)/u,
+    );
+    // The equal case is the boundary and must remain allowed.
+    const access = await createContextAccess(root, 'communion', {
+      maxSearchResults: 5,
+      maxSessionCitations: 5,
+    });
+    const hits = await access.search('irrigation');
+    assert.ok(hits.length > 0);
+    for (const hit of hits) {
+      assert.equal((await access.read(hit.citation_id)).path, 'knowledge/gold.md');
+    }
+  } finally {
     await rm(root, { recursive: true, force: true });
   }
 });

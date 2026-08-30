@@ -16,25 +16,32 @@ export interface ZigguratConfig {
   trust: z.infer<typeof TrustPolicySchema>;
 }
 
+/**
+ * Configuration is strict at the top level and inside every nested object.
+ *
+ * The documentation promises unknown-field rejection. A permissive nested object turns
+ * a typo such as `default_sensitvity` into a silently ignored key, which is exactly how
+ * a privacy default gets weakened without anyone noticing in review.
+ */
 export const ZigguratConfigSchema = z.object({
   schema_version: z.literal(1),
   lifecycle: z.object({
     review_queue_limit: z.number().int().min(1),
-  }),
+  }).strict(),
   domain: z.object({
     page_types: z.array(z.string().min(1)).min(1),
     tags: z.array(z.string().min(1)).min(1),
-  }),
+  }).strict(),
   privacy: z.object({
     default_sensitivity: z.literal('restricted'),
     default_pii: z.literal('unknown'),
-  }),
+  }).strict(),
   adapters: z.object({
     model_endpoint: z.string().url().optional(),
     embedding_endpoint: z.string().url().optional(),
-  }),
+  }).strict(),
   trust: TrustPolicySchema,
-});
+}).strict();
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 

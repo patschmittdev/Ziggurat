@@ -8,6 +8,15 @@
 # would put exactly the vocabulary the clean-room rule excludes into the repository, and
 # every adopter's project names are different. Add your own before publishing a fork.
 #
+# Because the scan covers this file too, a configured project name is also a finding
+# here. Add `config/clean-room.yaml` to `exclude_paths` when you configure names, and
+# re-read the file by hand before every release.
+#
+# This file is validated strictly. Only `project_names` and `exclude_paths` are allowed,
+# both must be lists of non-empty strings, and a malformed or unreadable file fails the
+# audit rather than falling back to defaults. Deleting the file is the supported way to
+# use defaults.
+#
 # Example:
 #   project_names:
 #     - apollo
