@@ -73,12 +73,18 @@ The signature payload is domain separated, and the canonical page representation
 parsed fields in fixed order with an LF-normalized body, so verification is stable on
 Windows, macOS, and Linux.
 
+Verification proves control of a configured key and authorization of exact canonical
+content. Operator policy maps keys to reviewers; Ziggurat does not prove that the signer
+was human, attended to the content, or completed a particular review workflow.
+
 ## Reporting a vulnerability
 
-Do not open a public issue. Use **Security**, **Advisories**, **Report a vulnerability**
-in the repository, or open
-[a private vulnerability report](https://github.com/patschmittdev/Ziggurat/security/advisories/new).
-Do not submit private vault content, credentials, tokens, or reviewer private keys.
+Do not open a public issue. Private vulnerability reporting is not enabled while the
+repository remains private. If you already have private repository access, use its
+Security Advisories area; otherwise use an established private channel to the maintainer
+and do not disclose details publicly. The public-reporting link will become available
+only after the release checklist activates it. Do not submit private vault content,
+credentials, tokens, or reviewer private keys.
 
 This project is pre-release and does not promise a response-time service level.
 

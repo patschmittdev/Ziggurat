@@ -251,8 +251,8 @@ for texture is a defect.
   scale on the left, the project's real specification as a `dt`/`dd` grid on the
   right, hairline above. It is not a hero.
 - **Boundary plate (Figure 1).** Two stacked fields, gold above and silver below,
-  divided by a 3px double seam reading `NO CODE PATH CROSSES`, with the key entering
-  from outside the frame. Real HTML text, not an image.
+  divided by a 3px double seam reading `NO SHIPPED PATH CREATES AUTHORIZATION`, with the
+  key entering from outside the frame. Real HTML text, not an image.
 - **Section drawing (Figure 3).** Inline SVG, complete in the served markup, with a
   datum rail, seven annotated levels, solid tier courses, and a recessed gap.
 - **Level index.** A monospace elevation number plus a solid tier chip in a ruled
@@ -267,10 +267,53 @@ for texture is a defect.
 - **Artifact.** A bordered plate with a mono filename, a stamp, a scrollable
   `tabindex="0"` code block, and a plain-language note.
 
-Motion is one authored moment and nothing else: a datum cursor that tracks the level
-being read, easing on `cubic-bezier(0.16, 1, 0.3, 1)` over 620ms. It is **additive**
-and dims nothing, so no text ever loses contrast to a scroll position. It runs only
-at or above `64rem` and never under `prefers-reduced-motion`.
+## Motion
+
+Two tiers, and no third.
+
+**Signature.** The datum cursor that tracks the level being read, easing on
+`--zg-ease-datum` (`cubic-bezier(0.16, 1, 0.3, 1)`) over `--zg-dur-datum` (620ms). It is
+**additive** and dims nothing, so no text ever loses contrast to a scroll position. It
+runs only at or above `64rem`, where the plate is sticky. Its first appearance is a fade
+at the correct level, never a traverse up the plate from zero.
+
+**Orientation.** Grouped section entry and a root-only cross-document route fade. A
+reveal group is a unit the reader already groups: a band head, a plate. Siblings
+stagger by `--zg-stagger` (60ms), capped at three steps. Travel is `--zg-rise` (8px)
+and never more.
+
+Rules that do not bend:
+
+- Custom transitions animate `transform` and `opacity` only. Colour, fill, background,
+  border, size, and filter changes are instant. An animated rule is a scaled
+  pseudo-element, never a transitioned `text-decoration-color`.
+- Every duration and easing comes from the tokens in `tokens.css`. No component
+  hardcodes a millisecond value.
+- Nothing that carries a fact reveals: not the seven ascent steps, not the ledger, not
+  the guarantee pair, not the comparison artifacts, not the command cards, not any
+  element containing a code block, and not the first viewport. An argument is not
+  delivered in instalments, and the limits never arrive after the guarantees.
+- Hidden initial states exist only under `html[data-motion]`, set synchronously in the
+  head and self-revoking if the controller never reports in. With no scripting, a failed
+  script, reduced motion, print, or no `IntersectionObserver`, the page renders complete.
+- `prefers-reduced-motion` removes interpolation, not information. The reading cursor
+  and its focus ring still mark the level; they simply arrive there.
+- No scroll-jacking, no parallax, no hover-only fact, no runtime dependency, no
+  framework hydration, and no shared-element route transition. A name that carried an
+  element from a Silver context into a Gold context would animate a promotion this
+  system cannot perform.
+
+## The mark
+
+A section through the structure, drawn in five rects: a Bronze base, a Silver course, a
+five-unit authorization void, an external Gold key stub entering from the right edge of
+the plate, the Gold course above the void, and the summit aperture. The void is the
+load-bearing idea and is spent as negative space so it survives to 16px; the key stub
+degrades to a tick below 24px, which is acceptable because the gap does not.
+
+The tiers are coloured at rest in every context, including the masthead. Identity is
+never a hover reward, and a fill is never animated. A contiguous Bronze-to-Gold stack is
+forbidden: it draws an automatic promotion.
 
 ## Do's and Don'ts
 

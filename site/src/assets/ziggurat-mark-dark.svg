@@ -1,16 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Ziggurat">
   <title>Ziggurat</title>
-  <!-- Base course: preserved evidence -->
-  <rect x="2" y="24" width="28" height="6" fill="#de9a6a" />
-  <!-- Middle course: staged proposal -->
-  <rect x="6" y="16" width="20" height="6" fill="#96bad2" />
-  <!-- Authorization gap: nothing in the structure bridges it from below -->
-  <path d="M6 14h9M17 14h9" stroke="#eceeec" stroke-width="1" stroke-linecap="square" />
-  <!-- External key crossing the gap from outside the frame -->
-  <path d="M31 14h-5" stroke="#eceeec" stroke-width="2" stroke-linecap="butt" />
-  <circle cx="16" cy="14" r="1.6" fill="none" stroke="#eceeec" stroke-width="1" />
-  <!-- Upper course: authorized reference data -->
-  <rect x="10" y="6" width="12" height="6" fill="#e6b854" />
-  <!-- Summit aperture: read-only communion -->
-  <rect x="14" y="2" width="4" height="2" fill="#eceeec" />
+  <rect x="2" y="25" width="28" height="5" fill="#de9a6a"></rect>
+  <rect x="6" y="18" width="20" height="5" fill="#96bad2"></rect>
+  <rect x="23" y="14" width="9" height="2" fill="#e6b854"></rect>
+  <rect x="10" y="7" width="12" height="5" fill="#e6b854"></rect>
+  <rect x="14" y="2" width="4" height="2" fill="#eceeec"></rect>
 </svg>

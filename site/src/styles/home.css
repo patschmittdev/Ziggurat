@@ -175,6 +175,7 @@ svg {
 }
 
 .masthead__nav a {
+  position: relative;
   color: var(--zg-ink-2);
   text-decoration: none;
   font-size: var(--zg-text--1);
@@ -183,9 +184,31 @@ svg {
   min-height: 44px;
 }
 
-.masthead__nav a:hover {
+/*
+  The hover rule is drawn by a pseudo-element and scaled on the transform axis,
+  so nothing reflows and the transition stays on the compositor. Colour changes
+  are instant: a hover cue should confirm the pointer, not fade in behind it.
+*/
+.masthead__nav a::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0.7rem;
+  height: var(--zg-hair);
+  background: currentcolor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--zg-dur-tap) var(--zg-ease-standard);
+}
+
+.masthead__nav a:hover,
+.masthead__nav a:focus-visible {
   color: var(--zg-ink);
-  text-decoration: underline;
+}
+
+.masthead__nav a:hover::after,
+.masthead__nav a:focus-visible::after {
+  transform: scaleX(1);
 }
 
 .theme-toggle {
@@ -359,6 +382,11 @@ svg {
 .action:hover {
   border-color: var(--zg-ink);
   background: var(--zg-raised);
+}
+
+/* A press is the one place a control may move, and it moves one pixel. */
+.action:active {
+  transform: translateY(1px);
 }
 
 .action--primary {
@@ -969,10 +997,34 @@ svg {
 }
 
 .site-footer nav a {
+  position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   color: var(--zg-ink-2);
+  text-decoration: none;
+}
+
+.site-footer nav a::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0.7rem;
+  height: var(--zg-hair);
+  background: currentcolor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--zg-dur-tap) var(--zg-ease-standard);
+}
+
+.site-footer nav a:hover,
+.site-footer nav a:focus-visible {
+  color: var(--zg-ink);
+}
+
+.site-footer nav a:hover::after,
+.site-footer nav a:focus-visible::after {
+  transform: scaleX(1);
 }
 
 .site-footer p {

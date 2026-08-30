@@ -30,8 +30,9 @@ On a filesystem that reports a link count above one for ordinary files, move the
 into `inbox/` as a fresh copy rather than linking it.
 :::
 
-The result is an immutable, body-hash-verified Bronze record. Fresh captures default to
-`sensitivity: restricted` and `pii: unknown`.
+The result is canonical UTF-8 text after CRLF-to-LF normalization in a Bronze record.
+Ingest creates it atomically without overwriting; SHA-256 verification detects later body
+mutation. Fresh captures default to `sensitivity: restricted` and `pii: unknown`.
 
 ## Refine: stage a Silver proposal
 
@@ -42,6 +43,12 @@ ziggurat refine --root <vault> --query "<request>" --source bronze/<path>.md
 Repeat `--source` once per record to name the Bronze records the host should include.
 Without `--source`, the same privacy policy that governs the model-readable evidence
 index is applied, which excludes fresh captures while their privacy state is unresolved.
+
+:::caution[Explicit sources widen disclosure]
+`--source` is an operator-authorized disclosure to the configured loopback model
+endpoint. Explicit selection bypasses the default model-access privacy filter and can
+include restricted or PII-unknown Bronze. Inspect each selected record first.
+:::
 
 ### What the model receives
 
@@ -66,12 +73,15 @@ server-side request forgery primitive.
 
 ### What the model may return
 
-Exactly one strict schema-version-2 Silver proposal, staged atomically under
-`.ziggurat/proposals/`. The refine pathway cannot write Bronze, knowledge pages, reviewed
-metadata, trust anchors, receipts, or indexes.
+Exactly one model-originated strict schema-version-2 Silver proposal. The refine host
+validates and atomically persists that JSON under `.ziggurat/proposals/`; the model does
+not write the file. The pathway cannot write Bronze, knowledge pages, reviewed metadata,
+trust anchors, receipts, or indexes.
 
-Every returned citation is revalidated against the real Bronze files on disk: exact path,
-body hash, line range, quote, and quote hash. A fabricated quote or digest fails staging.
+Every returned citation is revalidated against the stored Bronze files: exact path, body
+hash, line range, quote, and quote hash. A fabricated quote or digest fails staging.
+These checks establish citation integrity, not semantic entailment or factual truth;
+reviewers remain responsible for those judgments.
 
 Silver candidates cannot carry status, reviewer, receipt, or admission metadata. The
 schema has no field for them.

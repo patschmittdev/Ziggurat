@@ -24,9 +24,11 @@ integrity recovery.
 
 Ziggurat is a human-gated memory firewall: a local TypeScript reference
 implementation that treats durable AI memory as a privileged write surface. A model
-may read approved content and may draft a complete, evidence-backed candidate. It
-cannot admit that candidate to durable shared memory. Only a human holding an
-external Ed25519 private key can.
+may read authorized content and return a candidate with byte-validated citations. The
+refine host may persist that model-originated JSON only as Silver. Gold admission
+requires a valid receipt from a configured Ed25519 key that operator policy assigns to
+a reviewer. Ziggurat verifies key control and exact-content authorization; it does not
+prove humanity, attention, review quality, semantic support, or factual truth.
 
 The documentation site exists so that a qualified evaluator understands, within one
 viewport, that models may propose memory but cannot authorize persistence, and can
@@ -37,14 +39,12 @@ limits, without having been told anything untrue.
 
 ## Positioning
 
-The human boundary is a cryptographic capability boundary, not a review convention
-and not a model-accessible workflow step. Gold admission requires a detached Ed25519
-receipt from a key configured in `config/trust.yaml`. There is no signer, apply,
-approve, or promote command and no `--promote` flag; key custody lives outside the
-vault by design. A `reviewed_by: alice` string is metadata, not authority.
-
-A neighboring product cannot truthfully copy this claim while shipping a promote
-path, because the absence of the capability is the mechanism.
+The authorization boundary is a cryptographic capability boundary, not a review
+convention. Gold admission requires a detached Ed25519 receipt from a key configured
+in `config/trust.yaml`. No shipped path creates authorization, signs receipts, or
+applies Silver to knowledge. There is no signer, apply, approve, or promote command
+and no `--promote` flag. A `reviewed_by: alice` string is self-asserted metadata and is
+insufficient by itself.
 
 ## Operating Context
 
@@ -55,17 +55,22 @@ endpoint restricted to HTTP loopback.
 
 The pipeline the documentation must explain:
 
-1. `ingest` captures untrusted `inbox/` Markdown as immutable, body-hash-verified
-   Bronze evidence, preserving hostile text because Bronze is evidence, not memory.
+1. `ingest` captures untrusted `inbox/` Markdown as canonical UTF-8 Bronze evidence
+   after CRLF-to-LF normalization. Its API uses atomic no-overwrite creation, and
+   SHA-256 verification detects later body mutation.
 2. `refine` sends a bounded, labeled, host-selected Bronze reference block to a
-   loopback model and stages exactly one strict schema-version-2 Silver proposal.
+   loopback model. The host validates and persists one model-originated strict
+   schema-version-2 Silver proposal.
 3. `review` renders the complete candidate, exact citations, and contradictions for
    a human, marking untrusted text as non-instructional reference.
-4. A human authors the knowledge page by hand and signs a detached receipt with an
-   external Ed25519 key, following `docs/authorization-protocol.md`.
-5. `build` rebuilds three physically separate indexes: communion (authorized Gold
-   only), review (policy-safe Silver plus Gold), evidence (policy-safe Bronze plus
-   Gold).
+4. In the recommended workflow, a reviewer independently checks the citations, authors
+   the knowledge page, and uses an external Ed25519 signer following
+   `docs/authorization-protocol.md`. Ziggurat does not enforce that workflow as proof
+   of human attention.
+5. `build` rebuilds three physically separate indexes: communion (eligible,
+   externally key-authorized Gold only), review (Silver whose candidate and every
+   source pass model-access privacy filters, plus Gold), and evidence (Bronze that
+   passes integrity and model-access privacy filters, plus Gold).
 6. `mcp` serves communion only, read only, exposing `search_context` and
    `read_context`.
 
@@ -79,16 +84,17 @@ Confirmed product facts the site must preserve exactly:
 - Three claims stay distinct: provenance (bytes match captured evidence),
   persistence authorization (a configured key approved this exact page), and
   instruction authority (always none).
-- Models write exactly one artifact type: strict v2 Silver under
-  `.ziggurat/proposals/`. No model path writes Bronze, knowledge pages, reviewed
-  metadata, trust anchors, receipts, or indexes.
-- Every Silver citation is revalidated against real Bronze bytes, hashes, and line
-  ranges on disk.
+- The refine host persists exactly one model-originated artifact type: strict v2
+  Silver JSON under `.ziggurat/proposals/`. It does not write Bronze, knowledge pages,
+  reviewed metadata, trust anchors, receipts, or indexes.
+- Every Silver citation is revalidated against stored Bronze text, hashes, and line
+  ranges on disk. This establishes citation integrity, not semantic entailment or
+  factual truth.
 - Model and embedding endpoints are HTTP loopback only. The refine adapter, which is
   the only shipped caller, additionally refuses redirects and enforces a 30 second
   deadline with 1 MiB request and response ceilings.
-- Retrieval bounds: 1024 query characters, 20 results per search, 200 retained
-  citations per session, with eviction acting as revocation.
+- Retrieval bounds: 1,024 query UTF-16 code units, 20 results per search, and 200
+  retained citations per session; evicted IDs become invalid.
 - Version 0.1 is a pre-release, single-operator reference implementation.
   `package.json` stays `private: true` and the project is source-distributed; the
   `ziggurat` npm package name must not be depended on.
@@ -100,7 +106,9 @@ Confirmed product facts the site must preserve exactly:
 
 Documentation-site constraints:
 
-- The repository is intentionally private and stays private. Nothing may deploy.
+- At this commit the repository is private, and the Pages workflow remains inert. A
+  later public release may deploy only after visibility is explicitly public and the
+  publication checklist passes.
 - `SECURITY.md`, `ARCHITECTURE.md`, and `docs/authorization-protocol.md` remain
   canonical repository specifications at their existing paths. Site pages explain and
   link to them rather than copying their full text.
@@ -136,15 +144,17 @@ Real material that exists in this repository and may be shown:
 - `fixtures/garden/inbox/poisoned-memory-rule.md`, a plausible memo instructing an AI
   to skip review and remember a vendor as approved.
 - `test/memory-boundary.test.ts`, which demonstrates the complete defense end to end.
-- `scripts/run-garden-walkthrough.mjs`, which stops at the human signing boundary.
+- `scripts/run-garden-walkthrough.mjs`, which prepares and ingests the fixture vault,
+  then prints the remaining manual steps.
 - `fixtures/authorization/receipt-vectors.json`, published interoperability vectors.
 - Microsoft's
   [AI Memory / Context Poisoning](https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/ai-memory-context-poisoning)
   catalog entry, which is the external threat description this work implements
   controls for.
 
-Absences that must not be fabricated: no users, no deployments, no third-party
-audits, no benchmarks, no testimonials, no press, no release tag.
+Absences that must not be fabricated: no documented users or adoption figures, no known
+deployment, no third-party audit, no benchmark, no testimonial, no press, and no release
+tag.
 
 ## Product Principles
 

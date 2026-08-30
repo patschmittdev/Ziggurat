@@ -35,9 +35,10 @@ back through build output or logs.
 ziggurat build --root <vault>
 ```
 
-Rebuilding is the supported recovery for any index problem. Generated indexes are
-outputs, never inputs: they are ignored by version control and reconstructed from the
-current authoritative artifacts.
+Rebuilding is the supported recovery for any index problem. Generated indexes are derived
+outputs reconstructed from current source artifacts, then used as runtime inputs only
+after verification. `init` does not create a vault `.gitignore`; add vault-local ignore
+rules if the vault uses Git.
 
 Version-1 proposals and indexes are unsupported and must be restaged or rebuilt.
 
@@ -52,7 +53,8 @@ ziggurat eval --root <vault>
 ## Revoking poisoned memory
 
 1. Remove or correct the page and its receipt.
-2. Commit the change, so the history records what was removed and when.
+2. If the vault uses Git, commit the change so its history records what was removed and
+   when.
 3. Rebuild all indexes.
 
 Treat any unexpected proposal, receipt, trust-policy, or index change as a potential

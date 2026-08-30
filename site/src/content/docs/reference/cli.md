@@ -12,7 +12,7 @@ global link.
 | Command | Purpose |
 |---|---|
 | `ziggurat init --root <vault>` | Create vault directories and an empty trust policy |
-| `ziggurat ingest --root <vault> --file <inbox-file>` | Capture immutable Bronze evidence |
+| `ziggurat ingest --root <vault> --file <inbox-file>` | Capture no-overwrite, body-hash-verified Bronze evidence |
 | `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...` | Stage a strict Silver proposal through a loopback model |
 | `ziggurat review --root <vault>` | Render human review packets from staged proposals |
 | `ziggurat build --root <vault>` | Rebuild all three isolated indexes |
@@ -34,28 +34,34 @@ global link.
 | Command | Writes | Cannot write |
 |---|---|---|
 | `init` | Vault directories, an empty `config/trust.yaml` | Reviewer keys |
-| `ingest` | New immutable Bronze records | Anything outside `bronze/` |
-| `refine` | One strict v2 proposal under `.ziggurat/proposals/` | Bronze, knowledge, receipts, trust, reviewed metadata, indexes |
+| `ingest` | One no-overwrite Bronze record, then deletion of the captured inbox source | Other vault state |
+| `refine` | One model-originated strict v2 proposal under `.ziggurat/proposals/` | Bronze, knowledge, receipts, trust, reviewed metadata, indexes |
 | `review` | Nothing | Anything |
-| `build` | Generated indexes | An admission decision |
+| `build` | Generated indexes, including admitted Gold chunks for eligible pages | Knowledge pages, authorization receipts, or trust keys |
 | `query`, `mcp`, `eval` | Nothing | Anything |
 | `check` | Nothing | Anything |
 
-## refine and repeated --source
+## refine and repeated `--source`
 
 `--source <bronze-path>` names one Bronze record for the host to include, and is repeated
 once per record. Without `--source`, the privacy policy that governs the model-readable
 evidence index is applied instead, which excludes fresh captures while their privacy
 state is unresolved.
 
-Returned proposals are validated against the real files on disk either way, so a
-fabricated quote or digest fails staging.
+Explicit `--source` is an operator-authorized disclosure to the configured loopback model
+endpoint. It bypasses the default model-access privacy filter and can include restricted
+or PII-unknown Bronze. Returned proposals are validated against stored files either way,
+so a fabricated quote or digest fails staging; the checks do not establish semantic
+support or factual truth.
 
 ## check
 
-`check` is a publication gate rather than a vault command. It scans a source tree for
-contributor machine paths, email addresses, tokens, private keys, personal Git remotes,
-configured project names, and generated retrieval state. Point it at the repository root.
+`check` is a heuristic working-tree publication gate rather than a vault command. It
+scans regular UTF-8 text files for Windows and macOS-style user paths, email addresses,
+GitHub token prefixes, PEM private-key markers, personal Git remote syntax, configured
+project names, and generated retrieval state. It reports unscannable binary or non-UTF-8
+files unless explicitly excluded. Directory entries that are symlinks are skipped.
+Point it at the repository root.
 
 ```bash
 ziggurat check --root . --audit-clean-room
@@ -64,6 +70,10 @@ ziggurat check --root . --audit-clean-room
 Generated indexes are reported unconditionally and cannot be suppressed by
 `config/clean-room.yaml`, so a working vault that has already been built reports those
 files until they are removed.
+
+A PASS does not prove that the tree contains no credentials or private data, and the
+command does not inspect Git history. Use a general secret scanner and review reachable
+history separately before publication.
 
 `--audit-clean-room` names the audit that `check` runs. `check` performs exactly one
 audit today, so passing the flag and omitting it produce the same report. The flag lets

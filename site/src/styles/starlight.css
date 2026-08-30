@@ -187,6 +187,35 @@ header.header {
   outline-offset: 2px;
 }
 
+/*
+  Expressive Code hides the copy control until hover or focus and fades it in.
+  A focus indicator must not fade: a keyboard visitor arriving on the control
+  needs to see it in the frame the focus lands. The hover fade is kept but
+  narrowed to opacity, so this site never interpolates a colour.
+*/
+.expressive-code .copy button {
+  transition-property: opacity !important;
+}
+
+.expressive-code .copy button:focus-visible {
+  opacity: 1 !important;
+  transition: none !important;
+}
+
+/*
+  Anchor parity with the homepage. The documentation and the homepage should not
+  disagree about what following a link inside a page feels like.
+*/
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .sl-markdown-content a:not(:where(.not-content *)) {
   text-underline-offset: 0.2em;
 }

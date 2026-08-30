@@ -5,7 +5,7 @@
   <!-- Plate border and title block rules -->
   <g stroke="#61686f" stroke-width="1.5" fill="none">
     <rect x="48" y="48" width="1104" height="534" />
-    <path d="M48 138h1104M760 48v534" />
+    <path d="M48 138h1104M800 48v534" />
   </g>
 
   <!-- Title block -->
@@ -13,32 +13,44 @@
   <text x="1120" y="106" fill="#8a9095" font-family="ui-monospace, Consolas, monospace" font-size="22" text-anchor="end">v0.1.0 &#183; pre-release</text>
 
   <!-- Thesis -->
-  <text x="80" y="248" fill="#eceeec" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="66" font-weight="600" letter-spacing="-2.4">Models propose.</text>
-  <text x="80" y="326" fill="#eceeec" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="66" font-weight="600" letter-spacing="-2.4">Humans decide</text>
-  <text x="80" y="404" fill="#eceeec" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="66" font-weight="600" letter-spacing="-2.4">what persists.</text>
+  <g fill="#eceeec" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="62" font-weight="600" letter-spacing="-2.2">
+    <text x="80" y="222">Models propose.</text>
+    <text x="80" y="292">Humans decide</text>
+    <text x="80" y="362">what persists.</text>
+  </g>
 
-  <text x="80" y="474" fill="#a9afb3" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="25">A human-gated memory firewall. Durable AI memory is a</text>
-  <text x="80" y="510" fill="#a9afb3" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="25">privileged write surface, and no code path can authorize it.</text>
-  <text x="80" y="556" fill="#8a9095" font-family="ui-monospace, Consolas, monospace" font-size="20">github.com/patschmittdev/Ziggurat</text>
+  <g fill="#a9afb3" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="24">
+    <text x="80" y="416">A human-gated memory firewall. Durable AI memory is a</text>
+    <text x="80" y="448">privileged write surface, and no shipped path creates</text>
+    <text x="80" y="480">the authorization that admits one.</text>
+  </g>
+
+  <g font-family="ui-monospace, Consolas, monospace" font-size="18" fill="#8a9095">
+    <text x="80" y="520">Bronze: canonicalized evidence &#183; Silver: proposals only</text>
+    <text x="80" y="544">Gold: externally key-authorized</text>
+    <text x="80" y="568">not truth, not instruction authority</text>
+  </g>
 
   <!-- Section: stepped structure with the authorization gap -->
   <g>
-    <rect x="800" y="470" width="312" height="52" fill="#8c4a22" />
-    <text x="816" y="504" fill="#fbf8f5" font-family="ui-monospace, Consolas, monospace" font-size="20">BRONZE &#183; preserved</text>
+    <rect x="838" y="470" width="274" height="52" fill="#8c4a22" />
+    <text x="854" y="504" fill="#fbf8f5" font-family="ui-monospace, Consolas, monospace" font-size="22" letter-spacing="2">BRONZE</text>
 
-    <rect x="828" y="392" width="256" height="52" fill="#3b5a6b" />
-    <text x="844" y="426" fill="#f6fafc" font-family="ui-monospace, Consolas, monospace" font-size="20">SILVER &#183; proposed</text>
+    <rect x="866" y="392" width="218" height="52" fill="#3b5a6b" />
+    <text x="882" y="426" fill="#f6fafc" font-family="ui-monospace, Consolas, monospace" font-size="22" letter-spacing="2">SILVER</text>
 
     <!-- The gap: nothing in the structure bridges it from below -->
-    <path d="M828 352h104M980 352h104" stroke="#61686f" stroke-width="2" stroke-dasharray="8 8" />
+    <path d="M866 352h94M1000 352h84" stroke="#61686f" stroke-width="2" stroke-dasharray="8 8" />
     <path d="M1152 352h-96" stroke="#e6b854" stroke-width="5" />
-    <circle cx="956" cy="352" r="15" fill="none" stroke="#e6b854" stroke-width="3" />
-    <text x="828" y="325" fill="#f49384" font-family="ui-monospace, Consolas, monospace" font-size="19">external key required</text>
+    <circle cx="976" cy="352" r="15" fill="none" stroke="#e6b854" stroke-width="3" />
+    <text x="866" y="325" fill="#e6b854" font-family="ui-monospace, Consolas, monospace" font-size="19">external key required</text>
 
-    <rect x="856" y="240" width="236" height="52" fill="#c8921f" />
-    <text x="872" y="274" fill="#14171a" font-family="ui-monospace, Consolas, monospace" font-size="20">GOLD &#183; authorized</text>
+    <rect x="894" y="240" width="190" height="52" fill="#c8921f" />
+    <text x="910" y="274" fill="#14171a" font-family="ui-monospace, Consolas, monospace" font-size="22" letter-spacing="2">GOLD</text>
 
-    <rect x="928" y="180" width="56" height="20" fill="#eceeec" />
-    <text x="956" y="160" fill="#a9afb3" font-family="ui-monospace, Consolas, monospace" font-size="19" text-anchor="middle">communion, read only</text>
+    <rect x="962" y="180" width="56" height="20" fill="#eceeec" />
+    <text x="990" y="160" fill="#a9afb3" font-family="ui-monospace, Consolas, monospace" font-size="19" text-anchor="middle">communion, read only</text>
+
+    <text x="1120" y="562" fill="#8a9095" font-family="ui-monospace, Consolas, monospace" font-size="18" text-anchor="end">github.com/patschmittdev/Ziggurat</text>
   </g>
 </svg>

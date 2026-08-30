@@ -8,12 +8,14 @@ different meaning.
 
 ## Bronze: preserved evidence
 
-`ziggurat ingest` moves Markdown from `inbox/` into an immutable, body-hash-verified
-Bronze record under `bronze/`. It is the only Bronze writer.
+`ziggurat ingest` decodes inbox Markdown as UTF-8, normalizes CRLF to LF, and stores the
+canonical text in a Bronze record under `bronze/`. It is the only Bronze writer and uses
+atomic no-overwrite creation. SHA-256 verification detects later body mutation; it does
+not make the filesystem physically immutable or prove that the source was honest.
 
 Fresh captures default to `sensitivity: restricted` and `pii: unknown`. The original body
-is preserved exactly, hostile instructions included, because Bronze is *evidence* and not
-memory authority. A record whose privacy state is unresolved stays out of the
+is preserved as canonical text, hostile instructions included, because Bronze is
+*evidence* and not memory authority. A record whose privacy state is unresolved stays out of the
 model-readable evidence index.
 
 Bronze records reject unknown frontmatter fields. A record carrying fields outside the
@@ -22,12 +24,13 @@ restricted, PII-unknown, and hash-unverified, so it stays out of every index.
 
 ## Silver: the only model-originated layer
 
-`ziggurat refine` accepts structured JSON from a loopback model, validates it, adds local
-audit metadata, and atomically stages it under `.ziggurat/proposals/`.
+`ziggurat refine` accepts model-originated structured JSON from a loopback endpoint. The
+host validates it, adds local audit metadata, and atomically persists it under
+`.ziggurat/proposals/`; the model does not write the file.
 
 The host, not the model, reads Bronze. Each request carries a bounded reference block
-containing the selected records' verified `body_sha256` and their bodies as 1-based
-lines, labelled `content_role: reference` and `instruction_authority: none`. At most 12
+containing the selected records' verified `body_sha256` and their canonical bodies as
+1-based lines, labelled `content_role: reference` and `instruction_authority: none`. At most 12
 records, 32 KiB per record, and 256 KiB in total are included. Oversize records are
 omitted rather than truncated, because a truncated body would produce citations that fail
 validation for reasons no operator could diagnose. Every omission is reported with a
@@ -57,15 +60,16 @@ A page enters communion only when every eligibility check passes together:
 - current verification age
 - valid, non-empty, hash-verified Bronze lineage
 - no unresolved contradiction proposal
-- a valid detached Ed25519 human-authorization receipt
+- a valid detached Ed25519 receipt from a configured key
 
 The deterministic receipt path for `knowledge/topic.md` is
 `authorizations/topic.md.authorization.json`. Version-1 proposals and indexes are
 unsupported and must be restaged or rebuilt.
 
 :::caution[Gold is not a truth label]
-Gold means externally authorized reference data. It is not truth, not safety, and not
-instruction authority. Every Gold chunk still reports `instruction_authority: none`.
+Gold means eligible knowledge chunks externally authorized by a configured key. It is not
+truth, not safety, proof of human review, or instruction authority. Every Gold chunk still
+reports `instruction_authority: none`.
 :::
 
 ## Crossing between tiers
@@ -73,13 +77,14 @@ instruction authority. Every Gold chunk still reports `instruction_authority: no
 | Transition | Performed by | Requires |
 |---|---|---|
 | `inbox/` to Bronze | `ingest` | A real regular file physically under `inbox/` |
-| Bronze to Silver | `refine` | A loopback model response that revalidates against real Bronze bytes |
-| Silver to a curated page | A human, by hand | Reading the review packet and authoring the page |
-| Curated page to Gold | `build` | A valid receipt plus every eligibility check |
+| Bronze to Silver | Refine host | Model-originated JSON whose citations revalidate against stored Bronze text |
+| Silver review to a curated page | Recommended operator workflow | Independent citation review and page authoring; this is not a machine-proven admission prerequisite |
+| Curated page to Gold | `build` | A valid configured-key receipt plus every eligibility check |
 
-There is no automated Silver-to-knowledge transition. Contradiction proposals remain
-immutable; a reviewer resolves one by listing its ID in the page and signing that exact
-page.
+There is no shipped Silver-to-knowledge apply transition. A page need not originate from
+Silver, and running `review` or committing to Git is not a Gold eligibility rule.
+Contradiction proposals are no-overwrite artifacts; an eligible page resolves one by
+listing its ID in the signed page.
 
 ## Related
 

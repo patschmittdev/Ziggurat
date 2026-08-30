@@ -8,8 +8,9 @@ keeps `"private": true`, so do not depend on the `ziggurat` package name.
 
 ## Requirements
 
-- Node.js 22 or newer. Continuous integration covers Node.js 22 and 24 on Linux, macOS,
-  and Windows.
+- Node.js 22 or newer for the core package. The documentation site requires Node.js
+  22.12.0 or newer. Continuous integration is configured for Node.js 22 and 24 on Linux,
+  macOS, and Windows.
 - Git, to clone the repository.
 
 ## Build from source
@@ -32,7 +33,10 @@ node dist/src/cli/main.js --help
 ```
 
 `npm run check` cleans, rebuilds, and runs the full compiled test suite. `--help` prints
-the command list:
+the command list. In that output, “evidence-backed” means citations are byte-validated
+against stored Bronze text; it does not claim semantic or factual verification.
+“Immutable” is CLI shorthand for no-overwrite creation through ingest plus detection of
+later body mutation, not physical filesystem immutability.
 
 ```text
 Ziggurat: Models propose. Humans decide what persists.
@@ -65,3 +69,13 @@ npm link
 ## Next
 
 Create a vault in [Your first vault](/Ziggurat/getting-started/first-vault/).
+
+## Build the documentation site
+
+The site has its own dependencies and lockfile; root `npm ci` does not install them.
+
+```bash
+cd site
+npm ci
+npm run check
+```

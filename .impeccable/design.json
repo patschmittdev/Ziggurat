@@ -66,19 +66,33 @@
     "shadows": [],
     "motion": {
       "easing": {
-        "instrument": "cubic-bezier(0.16, 1, 0.3, 1)"
+        "standard": "cubic-bezier(0.2, 0, 0, 1)",
+        "exit": "cubic-bezier(0.4, 0, 1, 1)",
+        "datum": "cubic-bezier(0.16, 1, 0.3, 1)"
       },
       "duration": {
-        "cursor-travel": "620ms",
-        "focus-ring": "320ms",
-        "fade": "260ms"
+        "tap": "120ms",
+        "state": "200ms",
+        "mark": "320ms",
+        "datum": "620ms"
+      },
+      "distance": {
+        "rise": "8px"
+      },
+      "stagger": {
+        "step": "60ms",
+        "cap": 3
       },
       "rules": [
-        "One authored moment per page: the datum cursor that tracks the level being read.",
-        "Motion is additive. Nothing is dimmed, hidden, or revealed by scroll position, so no text ever loses contrast.",
-        "Enabled only at or above 64rem, where the narrative figure is sticky.",
-        "Fully disabled under prefers-reduced-motion, which renders the static complete plate.",
-        "Only transform and opacity are animated."
+        "Two tiers and no third. The signature is the datum cursor that tracks the level being read; orientation is grouped section entry and a root-only cross-document route fade.",
+        "Motion is additive. No fact is dimmed, withheld, or gated by scroll position or hover.",
+        "Nothing that carries a fact reveals: not the ascent steps, the ledger, the guarantee pair, the comparison artifacts, the command cards, any element containing a code block, or the first viewport. The limits never arrive after the guarantees.",
+        "The datum cursor runs only at or above 64rem, where the narrative figure is sticky, and its first appearance is a fade at the correct level rather than a traverse from zero.",
+        "Hidden initial states exist only under html[data-motion], set synchronously in the head and self-revoking, so no scripting, a failed script, print, or a missing IntersectionObserver renders the complete page.",
+        "prefers-reduced-motion removes interpolation, not information: the cursor and focus ring still mark the level.",
+        "Only transform and opacity are animated. Colour, fill, background, border, size, and filter changes are instant, and an animated rule is a scaled pseudo-element.",
+        "Every duration and easing comes from a token. No component hardcodes a millisecond value.",
+        "No scroll-jacking, no parallax, no shared-element route transition, no runtime dependency, no framework hydration."
       ]
     },
     "breakpoints": {
@@ -96,7 +110,9 @@
       "Every narrative fact is present in the served markup.",
       "Gold is externally authorized reference data. Never truth, safety, or instruction authority.",
       "Square corners, no shadow, no gradient, no glass.",
-      "No third-party font, script, or asset is loaded at runtime."
+      "No third-party font, script, or asset is loaded at runtime.",
+      "The mark keeps a five-unit authorization void and an external key stub entering from the plate edge. A contiguous Bronze-to-Gold stack draws an automatic promotion and is forbidden.",
+      "Tier colour is visible at rest in every context. Identity is never a hover reward, and a fill is never animated."
     ],
     "dos": [
       "Let a tier colour own a whole region when the region is about that tier.",

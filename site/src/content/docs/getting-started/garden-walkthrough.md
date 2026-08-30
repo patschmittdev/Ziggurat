@@ -1,16 +1,18 @@
 ---
 title: The garden walkthrough
-description: Run the poisoned-memory scenario against fixture data and watch it stop at the human signing boundary.
+description: Prepare a fixture vault, ingest its sources, and print the manual steps that remain.
 ---
 
-The repository ships a fixture vault and a script that runs the whole scenario.
+The repository ships fixture inputs and a script that initializes a vault, ingests those
+files as Bronze, and prints the remaining manual steps.
 
 ```bash
 node scripts/run-garden-walkthrough.mjs
 ```
 
-The script stops at the human signing boundary by design. There is no automated step past
-it, because there is no code path past it.
+The script does not stage Silver, render review, create a page or receipt, build indexes,
+or query Gold. No shipped path creates authorization, signs a receipt, or applies Silver
+to knowledge.
 
 ## What the fixture contains
 
@@ -23,13 +25,14 @@ That material is described here, never reproduced. Nothing on this site quotes t
 hostile instruction text, and nothing retrieved through Ziggurat carries instruction
 authority in any case.
 
-## What the automated test demonstrates
+## What the end-to-end automated test demonstrates
 
-`test/memory-boundary.test.ts` asserts the complete defence:
+Unlike the preparation script, `test/memory-boundary.test.ts` exercises the complete
+boundary:
 
 1. Ingestion preserves the hostile text as restricted, PII-unknown Bronze evidence.
-2. The model pathway stages an evidence-backed Silver candidate and writes no knowledge,
-   authorization, Bronze, or index file.
+2. A test helper stages a Silver candidate with byte-valid citations and writes no
+   knowledge, authorization, Bronze, or index file.
 3. `review` displays the embedded instruction under an `UNTRUSTED REFERENCE` warning.
 4. The poisoned Bronze record is excluded from model-readable evidence and review indexes
    while its privacy state is unresolved.
@@ -39,8 +42,8 @@ authority in any case.
 7. Retrieved Gold still reports no instruction authority.
 8. Tampering with the stored index causes retrieval to fail closed.
 
-Step 6 is the one that matters most. The test has to *simulate a human holding a key* to
-get past the boundary, because no shipped code path can.
+Step 6 simulates control of a configured reviewer key using a test-only helper. That
+demonstrates the cryptographic check, not a human identity, attention, or review process.
 
 ## Run it yourself
 
@@ -50,8 +53,9 @@ npm run build
 npm run check
 node scripts/run-garden-walkthrough.mjs
 ```
-`npm run check` runs the full compiled suite, which includes the memory-boundary test
-above.
+`npm run check` runs the full compiled suite, including the end-to-end memory-boundary
+test. The final command separately prepares the fixture vault and prints manual next
+steps.
 
 ## Next
 

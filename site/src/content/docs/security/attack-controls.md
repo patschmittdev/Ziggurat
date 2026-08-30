@@ -8,43 +8,27 @@ failure can begin as indirect prompt injection, become persistent data poisoning
 exploit weak retrieval-store integrity. The linked Microsoft catalog maps those stages to
 OWASP LLM01, LLM04, and LLM08 and to MITRE ATLAS context and RAG poisoning techniques.
 
-## Control mapping
+## Operational control summary
 
-| Memory-poisoning control | Ziggurat enforcement |
-|---|---|
-| Source approval | Sources remain isolated Bronze; extracted claims require separate admission |
-| Provenance | Exact Bronze citations, body hashes, quote hashes, and Gold lineage |
-| Memory write governance | External human signing capability required for Gold |
-| Schema-bound memory | Strict Zod v4 contracts reject unknown fields on Bronze records, configuration and its nested objects, proposals, receipts, and indexes |
-| Review and diff transparency | Complete Silver candidates and evidence in `review` |
-| Presentation sanitization | Candidate bodies are indented; quoted fields and control characters are escaped |
-| Integrity | Receipt binding plus complete chunk, BM25, policy, and live-corpus verification |
-| Isolation | Separate communion, review, and evidence indexes |
-| Revalidation | Verification age and signed page metadata |
-| Versioning and rollback | Source artifacts in Git; generated indexes rebuilt |
-| Least privilege | Model writes Silver only; MCP reads communion only; refine payloads are host-selected and bounded |
-| Suspicious instruction handling | Preserved as evidence and always labelled non-instructional |
-| Resource bounds | Adapter timeout and 1 MiB body caps; bounded refine reference; bounded query, result, and citation counts |
+The normative mapping and exact enforcement points live in
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md) and
+[ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md).
+Operationally, inspect these boundaries:
 
-## Enforcement points
-
-| Enforcement point | Control |
-|---|---|
-| Inbox boundary | Real-path resolution to a regular file under `inbox/`; symlink, reparse, hard-link, traversal, and escape refusal before any read or delete |
-| Bronze store | Atomic no-overwrite write and body SHA-256 |
-| Refine reference builder | Host-selected sources, hash-verified, bounded per record and in total, omitted rather than truncated, labelled non-instructional |
-| Adapter transport | Loopback-only URL, redirects disabled, request deadline, bounded request and streamed response bytes |
-| Proposal contract | Strict v2 schema excludes admission fields |
-| Evidence validator | Exact Bronze path, body hash, line range, quote, and quote hash |
-| Proposal store | Atomic, root-constrained write; strict fail-closed reads |
-| Corpus collector | Unreadable, unparsable, or schema-invalid entries rejected and reported by path without content |
-| Page canonicalizer | Stable semantic JSON and LF-normalized body |
-| Receipt verifier | Trusted Ed25519 key, strict schema, exact page, path, identity, and time binding |
-| Gold eligibility | Status, retrieval, privacy, sensitivity, egress, age, lineage, contradiction, authorization |
-| Profile builders | Physical separation and policy-safe source selection |
-| Index verifier | Chunk labels, content, provenance, BM25, trust policy, and live corpus |
-| MCP server | Communion-only startup, two read-only tools, strict tool inputs, bounded query, result, and session citation counts |
-| Clean-room audit | Present-but-invalid configuration fails the audit instead of defaulting |
+- **Capture:** inbox real-path checks precede reads and deletion; ingest creates canonical
+  Bronze text without overwriting and records its body SHA-256.
+- **Proposal staging:** the host bounds and labels selected Bronze text, validates strict
+  model-originated v2 JSON, and checks citation path, hash, range, and quote integrity.
+  Those checks do not establish semantic support or factual truth.
+- **Authorization and admission:** no shipped path creates authorization or applies Silver
+  to knowledge. `build` verifies a configured-key receipt and every other Gold eligibility
+  rule before admission. A signature proves key control, not humanity or review quality.
+- **Retrieval:** communion, review, and evidence are separate files; shipped MCP opens only
+  communion. This reduces accidental cross-profile selection but is not process or tenant
+  isolation.
+- **Resource and integrity checks:** loopback transport, request/response bounds, retrieval
+  limits, policy fingerprints, BM25 data, chunk integrity, and live corpus state fail
+  closed as specified in the canonical documents.
 
 ## Fail-closed behaviour
 

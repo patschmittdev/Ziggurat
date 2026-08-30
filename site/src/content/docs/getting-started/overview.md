@@ -6,20 +6,24 @@ description: What Ziggurat is, what it enforces, and what it deliberately does n
 Ziggurat is a human-gated memory firewall: a local TypeScript reference implementation
 that treats durable AI memory as a privileged write surface.
 
-A model can read authorized content and draft a complete, evidence-backed candidate. It
-cannot admit that candidate to durable shared memory. Only a human holding an external
-Ed25519 private key can.
+A model can read authorized content and return a candidate with byte-validated citations.
+The refine host may persist that model-originated JSON only as Silver. Gold requires a
+valid receipt from a configured Ed25519 key that operator policy assigns to a reviewer.
+Ziggurat verifies key control and exact-content authorization, not humanity, attention,
+semantic support, or factual truth.
 
 ## The boundary in one paragraph
 
-Content moves through three tiers. **Bronze** is immutable, hash-verified evidence
-captured from untrusted sources. **Silver** is the only layer a model originates: a
-strict, schema-bound proposal whose every citation is revalidated against real Bronze
-bytes. **Gold** is curated content that a human authored by hand and authorized with a
-detached Ed25519 receipt signed by a key configured in `config/trust.yaml`.
+Content moves through three tiers. **Bronze** is canonical UTF-8 text captured from
+untrusted sources after CRLF-to-LF normalization; ingest creates it without overwriting,
+and its body hash detects later mutation. **Silver** is model-originated strict JSON that
+the refine host validates and persists; every citation is revalidated against stored
+Bronze text. **Gold** is eligible knowledge content admitted by `build` after a detached
+Ed25519 receipt from a configured key and every other eligibility check pass.
 
-There is no signer, apply, approve, or promote command, and no `--promote` flag. The
-absence of that capability is the mechanism.
+No shipped path creates authorization, signs receipts, or applies Silver to knowledge.
+There is no signer, apply, approve, or promote command, and no `--promote` flag. `build`
+admits only independently authored, externally authorized eligible pages.
 
 ## What this is for
 

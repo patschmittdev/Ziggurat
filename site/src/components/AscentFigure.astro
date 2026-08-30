@@ -88,8 +88,7 @@
     <rect x="138" y="314" width="196" height="52" fill="var(--zg-silver-solid)"></rect>
     <text class="fig-label fill-on-silver" x="150" y="346"  font-weight="600">SILVER</text>
     <text class="fig-label fill-on-silver" x="322" y="346"  text-anchor="end">proposed</text>
-    <path class="fig-stroke-ink" stroke-width="1.5" d="M236 312V304" />
-    <path class="fig-stroke-ink" stroke-width="4" d="M206 301H266" />
+    <path class="fig-stroke-ink" stroke-width="4" d="M206 298H266" />
     <text class="fig-label--small" x="274" y="306">model reach ends</text>
   </g>
 
@@ -100,7 +99,7 @@
     <rect class="focus-ring" x="128" y="242" width="274" height="42"></rect>
     <rect x="134" y="248" width="176" height="30" fill="none" stroke="var(--zg-refuse)" stroke-width="1.5" stroke-dasharray="5 4"></rect>
     <text class="fig-label--small fill-refuse" x="142" y="268" >reviewed_by: alice</text>
-    <path d="M134 263H310" stroke="var(--zg-refuse)" stroke-width="1.5"></path>
+    <path d="M310 263H318" stroke="var(--zg-refuse)" stroke-width="1.5"></path>
     <rect x="318" y="248" width="78" height="30" fill="none" stroke="var(--zg-refuse)" stroke-width="2"></rect>
     <text class="fig-label--small fill-refuse" x="326" y="268" font-weight="700">REFUSED</text>
   </g>
@@ -192,32 +191,45 @@
     opacity: 0;
   }
 
+  /*
+    The cursor is positioned by the custom property in both states, so its first
+    appearance is a fade at the correct level rather than a traverse from the top
+    of the plate. The transition is enabled with `data-active`, one frame after
+    the position is written.
+
+    The transform stays on a `<g>` inside the drawing rather than moving to an
+    HTML overlay. An overlay would have to re-derive the plate's user-space
+    geometry in CSS and stay aligned across every breakpoint, which trades a
+    bounded, measurable repaint for a silent drift risk against the figure it is
+    supposed to index. Chromium does not composite SVG element transforms, so the
+    cost is a repaint of the figure's own box (measured, not asserted, in the
+    verification notes), and it is paid at most once per level change rather than
+    continuously.
+  */
   .datum-cursor {
     opacity: 0;
-    transform: translateY(0);
+    transform: translateY(var(--cursor-y, 0px));
   }
 
   .ascent-figure[data-active] .datum-cursor {
     opacity: 1;
-    transform: translateY(var(--cursor-y, 0px));
     transition:
-      transform 620ms cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 260ms linear;
+      transform var(--zg-dur-datum) var(--zg-ease-datum),
+      opacity var(--zg-dur-mark) linear;
   }
 
   .ascent-figure[data-active] .lvl.is-active .focus-ring {
     opacity: 1;
-    transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity var(--zg-dur-mark) var(--zg-ease-standard);
   }
 
+  /*
+    Reduced motion removes the interpolation, not the information: the cursor and
+    the focus ring still mark the level being read, they simply arrive there.
+  */
   @media (prefers-reduced-motion: reduce) {
     .datum-cursor,
-    .ascent-figure[data-active] .datum-cursor {
-      opacity: 0;
-      transform: none;
-      transition: none;
-    }
-
+    .ascent-figure[data-active] .datum-cursor,
     .ascent-figure[data-active] .lvl.is-active .focus-ring {
       transition: none;
     }

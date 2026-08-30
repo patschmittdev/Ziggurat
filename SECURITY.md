@@ -2,9 +2,12 @@
 
 ## Reporting a vulnerability
 
-Do not open a public issue for suspected vulnerabilities. Use **Security**,
-**Advisories**, **Report a vulnerability** in this repository, or open
-[a private vulnerability report](https://github.com/patschmittdev/Ziggurat/security/advisories/new).
+Do not open a public issue for suspected vulnerabilities. Private vulnerability
+reporting is not enabled while this repository remains private. Existing private
+collaborators should use the repository's Security Advisories area; other reporters
+should use an established private channel to a maintainer and avoid public disclosure.
+After the release checklist activates private vulnerability reporting, use **Security**,
+**Advisories**, **Report a vulnerability** in this repository.
 
 Include the affected commit or version, threat scenario, reproduction using
 fictional data, security impact, and any suggested mitigation. Do not submit private
@@ -18,8 +21,9 @@ response-time service level.
 
 | Version | Security fixes |
 |---|---|
-| Current `main` and 0.1.x | Supported |
-| Earlier pre-release versions | Unsupported |
+| Current `main` | Supported |
+| Released versions | None yet |
+| Earlier commits | Unsupported |
 
 ## Threat model
 

@@ -1,0 +1,28 @@
+---
+/**
+ * Motion readiness.
+ *
+ * Runs synchronously in the head, before first paint, so a reveal group is
+ * never painted in its final position and then hidden. A deferred or
+ * rAF-scheduled gate races first contentful paint and loses that race on slow
+ * hardware, which produces a visible flash of content that then hides itself.
+ *
+ * The attribute is self-revoking: if the reveal controller does not report in,
+ * the hidden states are dropped and the page renders complete. Content is
+ * therefore never dependent on the controller succeeding.
+ */
+---
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    if (!('IntersectionObserver' in window)) return;
+    root.setAttribute('data-motion', '');
+    const release = () => root.removeAttribute('data-motion');
+    const timer = window.setTimeout(release, 2000);
+    window.__zgMotionReady = (ok) => {
+      window.clearTimeout(timer);
+      if (!ok) release();
+    };
+  })();
+</script>

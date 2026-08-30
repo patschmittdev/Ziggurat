@@ -11,13 +11,14 @@ Version 0.1 is a pre-release, single-operator reference implementation.
 - It is not a hosted service, not an OS sandbox, and not a substitute for external key
   custody.
 
-Continuous integration runs the full suite on Linux, macOS, and Windows against Node.js
-22 and 24.
+Continuous integration is configured to run the full suite on Linux, macOS, and Windows
+against Node.js 22 and 24.
 
 ## Not claimed
 
-There are no users, deployments, third-party audits, benchmarks, adoption figures, or
-production maturity claims to report, and none are made anywhere in this documentation.
+There are no documented users, adoption figures, known deployments, third-party audits,
+benchmarks, or production maturity evidence to report. This documentation makes no claim
+for them.
 
 ## Pre-release compatibility notes
 
@@ -46,8 +47,9 @@ Silver.
 
 | Version | Security fixes |
 |---|---|
-| Current `main` and 0.1.x | Supported |
-| Earlier pre-release versions | Unsupported |
+| Current `main` | Supported |
+| Released versions | None yet |
+| Earlier commits | Unsupported |
 
 ## Related
 

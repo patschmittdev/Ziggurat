@@ -26,11 +26,12 @@ Tests use real temporary files. Do not mock the filesystem.
 These are not style preferences. A change that violates one of them is wrong regardless
 of how well it is written.
 
-- No model path may write Bronze, knowledge pages, reviewed metadata, trust
+- The refine host may persist model-originated content only as strict Silver JSON. No
+  model pathway may write Bronze, knowledge pages, reviewed metadata, trust
   configuration, authorization receipts, or indexes.
 - No signer, apply, approve, or promote command may be added. `--promote` must not exist.
 - Gold admission must continue to require a detached Ed25519 receipt from a configured
-  human key.
+  key. Operator policy maps keys to reviewers; signatures do not prove human attention.
 - Every retrieved chunk must continue to report `content_role: reference` and
   `instruction_authority: none`.
 - Model and embedding endpoints must remain HTTP loopback only.
@@ -41,6 +42,8 @@ of how well it is written.
 
 The site is a standalone project under `site/` with its own `package.json` and lockfile,
 so documentation dependencies never affect the core runtime package.
+
+The site requires Node.js 22.12.0 or newer.
 
 ```bash
 cd site

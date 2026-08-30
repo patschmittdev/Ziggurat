@@ -25,13 +25,13 @@ Tool inputs are strict.
 
 | Bound | Value |
 |---|---|
-| Query length | 1024 characters |
+| Query length | 1,024 UTF-16 code units |
 | Results per search | 20 |
 | Retained citations per session | 200 |
 
 Over-long queries are refused rather than truncated. When the citation ceiling is
-reached, the oldest citation IDs are evicted, and eviction is revocation: a read against
-an evicted ID fails closed with the same error as a forged ID.
+reached, the oldest citation IDs are evicted and become invalid: a read against an
+evicted ID fails closed with the same error as a forged ID.
 
 ## What every result says
 

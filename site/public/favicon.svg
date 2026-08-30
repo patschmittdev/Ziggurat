@@ -1,21 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <style>
-    .frame { fill: #14171a; }
+    .apex { fill: #14171a; }
     .bronze { fill: #8c4a22; }
     .silver { fill: #3b5a6b; }
     .gold { fill: #a87516; }
     @media (prefers-color-scheme: dark) {
-      .frame { fill: #eceeec; }
+      .apex { fill: #eceeec; }
       .bronze { fill: #de9a6a; }
       .silver { fill: #96bad2; }
       .gold { fill: #e6b854; }
     }
   </style>
-  <rect class="bronze" x="2" y="24" width="28" height="6" />
-  <rect class="silver" x="6" y="16" width="20" height="6" />
-  <rect class="frame" x="6" y="13.5" width="9" height="1" />
-  <rect class="frame" x="17" y="13.5" width="9" height="1" />
-  <rect class="frame" x="26" y="13" width="5" height="2" />
-  <rect class="gold" x="10" y="6" width="12" height="6" />
-  <rect class="frame" x="14" y="2" width="4" height="2" />
+  <rect class="bronze" x="2" y="25" width="28" height="5" />
+  <rect class="silver" x="6" y="18" width="20" height="5" />
+  <rect class="gold" x="23" y="14" width="9" height="2" />
+  <rect class="gold" x="10" y="7" width="12" height="5" />
+  <rect class="apex" x="14" y="2" width="4" height="2" />
 </svg>

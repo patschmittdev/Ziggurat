@@ -1,0 +1,52 @@
+/*
+  Section-entry reveals.
+
+  Orientation only. A reveal groups a band the way a reader already groups it
+  (a head, a plate), and it never withholds a fact from anyone. The narrative
+  steps, the ledger, the guarantee pair, the two comparison artifacts, and the
+  command cards are all deliberately excluded: those are the argument and the
+  evidence, and neither is delivered in instalments. No element containing a
+  code block reveals.
+
+  Hidden initial states exist only under html[data-motion], which is set
+  synchronously in the head and removed again if the controller never reports
+  in. With scripting disabled, blocked, or broken, every element renders exactly
+  as it does in the served markup.
+*/
+
+html[data-motion] [data-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(var(--zg-rise));
+}
+
+html[data-motion] [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--zg-dur-state) var(--zg-ease-standard),
+    transform var(--zg-dur-mark) var(--zg-ease-standard);
+  transition-delay: calc(var(--zg-i, 0) * var(--zg-stagger));
+}
+
+/*
+  Every state below renders the complete page. The reveal is an enhancement on
+  top of a document that is already finished.
+*/
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion] [data-reveal],
+  html[data-motion] [data-reveal]:not(.is-in),
+  html[data-motion] [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media print {
+  html[data-motion] [data-reveal],
+  html[data-motion] [data-reveal]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

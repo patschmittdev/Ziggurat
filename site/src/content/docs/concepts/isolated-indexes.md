@@ -10,8 +10,8 @@ separate file is a structural one.
 | Index | Contents | Intended use |
 |---|---|---|
 | `.ziggurat/gold-index.json` | Authorized Gold only | Communion answer context |
-| `.ziggurat/review-index.json` | Policy-safe Silver proposals plus authorized Gold | Local advisory review |
-| `.ziggurat/evidence-index.json` | Policy-safe Bronze plus authorized Gold | Local forensic tracing |
+| `.ziggurat/review-index.json` | Silver whose candidate and every source pass model-access privacy filters, plus eligible Gold | Local advisory review |
+| `.ziggurat/evidence-index.json` | Integrity-verified Bronze that passes model-access privacy filters, plus eligible Gold | Local forensic tracing |
 
 ## What each index carries
 
@@ -22,10 +22,10 @@ corpus are verified at startup and again before both search and citation reads.
 
 ## What the separation buys
 
-Communion is the only index that produces answer context for a general AI client. If
-review and evidence were profiles over one store, then a bug, a mis-set flag, or a
-crafted query would be the only thing standing between advisory Silver content and an
-answer. Making them different files removes that class of mistake.
+Communion is the only index that produces answer context for a general AI client.
+Separate files reduce accidental cross-profile selection compared with views over one
+store. They do not eliminate implementation bugs or provide process, operating-system,
+or tenant isolation.
 
 Shipped MCP startup opens communion only. Review and evidence are not exposed by it at
 all.
@@ -42,8 +42,9 @@ An index schema, chunk, provenance, trust-label, BM25, trust-policy, or live-cor
 mismatch prevents startup, or prevents the next search or read. Recovery is a rebuild
 from the current authoritative artifacts, not a repair of the index file.
 
-Generated indexes are ignored by version control and rebuilt from source artifacts. They
-are outputs, never inputs.
+Generated indexes are derived build outputs and verified runtime inputs to retrieval.
+`init` does not create a vault `.gitignore`; operators using Git must add vault-local
+ignore rules before committing them.
 
 ## Related
 

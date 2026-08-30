@@ -6,23 +6,31 @@ description: What Ziggurat enforces in code, and the risks it explicitly does no
 Read both lists. A boundary whose edges you cannot describe is a boundary you cannot rely
 on.
 
-## Enforced guarantees
+This page is an operational summary. [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md)
+owns the normative threat model, exact controls, and residual risks.
 
-- `ingest` is the only Bronze writer. Captures are immutable and body-hash verified.
+## Enforced boundaries
+
+- `ingest` is the only Bronze writer. It stores canonical UTF-8 text after CRLF-to-LF
+  normalization with no-overwrite creation; body-hash verification detects later
+  mutation.
 - An `ingest` source must resolve to a real regular file physically under `inbox/`.
   Absolute paths, `..` traversal, symlinks, junctions, other reparse points, hard links,
   directories, and anything outside `inbox/` are refused before the file is read, copied,
   or deleted.
 - `refine` can write only strict version-2 artifacts under `.ziggurat/proposals/`.
-- The refine model receives Bronze bytes the host selected, in a bounded, labelled
-  reference block. It is given no path it can fetch and no filesystem capability.
+- The refine model receives canonical Bronze text the host selected, in a bounded,
+  labelled reference block. The shipped interface gives it no path it can fetch and no
+  filesystem capability.
 - Silver candidates cannot contain status, reviewer, receipt, or admission metadata.
-- Every Silver citation must match exact Bronze bytes, hashes, and line ranges.
+- Every Silver citation must match stored Bronze text, hashes, and line ranges. This is
+  citation integrity, not semantic or factual verification.
 - No shipped function writes knowledge pages, reviewed metadata, trusted reviewer keys,
   or authorization receipts.
-- Gold requires a detached Ed25519 receipt from a configured reviewer key. The receipt
-  binds the reviewer, timestamp, target path, and canonical page digest.
-- `reviewed_by` text alone has no authority.
+- Gold requires a detached Ed25519 receipt from a configured key. The receipt binds the
+  claimed reviewer, timestamp, target path, and canonical page digest. Operator policy
+  assigns keys to reviewers; verification does not prove humanity, attention, or review.
+- `reviewed_by` text is self-asserted and insufficient by itself.
 - Unresolved contradiction proposals block Gold until their proposal IDs appear in the
   signed page.
 - Communion, review, and evidence are physically separate version-2 indexes.
@@ -31,9 +39,8 @@ on.
   and citation reads.
 - Shipped MCP startup is communion-only and exposes exactly `search_context` and
   `read_context`.
-- Retrieval is bounded: at most 1024 query characters, 20 results per search, and 200
-  citations retained per session. Older citation IDs are revoked when the session ceiling
-  is reached.
+- Retrieval is bounded: at most 1,024 query UTF-16 code units, 20 results per search, and
+  200 citations retained per session. Older citation IDs become invalid when evicted.
 - Every returned chunk says `content_role: reference` and `instruction_authority: none`.
 - Model and embedding endpoints are limited to HTTP loopback addresses. The adapter never
   follows redirects, bounds every request with a 30 second timeout, and refuses request or
@@ -43,7 +50,7 @@ on.
 - A present but malformed or unreadable `config/clean-room.yaml` fails the release audit
   instead of falling back to defaults.
 
-## Explicit non-guarantees and residual risks
+## Operationally important non-guarantees
 
 - Ziggurat is not an OS sandbox or a multi-tenant authorization service.
 - Arbitrary local filesystem access defeats application-level path and process
@@ -89,5 +96,6 @@ The `--promote` flag does not exist and must not be added.
 
 ## Canonical source
 
-[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md) is
-authoritative for all of the above.
+If this summary and
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md) differ,
+SECURITY.md wins. Update this page rather than treating it as a second specification.

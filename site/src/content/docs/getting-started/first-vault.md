@@ -3,8 +3,9 @@ title: Your first vault
 description: Create a vault, capture one piece of evidence, and build the three isolated indexes.
 ---
 
-A vault is an ordinary directory. Everything in it except the generated indexes is
-intended for Git versioning.
+A vault is an ordinary directory. `init` does not create a Git repository or a vault
+`.gitignore`. Before committing one, add vault-local ignore rules for generated indexes
+and decide whether inbox and Bronze evidence are safe to place in version control.
 
 ## Create the vault
 
@@ -20,10 +21,10 @@ reviewer keys.
 | Path | Contents | Who writes it |
 |---|---|---|
 | `inbox/` | Untrusted capture input | You, by copying files in |
-| `bronze/` | Immutable, hash-verified evidence | `ingest`, and nothing else |
-| `.ziggurat/proposals/` | Strict version-2 Silver proposals | `refine`, and nothing else |
-| `knowledge/` | Human-authored curated pages | A human, by hand |
-| `config/trust.yaml` | Reviewer public-key trust anchors | A human, by hand |
+| `bronze/` | Canonical captured text with a verified body hash | `ingest`, using no-overwrite creation |
+| `.ziggurat/proposals/` | Strict version-2, model-originated Silver JSON | The refine host |
+| `knowledge/` | Operator-managed curated pages | The operator's authoring workflow |
+| `config/trust.yaml` | Reviewer public-key trust anchors | The trusted operator |
 | `authorizations/` | Detached signed admission receipts | An external signer |
 | `.ziggurat/*-index.json` | Generated indexes | `build` |
 
@@ -51,8 +52,18 @@ out of the model-readable evidence index until a human resolves their privacy st
 node dist/src/cli/main.js build --root ./my-vault
 ```
 
-`build` rebuilds all three isolated indexes from the current artifacts. At this point Gold
-is empty: nothing has been authorized, and running `build` is not an admission capability.
+`build` rebuilds all three isolated indexes from the current artifacts. These files are
+derived outputs and verified runtime inputs to `query` and MCP. At this point Gold is
+empty because nothing has been authorized; `build` admits only pages that already have
+valid external authorization and pass every other eligibility check.
+
+Add these patterns to the vault's own `.gitignore` if you use Git:
+
+```text
+.ziggurat/gold-index.json
+.ziggurat/review-index.json
+.ziggurat/evidence-index.json
+```
 
 ## Query communion
 

@@ -1,6 +1,6 @@
 ---
-title: Configuration and limits
-description: Every configuration file, its allowed keys, and every enforced bound.
+title: Configuration and selected limits
+description: Configuration files, their allowed keys, and security-relevant shipped CLI limits.
 ---
 
 Configuration lives in `config/` and is validated strictly. Unknown keys are rejected at
@@ -21,6 +21,9 @@ lifecycle:
 |---|---|---|
 | `schema_version` | literal `1` | Required |
 | `lifecycle.review_queue_limit` | integer, minimum 1 | Required |
+
+The repository configuration uses `50`. A fresh vault created by `ziggurat init` starts
+at `20`. The configured value limits how many entries `review` renders.
 
 ## `config/domain.yaml`
 
@@ -106,9 +109,12 @@ file by hand before every release.
 | Adapter request deadline | 30 seconds | `refine` model endpoint |
 | Request body ceiling | 1 MiB | `refine` model endpoint |
 | Response body ceiling | 1 MiB, enforced while streaming | `refine` model endpoint |
-| Query length | 1024 characters | `query`, `search_context` |
+| Query length | 1,024 UTF-16 code units | `query`, `search_context` |
 | Results per search | 20 | `query`, `search_context` |
 | Retained citations per session | 200 | MCP session |
+| Search excerpt length | 500 UTF-16 code units | `search_context` |
+| CLI JSON excerpt length | 300 UTF-16 code units | `query --json` |
+| Gold verification age | 90 days | `build`, `query`, MCP |
 
 The loopback restriction applies to both configured endpoints. The deadline, redirect
 refusal, and byte ceilings are enforced by the refine adapter, which is the only shipped
@@ -117,7 +123,7 @@ code that issues a request; nothing in the current implementation calls
 
 Oversize refine records are omitted rather than truncated, and every omission is reported
 with a reason. Over-long queries are refused rather than truncated. Reaching the citation
-ceiling evicts the oldest IDs, and eviction is revocation.
+ceiling evicts the oldest IDs, which then become invalid.
 
 ## Related
 
