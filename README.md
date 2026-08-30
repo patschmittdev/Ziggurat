@@ -181,10 +181,9 @@ The script stops at the human signing boundary by design.
    any resolved contradiction proposal IDs.
 4. Use an external Ed25519 signer whose public key is listed in `config/trust.yaml`.
    Keep the private key outside the vault and outside model-accessible processes.
-5. Compute the page digest using the canonical representation defined in
-   `src/authorization/canonical.ts`. Sign the domain-separated unsigned receipt
-   payload and store the strict JSON receipt at its deterministic path under
-   `authorizations/`.
+5. Follow the versioned [authorization protocol](docs/authorization-protocol.md) to
+   compute the canonical page digest, sign the domain-separated payload, and store
+   the strict detached receipt under `authorizations/`.
 6. Commit the page, receipt, and intentional trust-policy change for versioning,
    audit, rollback, and review.
 7. Run `ziggurat build --root <vault>`. Invalid or missing authorization leaves the
@@ -223,17 +222,26 @@ The corresponding receipt is strict JSON:
 }
 ```
 
-`authorizationSigningPayload` defines the exact domain-separated bytes to sign.
+The [authorization protocol](docs/authorization-protocol.md) defines the exact
+cross-platform bytes to hash and sign. The TypeScript implementation remains the
+authoritative verifier.
 
 ## Commands and installation
 
 Requirements: Node.js 22 or newer.
 
+Ziggurat is currently distributed as source, not as a published npm package:
+
 ```bash
 npm ci
 npm run build
 node dist/src/cli/main.js --help
+node dist/src/cli/main.js init --root ./my-vault
 ```
+
+The command table uses the shorter `ziggurat` binary name. From a source checkout,
+either replace it with `node dist/src/cli/main.js` or run `npm link` to create a
+development-only global link.
 
 | Command | Purpose |
 |---|---|
@@ -249,3 +257,19 @@ node dist/src/cli/main.js --help
 
 Configure only loopback model endpoints in `config/adapters.yaml`. The VS Code
 binding in `.vscode/mcp.json` starts communion without a selectable profile.
+
+### Project status
+
+Version 0.1 is a pre-release, single-operator reference implementation. Contracts,
+index formats, and CLI behavior may change before 1.0. It is not a hosted service,
+an OS sandbox, or a substitute for external key custody.
+
+Before contributing or filing a report, read:
+
+- [Architecture](ARCHITECTURE.md)
+- [Security and vulnerability reporting](SECURITY.md)
+- [Authorization protocol](docs/authorization-protocol.md)
+- [Contributing](CONTRIBUTING.md)
+- [Support](SUPPORT.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [MIT License](LICENSE)

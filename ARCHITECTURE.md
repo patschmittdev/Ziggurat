@@ -125,3 +125,7 @@ Knowledge pages, trust policy, receipts, and proposals are ordinary files intend
 for Git versioning. Git supplies human-readable diff, history, and rollback.
 Generated indexes are ignored and rebuilt from source artifacts. A Git commit is
 valuable audit history, but only a valid detached receipt grants Gold eligibility.
+
+The byte-level page canonicalization and receipt signing contract is documented in
+[docs/authorization-protocol.md](docs/authorization-protocol.md). Changes to signed
+bytes require a new protocol version rather than an in-place reinterpretation.

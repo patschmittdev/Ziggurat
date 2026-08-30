@@ -17,4 +17,6 @@ project_names: []
 # Additional paths to exclude from the scan, beyond the built-in defaults
 # (package-lock.json and the audit's own test fixtures). Keep this list short and
 # justified: an exclusion is a promise that a human checked the file by hand.
+# Non-UTF-8 and binary files fail closed and require an explicit exclusion after
+# manual inspection.
 exclude_paths: []

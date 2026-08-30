@@ -1,5 +1,26 @@
 # Security
 
+## Reporting a vulnerability
+
+Do not open a public issue for suspected vulnerabilities. Use **Security**,
+**Advisories**, **Report a vulnerability** in this repository, or open
+[a private vulnerability report](https://github.com/patschmittdev/Ziggurat/security/advisories/new).
+
+Include the affected commit or version, threat scenario, reproduction using
+fictional data, security impact, and any suggested mitigation. Do not submit private
+vault content, credentials, tokens, or reviewer private keys.
+
+The maintainers will coordinate disclosure after the issue is understood and a fix
+or mitigation is available. This project is pre-release and does not promise a
+response-time service level.
+
+## Supported versions
+
+| Version | Security fixes |
+|---|---|
+| Current `main` and 0.1.x | Supported |
+| Earlier pre-release versions | Unsupported |
+
 ## Threat model
 
 Ziggurat addresses persistent AI memory and context poisoning: untrusted content

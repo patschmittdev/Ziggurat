@@ -1,0 +1,43 @@
+name: Change proposal
+description: Propose a feature or trust-boundary change
+title: "[Proposal]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete problem or attack path should the project address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest complete change and its expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Human authority boundary
+      description: Explain how the proposal preserves or changes the rule that models propose and humans decide what persists.
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and migration
+      description: Identify affected schemas, commands, indexes, or vault artifacts.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This proposal does not add model-accessible admission authority.
+          required: true
+        - label: I searched existing issues and proposals.
+          required: true

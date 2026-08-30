@@ -1,7 +1,21 @@
 {
   "name": "ziggurat",
   "version": "0.1.0",
+  "description": "A human-gated memory firewall for evidence-backed AI context.",
   "private": true,
+  "license": "MIT",
+  "repository": "github:patschmittdev/Ziggurat",
+  "homepage": "https://github.com/patschmittdev/Ziggurat#readme",
+  "bugs": {
+    "url": "https://github.com/patschmittdev/Ziggurat/issues"
+  },
+  "keywords": [
+    "ai-memory",
+    "context-poisoning",
+    "human-in-the-loop",
+    "mcp",
+    "retrieval"
+  ],
   "type": "module",
   "bin": { "ziggurat": "./dist/src/cli/main.js" },
   "scripts": {
