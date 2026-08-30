@@ -64,7 +64,7 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
         build: 'ziggurat build --root <vault>',
         query: 'ziggurat query --root <vault> --query <text>',
         mcp: 'ziggurat mcp --root <vault>',
-        check: 'ziggurat check --root <vault> --audit-clean-room',
+        check: 'ziggurat check --root <repo> [--audit-clean-room]',
         eval: 'ziggurat eval --root <vault>',
       };
       return `Usage: ${usage[command]}\n`;
@@ -87,6 +87,9 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
       '',
       'Communion MCP: ziggurat mcp --root <vault>',
       'Common options: --root <vault> --json --help',
+      'check option:  --audit-clean-room  Select the clean-room release audit.',
+      '               check runs that audit either way; the flag names the gate',
+      '               explicitly and is rejected by every other command.',
       '',
     ].join('\n');
   }

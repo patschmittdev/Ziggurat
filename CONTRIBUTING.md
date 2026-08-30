@@ -31,11 +31,20 @@ depend on the `ziggurat` npm package name.
 5. Run `npm run check`.
 6. Run `node dist/src/cli/main.js check --root . --audit-clean-room`.
 
+`--audit-clean-room` names the clean-room release audit and is accepted only by
+`check`. Every other command rejects it, so a misplaced flag fails loudly rather than
+exiting zero without auditing anything. `check` performs exactly one audit today, so the
+report is the same with or without the flag; keep passing it so the invoked gate is
+explicit in scripts and transcripts.
+
 All changes must work on Windows, macOS, and Linux with Node.js 22 or newer.
 
 Before opening a pull request, review the complete diff for generated artifacts,
 private data, unrelated formatting changes, undocumented compatibility breaks, and
 trust claims stronger than the implementation.
+
+Maintainers preparing a published build follow the
+[release checklist](docs/release-checklist.md).
 
 ## Nondelegable memory boundary
 
