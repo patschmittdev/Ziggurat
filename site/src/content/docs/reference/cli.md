@@ -83,8 +83,8 @@ that misplaces the flag fails loudly instead of exiting zero without auditing an
 
 ## Commands that do not exist
 
-There is no `signer`, `apply`, `approve`, or `promote` command, and no `--promote` flag.
-This is a deliberate, permanent property of the design.
+Ziggurat ships no signer, apply, approve, or promote command; see the
+[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
 
 ## Related
 

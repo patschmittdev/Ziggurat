@@ -51,8 +51,8 @@ Maintainers preparing a published build follow the
 - Models may return strict Silver proposal payloads only.
 - Model and refine pathways must never write Bronze, knowledge pages, reviewed
   metadata, trusted reviewer keys, authorization receipts, or indexes.
-- Do not add a signer, apply, approve, or promote command.
-- The `--promote` flag does not exist and must remain rejected.
+- Ziggurat ships no signer, apply, approve, or promote command; preserve the
+  [human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
 - A `reviewed_by` string is not authority. Gold requires a verified detached
   Ed25519 receipt from `config/trust.yaml`.
 - Review and evidence indexes are advisory or forensic. They never prove human

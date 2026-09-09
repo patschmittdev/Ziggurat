@@ -40,10 +40,11 @@ limits, without having been told anything untrue.
 
 The authorization boundary is a cryptographic capability boundary, not a review
 convention. Gold admission requires a detached Ed25519 receipt from a key configured
-in `config/trust.yaml`. No shipped path creates authorization, signs receipts, or
-applies Silver to knowledge. There is no signer, apply, approve, or promote command
-and no `--promote` flag. A `reviewed_by: alice` string is self-asserted metadata and is
-insufficient by itself.
+in `config/trust.yaml`. Ziggurat ships no signer, apply, approve, or promote
+command; see the
+[human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
+A `reviewed_by: alice` string is self-asserted metadata and is insufficient by
+itself.
 
 Comparators, stated once and honestly: mem0, Letta, and Zep persist model-originated
 memory automatically (LLM-decided writes, agent-edited memory blocks, automatic fact
@@ -82,7 +83,9 @@ The pipeline the documentation must explain:
 
 ## Capabilities and Constraints
 
-Confirmed product facts the site must preserve exactly:
+Confirmed product facts the site must preserve exactly; the
+[guarantees page](https://patschmittdev.github.io/Ziggurat/security/guarantees/)
+owns their explanation:
 
 - Gold means authorized reference data. It never means factual truth, divine
   authority, or instruction authority. Every retrieved chunk, Gold included, reports
@@ -90,19 +93,18 @@ Confirmed product facts the site must preserve exactly:
 - Three claims stay distinct: provenance (bytes match captured evidence),
   persistence authorization (a configured key approved this exact page), and
   instruction authority (always none).
-- The refine host persists exactly one model-originated artifact type: strict v2
-  Silver JSON under `.ziggurat/proposals/`. It does not write Bronze, knowledge pages,
-  reviewed metadata, trust anchors, receipts, or indexes.
+- Refine output: one model-originated artifact type, strict v2 Silver JSON under
+  `.ziggurat/proposals/`; no writes to Bronze, knowledge pages, reviewed metadata,
+  trust anchors, receipts, or indexes.
 - Every Silver citation is revalidated against stored Bronze text, hashes, and line
-  ranges on disk. This establishes citation integrity, not semantic entailment or
-  factual truth.
-- Model and embedding endpoints are HTTP loopback only. The refine adapter, which is
-  the only shipped caller, additionally refuses redirects and enforces a 30 second
-  deadline with 1 MiB request and response ceilings.
+  ranges on disk; no semantic entailment or factual truth guarantee.
+- Model and embedding endpoints: HTTP loopback only; refine is the only shipped
+  caller, with no redirects, a 30 second deadline, and 1 MiB request and response
+  ceilings.
 - Retrieval bounds: 1,024 query UTF-16 code units, 20 results per search, and 200
   retained citations per session; evicted IDs become invalid.
-- Version 0.1 is a pre-release, single-operator reference implementation.
-  `package.json` stays `private: true` and the project is source-distributed; the
+- Version 0.1: pre-release, single-operator, source-distributed;
+  `package.json` stays `private: true`; the
   `ziggurat` npm package name must not be depended on.
 - Named non-guarantees must remain visible: not an OS sandbox, not multi-tenant
   authorization, no key custody or revocation service, no hosted identity, no

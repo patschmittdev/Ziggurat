@@ -21,9 +21,8 @@ the refine host validates and persists; every citation is revalidated against st
 Bronze text. **Gold** is eligible knowledge content admitted by `build` after a detached
 Ed25519 receipt from a configured key and every other eligibility check pass.
 
-No shipped path creates authorization, signs receipts, or applies Silver to knowledge.
-There is no signer, apply, approve, or promote command, and no `--promote` flag. `build`
-admits only independently authored, externally authorized eligible pages.
+Ziggurat ships no signer, apply, approve, or promote command; see the
+[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
 
 ## What this is for
 

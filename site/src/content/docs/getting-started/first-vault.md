@@ -37,11 +37,8 @@ cp some-note.md ./my-vault/inbox/
 node dist/src/cli/main.js ingest --root ./my-vault --file inbox/some-note.md
 ```
 
-`ingest` reads and deletes its source, so the source path is validated hard before the
-file is opened. It must resolve to a real regular file physically under `inbox/`.
-Absolute paths, `..` traversal, empty segments, control characters, directories,
-symlinks, junctions, other reparse points, hard links, and real-parent escapes are all
-refused before any read, copy, or unlink happens.
+`ingest` refuses unsafe source paths before any read, copy, or unlink; see the
+[ingest path rules](/Ziggurat/guides/ingest-and-refine/#ingest-capture-evidence).
 
 Fresh captures default to `sensitivity: restricted` and `pii: unknown`, which keeps them
 out of the model-readable evidence index until a human resolves their privacy state.
