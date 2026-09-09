@@ -190,45 +190,32 @@
     opacity: 0;
   }
 
-  /*
-    The cursor is positioned by the custom property in both states, so its first
-    appearance is a fade at the correct level rather than a traverse from the top
-    of the plate. The transition is enabled with `data-active`, one frame after
-    the position is written.
-
-    The transform stays on a `<g>` inside the drawing rather than moving to an
-    HTML overlay. An overlay would have to re-derive the plate's user-space
-    geometry in CSS and stay aligned across every breakpoint, which trades a
-    bounded, measurable repaint for a silent drift risk against the figure it is
-    supposed to index. Chromium does not composite SVG element transforms, so the
-    cost is a repaint of the figure's own box (measured, not asserted, in the
-    verification notes), and it is paid at most once per level change rather than
-    continuously.
-  */
   .datum-cursor {
     opacity: 0;
-    transform: translateY(var(--cursor-y, 0px));
+    transform: translateY(0);
   }
 
   .ascent-figure[data-active] .datum-cursor {
     opacity: 1;
+    transform: translateY(var(--cursor-y, 0px));
     transition:
-      transform var(--zg-dur-datum) var(--zg-ease-datum),
-      opacity var(--zg-dur-mark) linear;
+      transform 620ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 260ms linear;
   }
 
   .ascent-figure[data-active] .lvl.is-active .focus-ring {
     opacity: 1;
-    transition: opacity var(--zg-dur-mark) var(--zg-ease-standard);
+    transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /*
-    Reduced motion removes the interpolation, not the information: the cursor and
-    the focus ring still mark the level being read, they simply arrive there.
-  */
   @media (prefers-reduced-motion: reduce) {
     .datum-cursor,
-    .ascent-figure[data-active] .datum-cursor,
+    .ascent-figure[data-active] .datum-cursor {
+      opacity: 0;
+      transform: none;
+      transition: none;
+    }
+
     .ascent-figure[data-active] .lvl.is-active .focus-ring {
       transition: none;
     }

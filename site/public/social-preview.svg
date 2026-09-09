@@ -1,5 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Ziggurat. Models propose. Humans decide what persists.">
-  <title>Ziggurat</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Ziggurat — models propose, humans decide what persists">
   <rect width="1200" height="630" fill="#101214"></rect>
   <rect x="24.5" y="24.5" width="1151" height="581" fill="none" stroke="#2e3337" stroke-width="1"></rect>
 
@@ -7,14 +6,11 @@
   <rect x="150" y="315" width="180" height="54" fill="#96bad2"></rect>
   <rect x="186" y="243" width="108" height="54" fill="#e6b854"></rect>
   <rect x="222" y="207" width="36" height="18" fill="#eceeec"></rect>
-
   <g font-family="system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
     <text x="472" y="310" fill="#eceeec" font-size="76" font-weight="600" letter-spacing="-2">Ziggurat</text>
-    <text x="474" y="372" fill="#a9afb3" font-size="33">Models propose. Humans decide what persists.</text>
+    <text x="474" y="372" fill="#a9afb3" font-size="34">Models propose. Humans decide what persists.</text>
   </g>
   <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" fill="#8a9095">
-    <text x="474" y="440">bronze: canonicalized evidence &#183; silver: proposals only</text>
-    <text x="474" y="468">gold: externally key-authorized &#183; not instruction authority</text>
-    <text x="1146" y="66" text-anchor="end">v0.1.0 &#183; pre-release</text>
+    <text x="474" y="440">bronze: immutable · silver: proposals only · gold: human-authorized</text>
   </g>
 </svg>

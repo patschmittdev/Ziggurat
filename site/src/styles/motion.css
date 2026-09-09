@@ -1,38 +1,39 @@
 /*
-  Section-entry reveals, taken from the design export.
+  Section-entry motion.
 
-  A group carries `data-reveal="1|2|3"`, which is its place in the entry rhythm:
-  0ms, 90ms, 180ms. Each group reveals once on its own entry and is then
-  unobserved.
+  Hidden initial states exist ONLY under html[data-js-ready], which is set by the
+  reveal controller itself. If scripting is disabled, blocked, or fails, the
+  attribute is never set and every element renders exactly as before.
 
-  Hidden initial states exist only under html[data-motion], which is set
-  synchronously in the head and removed again if the controller never reports
-  in. With scripting disabled, blocked, or broken, every element renders exactly
-  as it does in the served markup, so no fact is ever gated behind a script.
+  Reveals animate conceptual groups (a band head, a figure, a ledger), never
+  individual lines. Transform + opacity only, so no layout shifts. Each group
+  reveals once; the controller unobserves after entry.
 */
 
-html[data-motion] [data-reveal]:not(.is-in) {
+html[data-js-ready] [data-reveal] {
   opacity: 0;
-  transform: translateY(var(--zg-rise));
+  transform: translateY(14px);
 }
 
-html[data-motion] [data-reveal].is-in {
+html[data-js-ready] [data-reveal].is-in {
   opacity: 1;
   transform: none;
   transition:
-    opacity var(--zg-dur-reveal-fade) ease-out,
-    transform var(--zg-dur-reveal-rise) var(--zg-ease-reveal);
-  transition-delay: calc(var(--zg-i, 0) * var(--zg-stagger));
+    opacity 300ms ease-out,
+    transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-/*
-  Every state below renders the complete page. The reveal is an enhancement on
-  top of a document that is already finished.
-*/
+html[data-js-ready] [data-reveal='2'].is-in {
+  transition-delay: 90ms;
+}
+
+html[data-js-ready] [data-reveal='3'].is-in {
+  transition-delay: 180ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  html[data-motion] [data-reveal],
-  html[data-motion] [data-reveal]:not(.is-in),
-  html[data-motion] [data-reveal].is-in {
+  html[data-js-ready] [data-reveal],
+  html[data-js-ready] [data-reveal].is-in {
     opacity: 1;
     transform: none;
     transition: none;
@@ -40,8 +41,7 @@ html[data-motion] [data-reveal].is-in {
 }
 
 @media print {
-  html[data-motion] [data-reveal],
-  html[data-motion] [data-reveal]:not(.is-in) {
+  html[data-js-ready] [data-reveal] {
     opacity: 1;
     transform: none;
     transition: none;
