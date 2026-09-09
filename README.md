@@ -37,9 +37,9 @@ reference data.
 - **Every citation is checked against stored Bronze text.** A fabricated quote, digest,
   or line range fails staging. Citation integrity does not establish semantic support or
   factual truth; those judgments remain reviewer responsibilities.
-- **Approval is not instruction authority.** Every retrieved chunk, including Gold,
-  reports `content_role: reference` and `instruction_authority: none`. Gold means
-  authorized reference data, not truth and not a command.
+- **Approval is not instruction authority.** Every retrieved chunk carries
+  `content_role: reference` and `instruction_authority: none`; see
+  [provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
 
 ```mermaid
 flowchart LR

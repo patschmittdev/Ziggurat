@@ -67,9 +67,8 @@ The deterministic receipt path for `knowledge/topic.md` is
 unsupported and must be restaged or rebuilt.
 
 :::caution[Gold is not a truth label]
-Gold means eligible knowledge chunks externally authorized by a configured key. It is not
-truth, not safety, proof of human review, or instruction authority. Every Gold chunk still
-reports `instruction_authority: none`.
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`; see [Gold's limits](/Ziggurat/concepts/provenance-and-authority/).
 :::
 
 ## Crossing between tiers

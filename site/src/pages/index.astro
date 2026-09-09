@@ -116,7 +116,7 @@ const notGuaranteed = [
   'An attacker with arbitrary vault filesystem access can replace the trust policy, sources, receipts, and indexes, then rebuild.',
   'A stolen reviewer key, a compromised reviewer, or an inattentive approval can authorize harmful or false content.',
   'A valid signature proves control of a configured key and approval of exact content. It does not prove factual truth.',
-  'Approved text can still contain prompt injection. Gold approval never grants instruction authority.',
+  'Approved text can still contain prompt injection; see <a href="/Ziggurat/concepts/provenance-and-authority/">provenance and authority</a>.',
   'Application-level path checks cannot fully close time-of-check to time-of-use windows.',
   'No key custody, revocation service, hosted identity, transport security, or GUI review system is provided.',
 ];
@@ -401,8 +401,10 @@ retrieval_eligible: true
             <figure class="figure" data-reveal="2">
               <AscentFigure />
               <figcaption class="figure__caption">
-                <b>Figure 3.</b> Gold is externally authorized reference data. It is not truth,
-                not safety, and not instruction authority.
+                <b>Figure 3.</b> Every retrieved chunk carries
+                <code>content_role: reference</code>
+                and <code>instruction_authority: none</code>; see
+                <a href={url('concepts/provenance-and-authority/')}>Gold's limits</a>.
               </figcaption>
             </figure>
           </div>

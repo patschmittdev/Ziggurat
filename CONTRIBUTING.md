@@ -59,7 +59,9 @@ Maintainers preparing a published build follow the
   identity.
 - Shipped MCP startup serves the Gold index only and exposes
   two read-only tools.
-- All retrieved content is reference data with `instruction_authority: none`.
+- Every retrieved chunk carries `content_role: reference` and
+  `instruction_authority: none`; see
+  [provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
 
 ## Silver proposal changes
 

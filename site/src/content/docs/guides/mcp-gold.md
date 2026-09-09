@@ -35,17 +35,12 @@ evicted ID fails closed with the same error as a forged ID.
 
 ## What every result says
 
-```text
-content_role: reference
-instruction_authority: none
-```
-
-This is true of every chunk, Gold included.
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`.
 
 :::caution[Consumers must honour the label]
-Gold approval never grants instruction authority. Approved text can still contain prompt
-injection, so a client that treats retrieved content as instructions has stepped outside
-the boundary Ziggurat maintains.
+Approved text can still contain prompt injection; see
+[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
 :::
 
 ## Verification before every read

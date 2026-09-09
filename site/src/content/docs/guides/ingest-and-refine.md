@@ -63,9 +63,10 @@ The host reads Bronze on the model's behalf and builds a bounded reference block
 | Request and response body ceiling | 1 MiB each |
 
 Each record carries its verified `body_sha256` and its body as 1-based lines, labelled
-`content_role: reference` and `instruction_authority: none`. That is what makes exact
-citation possible without ever handing the model a path it could fetch. Oversize records
-are omitted rather than truncated, and every omission is reported with a reason.
+`content_role: reference` and `instruction_authority: none`; see
+[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+Oversize records are omitted rather than truncated, and every omission is reported
+with a reason.
 
 The model endpoint must be an HTTP loopback address. The adapter never follows redirects,
 so a loopback endpoint answering with an off-machine `Location` cannot be turned into a

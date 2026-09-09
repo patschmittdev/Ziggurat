@@ -175,14 +175,9 @@ project name a human configured. An absent file still uses documented defaults.
 
 ## Provenance is not instruction authority
 
-Three different claims must not be conflated:
-
-1. **Provenance:** these bytes match captured evidence.
-2. **Persistence authorization:** a configured reviewer key approved this exact page.
-3. **Instruction authority:** whether text may direct a model or tool.
-
-Ziggurat implements the first two. It always sets the third to none. Gold is
-approved reference data, not executable instruction and not guaranteed truth.
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`; see
+[provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
 
 ## Explicit non-guarantees and residual risks
 
@@ -207,8 +202,8 @@ approved reference data, not executable instruction and not guaranteed truth.
 - Stolen or misused reviewer private keys can authorize poisoned content.
 - Human reviewers can make mistakes, collude, or approve false claims.
 - Signatures do not detect semantic deception that a reviewer accepts.
-- Gold text can still contain prompt injection. Consumers must honor
-  `instruction_authority: none`.
+- Gold text can still contain prompt injection; see
+  [instruction authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/#3-instruction-authority).
 - Review output intentionally displays untrusted content. Terminals and downstream
   renderers must not treat it as active markup or commands.
 - No GUI review system is provided; review is a terminal rendering plus an external

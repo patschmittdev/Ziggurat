@@ -113,22 +113,21 @@ in the page and signing that exact page.
 
 ## Physical index isolation
 
-- **gold**: the Gold index holds authorization-valid Gold only. This is answer-producing AI context.
-- **review**: policy-safe canonical Silver proposals plus authorization-valid Gold.
-  This is advisory context, not identity proof.
-- **evidence**: policy-safe, integrity-valid Bronze plus authorization-valid Gold.
-  This is forensic context, not identity proof.
+| Index | Contents |
+|---|---|
+| gold | Authorized Gold only |
+| review | Policy-safe Silver plus Gold |
+| evidence | Policy-safe Bronze plus Gold |
 
-Each index has a profile literal, deterministic chunk IDs, a trust-policy
-fingerprint, and a corpus fingerprint over complete chunk integrity. Review and
-evidence are not exposed by shipped MCP startup.
+Review and evidence are not identity proof; see
+[Isolated indexes](https://patschmittdev.github.io/Ziggurat/concepts/isolated-indexes/)
+for the full isolation and integrity rules.
 
 ## Provenance trust and instruction authority
 
-Bronze hashes prove that cited bytes match captured bytes. An authorization receipt
-proves that a configured key approved exact curated content. Neither grants
-instruction authority. Every chunk is labeled `content_role: reference` and
-`instruction_authority: none`, including Gold.
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`; see
+[provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
 
 ## Versioning and rollback
 

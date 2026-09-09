@@ -87,12 +87,10 @@ Confirmed product facts the site must preserve exactly; the
 [guarantees page](https://patschmittdev.github.io/Ziggurat/security/guarantees/)
 owns their explanation:
 
-- Gold means authorized reference data. It never means factual truth, divine
-  authority, or instruction authority. Every retrieved chunk, Gold included, reports
-  `content_role: reference` and `instruction_authority: none`.
-- Three claims stay distinct: provenance (bytes match captured evidence),
-  persistence authorization (a configured key approved this exact page), and
-  instruction authority (always none).
+- Every retrieved chunk carries `content_role: reference` and
+  `instruction_authority: none`; see
+  [Gold's limits](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
+- Distinct claims: provenance, persistence authorization, and instruction authority.
 - Refine output: one model-originated artifact type, strict v2 Silver JSON under
   `.ziggurat/proposals/`; no writes to Bronze, knowledge pages, reviewed metadata,
   trust anchors, receipts, or indexes.

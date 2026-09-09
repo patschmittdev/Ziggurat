@@ -103,8 +103,10 @@ page. Until then the contradiction blocks Gold.
 
 A valid signature proves control of a configured key and authorization of exact canonical
 content. It does not prove humanity, attention, completion of this workflow, semantic
-support, or factual truth, and it never grants instruction authority. A stolen key, a
-compromised reviewer, or an inattentive approval can authorize harmful content.
+support, or factual truth; see
+[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+A stolen key, a compromised reviewer, or an inattentive approval can authorize harmful
+content.
 
 ## Related
 
