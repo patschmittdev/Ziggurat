@@ -49,7 +49,7 @@ flowchart TB
       BRONZE[Bronze]
       SILVER[Silver proposal]
     end
-    subgraph HumanBoundary[Nondelegable human authority]
+    subgraph HumanBoundary[External key-holder authority]
       KEY[External private key]
       PAGE[Knowledge page]
       RECEIPT[Signed receipt]

@@ -137,6 +137,9 @@ components:
 
 # Design
 
+> Maintainer material: design tokens and rules for the documentation site. Not evaluator
+> reading.
+
 This records the system as built in `site/`. It governs the custom homepage
 (`site/src/pages/index.astro`), the framework-free components in
 `site/src/components/`, and the Starlight documentation theme in
@@ -149,7 +152,7 @@ they section a structure and annotate what each layer does and what it cannot do
 It refuses the security-landing default of a hero, three icon cards, and a terminal
 screenshot.
 
-The one idea it owns: authority over durable memory is a capability the software
+The one idea it owns: authority over Gold admission is a capability the software
 does not have. Every device serves that. Solid tier fields carry Bronze, Silver, and
 Gold at page scale; a hairline rule separates two genuinely different things and
 never decorates; monospace marks machine facts and nothing else; and a recessed gap
@@ -199,10 +202,9 @@ Two registers, and the split is semantic rather than decorative:
 
 - **Sans** carries human explanation: headings, prose, navigation, labels.
 - **Monospace** carries machine facts only: paths, digests, field names and values,
-  command names, configuration keys, and the datum scale numerals. In this product
-  the difference between prose and a machine fact is the whole epistemology, so the
-  typeface change is load-bearing. Monospace is never used as a costume for
-  "technical".
+  command names, configuration keys, and the datum scale numerals. Typography carries
+  the hierarchy: the typeface change distinguishes prose from machine facts.
+  Monospace is never used as a costume for "technical".
 
 Display tracking runs to `-0.035em`; headings to `-0.025em`. Body measure is capped
 at 68ch. Headings use `text-wrap: balance`.
