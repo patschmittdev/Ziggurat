@@ -251,7 +251,7 @@ for texture is a defect.
   scale on the left, the project's real specification as a `dt`/`dd` grid on the
   right, hairline above. It is not a hero.
 - **Boundary plate (Figure 1).** Two stacked fields, gold above and silver below,
-  divided by a 3px double seam reading `NO SHIPPED PATH CREATES AUTHORIZATION`, with the
+  divided by a 3px double seam reading `NO CODE PATH CROSSES`, with the
   key entering from outside the frame. Real HTML text, not an image.
 - **Section drawing (Figure 3).** Inline SVG, complete in the served markup, with a
   datum rail, seven annotated levels, solid tier courses, and a recessed gap.
@@ -291,9 +291,14 @@ Rules that do not bend:
   `transition: all` is never written.
 - Every duration and easing comes from the tokens in `tokens.css`. No component
   hardcodes a millisecond value.
-- Hidden initial states exist only under `html[data-motion]`, set synchronously in the
-  head and self-revoking if the controller never reports in. With no scripting, a failed
-  script, reduced motion, print, or no `IntersectionObserver`, the page renders complete.
+- Hidden initial states exist only under `html[data-js-ready]`, set from a
+  `requestAnimationFrame` callback in the page's body script once a live render loop
+  is proven. Groups reveal once via `IntersectionObserver` with
+  `rootMargin: '0px 0px -8% 0px'` and `threshold: 0.05`, then are unobserved.
+  With no scripting, a failed script, or no `IntersectionObserver`, the page renders
+  complete.
+  Reduced motion and print render everything immediately (see
+  `site/src/styles/motion.css`).
   A reveal therefore delays a fact by at most 600ms and withholds it from nobody.
 - `prefers-reduced-motion` removes interpolation, not information. The reading cursor
   and its focus ring still mark the level; they simply arrive there.
@@ -310,15 +315,13 @@ and the summit aperture at `x14 y4 w4 h2`. The same four rectangles carry the in
 wordmark, both mark assets, the favicon, and the social plate, so the identity is one
 shape at every size.
 
-In the masthead the mark sits in ink at rest and takes its tier colours on hover or
-keyboard focus; the aperture stays ink in every state. Where hover is unavailable there
-is no rest state to reward, so the tier colours are drawn permanently. The mark is
+In the masthead the mark sits in ink at rest and takes its tier colours on `:hover`
+and `:focus-visible` only; the aperture stays ink in every state. The mark is
 decorative and `aria-hidden` in that context, and the word beside it is the accessible
 name, so nothing about wayfinding depends on either state.
 
-The favicon carries both a presentation-attribute fill and a class-based
-`prefers-color-scheme` rule, so it adapts where CSS in SVG is honoured and still renders
-in colour where it is not.
+The favicon is a plain single-colour SVG with no fill attributes and no
+`prefers-color-scheme` rule.
 
 ## Do's and Don'ts
 
