@@ -42,7 +42,7 @@ The authorization boundary is a cryptographic capability boundary, not a review
 convention. Gold admission requires a detached Ed25519 receipt from a key configured
 in `config/trust.yaml`. Ziggurat ships no signer, apply, approve, or promote
 command; see the
-[human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
+[human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 A `reviewed_by: alice` string is self-asserted metadata and is insufficient by
 itself.
 
@@ -84,12 +84,12 @@ The pipeline the documentation must explain:
 ## Capabilities and Constraints
 
 Confirmed product facts the site must preserve exactly; the
-[guarantees page](https://patschmittdev.github.io/Ziggurat/security/guarantees/)
+[guarantees page](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/security/guarantees.md)
 owns their explanation:
 
 - Every retrieved chunk carries `content_role: reference` and
   `instruction_authority: none`; see
-  [Gold's limits](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
+  [Gold's limits](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 - Distinct claims: provenance, persistence authorization, and instruction authority.
 - Refine output: one model-originated artifact type, strict v2 Silver JSON under
   `.ziggurat/proposals/`; no writes to Bronze, knowledge pages, reviewed metadata,

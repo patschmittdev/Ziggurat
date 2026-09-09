@@ -52,7 +52,7 @@ Maintainers preparing a published build follow the
 - Model and refine pathways must never write Bronze, knowledge pages, reviewed
   metadata, trusted reviewer keys, authorization receipts, or indexes.
 - Ziggurat ships no signer, apply, approve, or promote command; preserve the
-  [human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
+  [human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 - A `reviewed_by` string is not authority. Gold requires a verified detached
   Ed25519 receipt from `config/trust.yaml`.
 - Review and evidence indexes are advisory or forensic. They never prove human
@@ -61,7 +61,7 @@ Maintainers preparing a published build follow the
   two read-only tools.
 - Every retrieved chunk carries `content_role: reference` and
   `instruction_authority: none`; see
-  [provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
+  [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ## Silver proposal changes
 

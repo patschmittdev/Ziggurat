@@ -177,7 +177,7 @@ project name a human configured. An absent file still uses documented defaults.
 
 Every retrieved chunk carries `content_role: reference` and
 `instruction_authority: none`; see
-[provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
+[provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ## Explicit non-guarantees and residual risks
 
@@ -203,7 +203,7 @@ Every retrieved chunk carries `content_role: reference` and
 - Human reviewers can make mistakes, collude, or approve false claims.
 - Signatures do not detect semantic deception that a reviewer accepts.
 - Gold text can still contain prompt injection; see
-  [instruction authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/#3-instruction-authority).
+  [instruction authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md#3-instruction-authority).
 - Review output intentionally displays untrusted content. Terminals and downstream
   renderers must not treat it as active markup or commands.
 - No GUI review system is provided; review is a terminal rendering plus an external
@@ -228,4 +228,4 @@ Every retrieved chunk carries `content_role: reference` and
   potential memory-poisoning incident.
 
 Ziggurat ships no signer, apply, approve, or promote command; see the
-[human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
+[human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).

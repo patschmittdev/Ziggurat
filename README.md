@@ -30,7 +30,7 @@ reference data.
   `reviewed_by: alice` string is metadata, not authority.
 - **Authorization is external to the admission path.** Ziggurat ships no signer,
   apply, approve, or promote command; see the
-  [human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
+  [human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 - **The refine host persists one model-originated artifact type.** It can stage only
   strict schema-version-2 Silver JSON. It cannot write Bronze, knowledge pages, reviewed
   metadata, trust anchors, receipts, or indexes.
@@ -39,7 +39,7 @@ reference data.
   factual truth; those judgments remain reviewer responsibilities.
 - **Approval is not instruction authority.** Every retrieved chunk carries
   `content_role: reference` and `instruction_authority: none`; see
-  [provenance and authority](https://patschmittdev.github.io/Ziggurat/concepts/provenance-and-authority/).
+  [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ```mermaid
 flowchart LR
@@ -59,12 +59,12 @@ flowchart LR
 The shipped refine and MCP interfaces do not receive the signing capability. An
 operator who gives an AI shell, filesystem, or key access has delegated authority
 outside the
-[boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).
+[boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 
 ### How this differs from other agent-memory systems
 
 Ziggurat requires external authorization where mem0, Letta, and Zep persist memory
-automatically; see the [Overview](https://patschmittdev.github.io/Ziggurat/getting-started/overview/#how-it-differs-from-other-agent-memory-systems)
+automatically; see the [Overview](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/getting-started/overview.md#how-it-differs-from-other-agent-memory-systems)
 for the comparison and its limits.
 
 ## Quickstart
@@ -139,7 +139,7 @@ Configure only loopback model endpoints in `config/adapters.yaml`. The VS Code b
 - No shipped path writes knowledge pages, reviewed metadata, trust anchors, or
   receipts.
 
-See [Enforced boundaries](https://patschmittdev.github.io/Ziggurat/security/guarantees/#enforced-boundaries)
+See [Enforced boundaries](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/security/guarantees.md#enforced-boundaries)
 for the complete guarantees.
 
 Ziggurat is not an OS sandbox or a multi-tenant authorization service, and a valid
