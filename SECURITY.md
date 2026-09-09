@@ -43,8 +43,8 @@ reviewer trust anchors, detached authorization receipts, isolated indexes, and
 retrieved citations.
 
 Actors are untrusted source authors, the loopback refinement model, human reviewers,
-the trusted local operator, general communion clients, and advisory review/evidence
-tooling. Advisory access does not establish human identity.
+the trusted local operator, general communion (the Gold-only retrieval index) clients,
+and advisory review/evidence tooling. Advisory access does not establish human identity.
 
 ## Trust assumptions
 
@@ -193,6 +193,8 @@ approved reference data, not executable instruction and not guaranteed truth.
   `instruction_authority: none`.
 - Review output intentionally displays untrusted content. Terminals and downstream
   renderers must not treat it as active markup or commands.
+- No GUI review system is provided; review is a terminal rendering plus an external
+  signing step.
 - The implementation does not provide hardware key storage, revocation services,
   threshold approval, remote attestation, hosted identity, tenant isolation, or
   transport security.

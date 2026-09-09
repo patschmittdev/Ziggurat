@@ -7,6 +7,9 @@ description: Why communion, review, and evidence are three physical files rather
 files, not views over a shared store, because a filter is a runtime decision and a
 separate file is a structural one.
 
+communion is the retrieval index for Gold: eligible knowledge chunks externally
+authorized by a configured key.
+
 | Index | Contents | Intended use |
 |---|---|---|
 | `.ziggurat/gold-index.json` | Authorized Gold only | Communion answer context |

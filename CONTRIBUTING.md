@@ -57,7 +57,8 @@ Maintainers preparing a published build follow the
   Ed25519 receipt from `config/trust.yaml`.
 - Review and evidence indexes are advisory or forensic. They never prove human
   identity.
-- Shipped MCP startup is communion-only and exposes two read-only tools.
+- Shipped MCP startup serves communion (the Gold-only retrieval index) only and exposes
+  two read-only tools.
 - All retrieved content is reference data with `instruction_authority: none`.
 
 ## Silver proposal changes

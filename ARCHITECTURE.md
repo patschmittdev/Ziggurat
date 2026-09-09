@@ -16,7 +16,7 @@ verifiable human capability before content becomes durable communion context.
 | Knowledge page | `knowledge/` | Human-authored curated content |
 | Trust policy | `config/trust.yaml` | Reviewer public-key trust anchors |
 | Authorization receipt | `authorizations/` | Detached signed admission decision |
-| Communion index | `.ziggurat/gold-index.json` | Authorized Gold retrieval |
+| Communion index (the Gold-only retrieval index) | `.ziggurat/gold-index.json` | Authorized Gold retrieval |
 | Review index | `.ziggurat/review-index.json` | Policy-safe Silver plus Gold |
 | Evidence index | `.ziggurat/evidence-index.json` | Policy-safe Bronze plus Gold |
 

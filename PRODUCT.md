@@ -17,8 +17,8 @@ and without running anything, whether Ziggurat's boundary is real, and then eith
 read the threat model or run the reference implementation.
 
 Secondary users are maintainers and contributors who need task-oriented operating
-documentation for ingest, refine, review, external authorization, communion, and
-integrity recovery.
+documentation for ingest, refine, review, external authorization, communion (the
+Gold-only retrieval index), and integrity recovery.
 
 ## Product Purpose
 
