@@ -62,7 +62,7 @@ const steps: Step[] = [
     tierLabel: 'REFUSED',
     cursor: 263,
     heading: 'A page that reviews itself changes nothing',
-    body: 'A curated page can carry status: reviewed and any reviewer name its author likes. build reads it, and communion does not change. There is no signer, apply, approve, or promote command and no --promote flag, so there is no capability behind the string.',
+    body: 'A curated page can carry status: reviewed and any reviewer name its author likes. build reads it, and the Gold index does not change. There is no signer, apply, approve, or promote command and no --promote flag, so there is no capability behind the string.',
     facts: ['reviewed_by is uninterpreted metadata', 'no shipped code path admits a page'],
   },
   {
@@ -90,10 +90,10 @@ const steps: Step[] = [
   {
     level: '06',
     tier: 'none',
-    tierLabel: 'COMMUNION',
+    tierLabel: 'GOLD',
     cursor: 62,
     heading: 'Authorized is still not instruction authority',
-    body: 'Shipped MCP startup is communion-only and read-only, exposing exactly search_context and read_context. Retrieval is bounded to 1024 query characters, 20 results per search, and 200 retained citations per session; reaching the ceiling evicts the oldest citation IDs, which revokes them. Every returned chunk, Gold included, reports content_role: reference and instruction_authority: none.',
+    body: 'Shipped MCP startup is Gold-only and read-only, exposing exactly search_context and read_context. Retrieval is bounded to 1024 query characters, 20 results per search, and 200 retained citations per session; reaching the ceiling evicts the oldest citation IDs, which revokes them. Every returned chunk, Gold included, reports content_role: reference and instruction_authority: none.',
     facts: ['search_context, read_context', 'instruction_authority: none'],
   },
 ];
@@ -105,8 +105,8 @@ const enforced = [
   'Silver candidates cannot carry status, reviewer, receipt, or admission metadata.',
   'Every Silver citation must match exact Bronze bytes, hashes, and line ranges.',
   'Gold requires a detached Ed25519 receipt from a key configured in <code>config/trust.yaml</code>.',
-  'Communion, review, and evidence are physically separate version-2 indexes.',
-  'Shipped MCP startup is communion-only and exposes exactly two read-only tools.',
+  'gold, review, and evidence are physically separate version-2 indexes.',
+  'Shipped MCP startup is Gold-only and exposes exactly two read-only tools.',
   'Model endpoints are HTTP loopback only, with redirects disabled, a 30 second deadline, and 1 MiB request and response ceilings.',
   'Every returned chunk reports <code>content_role: reference</code> and <code>instruction_authority: none</code>.',
 ];
@@ -233,7 +233,7 @@ const notGuaranteed = [
             <div class="boundary__zone boundary__zone--above">
               <p class="boundary__zone-label" id="boundary-above">Only an external key holder may</p>
               <ul class="boundary__list" aria-labelledby="boundary-above">
-                <li>admit a curated page to durable communion memory</li>
+                <li>admit a curated page to durable Gold memory</li>
               </ul>
             </div>
             <div class="boundary__seam">
@@ -356,7 +356,7 @@ retrieval_eligible: true
 ---</code></pre>
             <p class="artifact__note">
               Self-asserted metadata changes nothing. Without a matching receipt the page stays
-              out of Gold and out of communion, whatever it says about itself.
+              out of Gold and out of the Gold index, whatever it says about itself.
             </p>
           </article>
 
@@ -457,7 +457,7 @@ retrieval_eligible: true
             <tr>
               <th scope="row">gold-index.json</th>
               <td data-label="Contents">Authorized Gold only</td>
-              <td data-label="Intended use">Communion answer context</td>
+              <td data-label="Intended use">Answer context</td>
               <td data-label="Shipped MCP">Exposed, read only</td>
             </tr>
             <tr>
@@ -485,7 +485,7 @@ retrieval_eligible: true
             <svg viewBox="0 0 480 196" role="img" aria-labelledby="iso-title iso-desc">
               <title id="iso-title">Three separate index files</title>
               <desc id="iso-desc">
-                Shipped MCP startup has a single arrow, and it points only at the communion
+                Shipped MCP startup has a single arrow, and it points only at the Gold
                 index. The review and evidence indexes stand apart with no connection to the
                 MCP server and no connection to each other, because they are separate files
                 rather than views over one store.

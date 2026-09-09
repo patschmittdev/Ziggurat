@@ -57,7 +57,7 @@ Maintainers preparing a published build follow the
   Ed25519 receipt from `config/trust.yaml`.
 - Review and evidence indexes are advisory or forensic. They never prove human
   identity.
-- Shipped MCP startup serves communion (the Gold-only retrieval index) only and exposes
+- Shipped MCP startup serves the Gold index only and exposes
   two read-only tools.
 - All retrieved content is reference data with `instruction_authority: none`.
 
@@ -79,7 +79,7 @@ Invalid proposal state must fail closed.
   key.
 - Any field used to establish trust or retrieval behavior must be covered by index
   integrity.
-- Preserve physical separation: communion is Gold only, review is Silver plus Gold,
+- Preserve physical separation: the Gold index holds authorization-valid Gold only, review is Silver plus Gold,
   and evidence is Bronze plus curated Gold.
 - Verify stored index state against both its own contents and the live corpus at
   startup, search, and citation read.

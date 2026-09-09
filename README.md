@@ -50,7 +50,7 @@ flowchart LR
     R --> S[Silver proposal]
     S -. recommended review .-> H{Operator-assigned reviewer\nwith external Ed25519 key}
     H -->|independently authored page + signed receipt| G[Gold reference]
-    G --> C[Communion MCP\nread only]
+    G --> C[Gold MCP\nread only]
     B --> E[Evidence index\nadvisory]
     S --> V[Review index\nadvisory]
     G --> V
@@ -115,7 +115,7 @@ steps. The full end-to-end boundary is exercised by `test/memory-boundary.test.t
 | **Gold** | `build` | Eligible knowledge chunks admitted only with a valid detached Ed25519 receipt and every other eligibility check. |
 
 The three generated indexes remain physically separate. `gold-index.json` holds authorized
-Gold only and is the sole communion answer context, while `review-index.json` and
+Gold only and is the sole answer context, while `review-index.json` and
 `evidence-index.json` are local advisory context that shipped MCP never exposes.
 
 Ziggurat intentionally ships no signer, apply, approve, or promote command. External key
@@ -134,13 +134,13 @@ link.
 | `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...` | Stage a strict Silver proposal through a loopback model |
 | `ziggurat review --root <vault>` | Render human review packets from staged proposals |
 | `ziggurat build --root <vault>` | Rebuild all three isolated indexes |
-| `ziggurat query --root <vault> --query <text>` | Query authorized Gold communion (the read-only Gold retrieval surface) |
-| `ziggurat mcp --root <vault>` | Start the communion-only read-only MCP server |
+| `ziggurat query --root <vault> --query <text>` | Query authorized Gold |
+| `ziggurat mcp --root <vault>` | Start the read-only Gold MCP server |
 | `ziggurat eval --root <vault>` | Run built-in conformance cases |
 | `ziggurat check --root <repo> [--audit-clean-room]` | Audit a tree you intend to publish for clean-room and key-material violations |
 
 Configure only loopback model endpoints in `config/adapters.yaml`. The VS Code binding in
-`.vscode/mcp.json` starts communion without a selectable profile.
+`.vscode/mcp.json` starts the Gold MCP server without a selectable profile.
 
 ## Core guarantees
 
@@ -153,7 +153,7 @@ Configure only loopback model endpoints in `config/adapters.yaml`. The VS Code b
 - Gold requires a detached Ed25519 receipt binding a configured key, claimed reviewer,
   timestamp, target path, and canonical page digest. This does not prove human identity,
   attention, semantic support, or factual verification.
-- Shipped MCP startup is communion-only and exposes exactly `search_context` and
+- Shipped MCP startup is Gold-only and exposes exactly `search_context` and
   `read_context`, bounded to 1,024 query UTF-16 code units, 20 results, and 200 session
   citations. Evicted citation IDs become invalid.
 - Model and embedding endpoints are limited to HTTP loopback addresses. The refine

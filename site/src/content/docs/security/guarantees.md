@@ -33,11 +33,11 @@ owns the normative threat model, exact controls, and residual risks.
 - `reviewed_by` text is self-asserted and insufficient by itself.
 - Unresolved contradiction proposals block Gold until their proposal IDs appear in the
   signed page.
-- Communion, review, and evidence are physically separate version-2 indexes.
+- gold, review, and evidence are physically separate version-2 indexes.
 - Stored chunks, labels, lineage, proposal provenance, authorization provenance, BM25
   data, trust policy, and the live corpus are verified at startup and before both search
   and citation reads.
-- Shipped MCP startup is communion-only and exposes exactly `search_context` and
+- Shipped MCP startup is Gold-only and exposes exactly `search_context` and
   `read_context`.
 - Retrieval is bounded: at most 1,024 query UTF-16 code units, 20 results per search, and
   200 citations retained per session. Older citation IDs become invalid when evicted.

@@ -23,8 +23,8 @@ Operationally, inspect these boundaries:
 - **Authorization and admission:** no shipped path creates authorization or applies Silver
   to knowledge. `build` verifies a configured-key receipt and every other Gold eligibility
   rule before admission. A signature proves key control, not humanity or review quality.
-- **Retrieval:** communion, review, and evidence are separate files; shipped MCP opens only
-  communion. This reduces accidental cross-profile selection but is not process or tenant
+- **Retrieval:** gold, review, and evidence are separate files; shipped MCP opens only
+  the Gold index. This reduces accidental cross-profile selection but is not process or tenant
   isolation.
 - **Resource and integrity checks:** loopback transport, request/response bounds, retrieval
   limits, policy fingerprints, BM25 data, chunk integrity, and live corpus state fail

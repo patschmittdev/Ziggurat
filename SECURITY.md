@@ -39,7 +39,7 @@ reviewer trust anchors, detached authorization receipts, isolated indexes, and
 retrieved citations.
 
 Actors are untrusted source authors, the loopback refinement model, human reviewers,
-the trusted local operator, general communion (the Gold-only retrieval index) clients,
+the trusted local operator, general Gold retrieval clients,
 and advisory review/evidence tooling. Advisory access does not establish human identity.
 
 ## Trust assumptions
@@ -132,10 +132,10 @@ to prevent every prompt-injection or model-behavior failure.
 | Review and diff transparency | Complete Silver candidates and evidence in `review` |
 | Presentation sanitization | Candidate bodies are indented; quoted fields and control characters are escaped |
 | Integrity | Receipt binding plus complete chunk, BM25, policy, and live-corpus verification |
-| Isolation | Separate communion, review, and evidence indexes |
+| Isolation | Separate gold, review, and evidence indexes |
 | Revalidation | Verification age and signed page metadata |
 | Versioning and rollback | Source artifacts in Git; generated indexes rebuilt |
-| Least privilege | Model writes Silver only; MCP reads communion only; refine payloads are host-selected and bounded |
+| Least privilege | Model writes Silver only; MCP reads Gold only; refine payloads are host-selected and bounded |
 | Suspicious instruction handling | Preserved as evidence and always labeled non-instructional |
 | Resource bounds | Adapter timeout and 1 MiB body caps; bounded refine reference; bounded query, result, and citation counts |
 

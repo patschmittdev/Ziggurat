@@ -4,7 +4,7 @@
 
 Ziggurat is a memory admission firewall. It preserves untrusted source material,
 allows models to stage evidence-backed candidates, and requires a separately
-verifiable human capability before content becomes durable communion context.
+verifiable human capability before content becomes durable Gold context.
 
 ## Assets
 
@@ -16,7 +16,7 @@ verifiable human capability before content becomes durable communion context.
 | Knowledge page | `knowledge/` | Human-authored curated content |
 | Trust policy | `config/trust.yaml` | Reviewer public-key trust anchors |
 | Authorization receipt | `authorizations/` | Detached signed admission decision |
-| Communion index (the Gold-only retrieval index) | `.ziggurat/gold-index.json` | Authorized Gold retrieval |
+| Gold index | `.ziggurat/gold-index.json` | Authorized Gold retrieval |
 | Review index | `.ziggurat/review-index.json` | Policy-safe Silver plus Gold |
 | Evidence index | `.ziggurat/evidence-index.json` | Policy-safe Bronze plus Gold |
 
@@ -30,7 +30,7 @@ verifiable human capability before content becomes durable communion context.
 | `refine` host pathway | Bronze citations, target base | One Silver proposal | Write Bronze, knowledge, receipts, trust, reviewed metadata, or indexes |
 | Human reviewer | Bronze, Silver, knowledge | Manual page and external signed receipt | Gain factual certainty from a signature |
 | `build` | Corpus, receipts, public keys | Generated indexes | Admit a page without valid authorization |
-| General AI client | Communion citations | none | Select review/evidence through shipped MCP |
+| General AI client | Gold citations | none | Select review/evidence through shipped MCP |
 | Advisory reviewer tooling | Review/evidence data | none | Assert human identity or authorize Gold |
 | Trusted operator | Entire local vault | Filesystem and process configuration | Delegated trust is outside Ziggurat's guarantees |
 
@@ -56,7 +56,7 @@ flowchart TB
     end
     subgraph RetrievalBoundary[Verified read-only retrieval]
       GOLD[Gold index]
-      MCP[Communion MCP]
+      MCP[Gold MCP]
     end
 
     SRC --> BRONZE
@@ -80,7 +80,7 @@ allowed to exercise the admission capability.
    `.ziggurat/proposals/<proposal-id>.json`
 3. Silver proposal -> manual `knowledge/*.md` plus detached receipt
 4. Authorized page -> Gold chunk during `build`
-5. Gold chunk -> citation-scoped, read-only communion result
+5. Gold chunk -> citation-scoped, read-only Gold result
 
 Step 2 is the only place model output crosses into stored state, and it crosses
 through the strict proposal schema and the evidence validator. The model never holds
@@ -108,12 +108,12 @@ in the page and signing that exact page.
 | Gold eligibility | Status, retrieval, privacy, sensitivity, egress, age, lineage, contradiction, authorization |
 | Profile builders | Physical separation and policy-safe source selection |
 | Index verifier | Chunk labels, content, provenance, BM25, trust policy, and live corpus |
-| MCP server | Communion-only startup, two read-only tools, strict tool inputs, bounded query, result, and session citation counts |
+| MCP server | Gold-only startup, two read-only tools, strict tool inputs, bounded query, result, and session citation counts |
 | Clean-room audit | Present-but-invalid configuration fails the audit instead of defaulting |
 
 ## Physical index isolation
 
-- **communion**: authorization-valid Gold only. This is answer-producing AI context.
+- **gold**: the Gold index holds authorization-valid Gold only. This is answer-producing AI context.
 - **review**: policy-safe canonical Silver proposals plus authorization-valid Gold.
   This is advisory context, not identity proof.
 - **evidence**: policy-safe, integrity-valid Bronze plus authorization-valid Gold.

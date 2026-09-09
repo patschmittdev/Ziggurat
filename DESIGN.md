@@ -349,7 +349,7 @@ The favicon is a plain single-colour SVG with no fill attributes and no
 - Name: Ziggurat. Thesis line: "Models propose. Humans decide what persists."
 - The historical metaphor stays implicit. The stepped form and summit may be used
   visually; the copy stays technical. No faux-ancient or religious styling.
-- Tier vocabulary is fixed: Bronze, Silver, Gold, communion, review, evidence.
+- Tier vocabulary is fixed: Bronze, Silver, Gold. Index vocabulary is fixed: gold, review, evidence.
 - Reference for explanatory discipline only, never for reuse: metaharness.tools, for
   its generous pacing, integrated systems diagrams, and long-form narrative. None of
   its branding, layout, assets, code, or prose may be copied.

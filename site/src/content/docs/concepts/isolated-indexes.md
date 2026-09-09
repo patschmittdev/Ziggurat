@@ -1,18 +1,18 @@
 ---
 title: Isolated indexes
-description: Why communion, review, and evidence are three physical files rather than one store with filters.
+description: Why gold, review, and evidence are three physical files rather than one store with filters.
 ---
 
 `ziggurat build` writes three separate version-2 indexes. They are physically separate
 files, not views over a shared store, because a filter is a runtime decision and a
 separate file is a structural one.
 
-communion is the retrieval index for Gold: eligible knowledge chunks externally
+The Gold index holds eligible knowledge chunks externally
 authorized by a configured key.
 
 | Index | Contents | Intended use |
 |---|---|---|
-| `.ziggurat/gold-index.json` | Authorized Gold only | Communion answer context |
+| `.ziggurat/gold-index.json` | Authorized Gold only | Answer context |
 | `.ziggurat/review-index.json` | Silver whose candidate and every source pass model-access privacy filters, plus eligible Gold | Local advisory review |
 | `.ziggurat/evidence-index.json` | Integrity-verified Bronze that passes model-access privacy filters, plus eligible Gold | Local forensic tracing |
 
@@ -25,12 +25,12 @@ corpus are verified at startup and again before both search and citation reads.
 
 ## What the separation buys
 
-Communion is the only index that produces answer context for a general AI client.
+The Gold index is the only index that produces answer context for a general AI client.
 Separate files reduce accidental cross-profile selection compared with views over one
 store. They do not eliminate implementation bugs or provide process, operating-system,
 or tenant isolation.
 
-Shipped MCP startup opens communion only. Review and evidence are not exposed by it at
+Shipped MCP startup opens the Gold index only. Review and evidence are not exposed by it at
 all.
 
 :::caution[Advisory is not identity]
@@ -52,4 +52,4 @@ ignore rules before committing them.
 ## Related
 
 - [Integrity verification and recovery](/Ziggurat/guides/integrity-and-recovery/)
-- [MCP communion](/Ziggurat/guides/mcp-communion/)
+- [Gold MCP](/Ziggurat/guides/mcp-gold/)

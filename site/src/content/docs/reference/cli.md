@@ -16,8 +16,8 @@ global link.
 | `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...` | Stage a strict Silver proposal through a loopback model |
 | `ziggurat review --root <vault>` | Render human review packets from staged proposals |
 | `ziggurat build --root <vault>` | Rebuild all three isolated indexes |
-| `ziggurat query --root <vault> --query <text>` | Query authorized Gold communion |
-| `ziggurat mcp --root <vault>` | Start the communion-only read-only MCP server |
+| `ziggurat query --root <vault> --query <text>` | Query authorized Gold |
+| `ziggurat mcp --root <vault>` | Start the read-only Gold MCP server |
 | `ziggurat eval --root <vault>` | Run built-in conformance cases |
 | `ziggurat check --root <repo> [--audit-clean-room]` | Audit a tree you intend to publish |
 

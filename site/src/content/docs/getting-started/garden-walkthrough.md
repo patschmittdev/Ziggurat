@@ -36,8 +36,8 @@ boundary:
 3. `review` displays the embedded instruction under an `UNTRUSTED REFERENCE` warning.
 4. The poisoned Bronze record is excluded from model-readable evidence and review indexes
    while its privacy state is unresolved.
-5. A knowledge page carrying self-asserted reviewed metadata does not change communion.
-6. Communion changes only after the test simulates an external reviewer key and writes a
+5. A knowledge page carrying self-asserted reviewed metadata does not change the Gold index.
+6. The Gold index changes only after the test simulates an external reviewer key and writes a
    matching receipt.
 7. Retrieved Gold still reports no instruction authority.
 8. Tampering with the stored index causes retrieval to fail closed.

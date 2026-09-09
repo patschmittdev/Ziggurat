@@ -53,7 +53,7 @@ Knowledge drafts are not Silver. Malformed proposal state fails closed.
 
 ## Gold: authorized reference admission
 
-A page enters communion only when every eligibility check passes together:
+A page enters the Gold index only when every eligibility check passes together:
 
 - reviewed status and retrieval eligibility
 - `pii: false`, an allowed sensitivity, and approved egress

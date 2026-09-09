@@ -35,8 +35,8 @@ of how well it is written.
 - Every retrieved chunk must continue to report `content_role: reference` and
   `instruction_authority: none`.
 - Model and embedding endpoints must remain HTTP loopback only.
-- Shipped MCP must remain communion-only and read-only.
-- The communion, review, and evidence indexes must remain physically separate.
+- Shipped MCP must remain Gold-only and read-only.
+- The gold, review, and evidence indexes must remain physically separate.
 
 ## Documentation site
 

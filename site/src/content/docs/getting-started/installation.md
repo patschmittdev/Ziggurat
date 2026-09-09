@@ -49,8 +49,8 @@ Commands:
   refine   Stage an evidence-backed Silver proposal
   review   Render staged Silver proposals for human review
   build    Rebuild isolated indexes; unsigned content stays out of Gold
-  query    Query authorized Gold communion
-  mcp      Start the communion-only read-only MCP server
+  query    Query authorized Gold
+  mcp      Start the read-only Gold MCP server
   check    Audit clean-room and key-material policy
   eval     Run conformance checks
 ```

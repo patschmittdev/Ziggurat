@@ -16,8 +16,8 @@ to determine, quickly and without running anything, whether Ziggurat's boundary 
 real, and then either read the threat model or run the reference implementation.
 
 Secondary users are maintainers and contributors who need task-oriented operating
-documentation for ingest, refine, review, external authorization, communion (the
-Gold-only retrieval index), and integrity recovery.
+documentation for ingest, refine, review, external authorization, Gold retrieval,
+and integrity recovery.
 
 ## Product Purpose
 
@@ -73,11 +73,11 @@ The pipeline the documentation must explain:
    the knowledge page, and uses an external Ed25519 signer following
    `docs/authorization-protocol.md`. Ziggurat does not enforce that workflow as proof
    of human attention.
-5. `build` rebuilds three physically separate indexes: communion (eligible,
+5. `build` rebuilds three physically separate indexes: gold (eligible,
    externally key-authorized Gold only), review (Silver whose candidate and every
    source pass model-access privacy filters, plus Gold), and evidence (Bronze that
    passes integrity and model-access privacy filters, plus Gold).
-6. `mcp` serves communion only, read only, exposing `search_context` and
+6. `mcp` serves Gold only, read only, exposing `search_context` and
    `read_context`.
 
 ## Capabilities and Constraints

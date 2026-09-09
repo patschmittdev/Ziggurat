@@ -28,7 +28,7 @@ detached authorization receipts, isolated indexes, and retrieved citations.
 ## Actors
 
 Untrusted source authors, the loopback refinement model, human reviewers, the trusted
-local operator, general communion clients, and advisory review or evidence tooling.
+local operator, general Gold retrieval clients, and advisory review or evidence tooling.
 Advisory access does not establish human identity.
 
 ## Trust assumptions

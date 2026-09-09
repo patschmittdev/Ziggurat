@@ -65,13 +65,13 @@ Add these patterns to the vault's own `.gitignore` if you use Git:
 .ziggurat/evidence-index.json
 ```
 
-## Query communion
+## Query Gold
 
 ```bash
 node dist/src/cli/main.js query --root ./my-vault --query "some question"
 ```
 
-Communion contains authorized Gold only, so a vault with no receipts returns nothing.
+The Gold index contains authorized Gold only, so a vault with no receipts returns nothing.
 That is the expected result, not a failure.
 
 ## Next
