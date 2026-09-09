@@ -33,17 +33,10 @@ Advisory access does not establish human identity.
 
 ## Trust assumptions
 
-These are the conditions under which the guarantees hold. They are assumptions, not
-claims:
-
-- The operator controls vault permissions, local processes, Git history, and
-  `config/trust.yaml`.
-- Reviewer Ed25519 private keys remain outside the vault and outside model-accessible
-  processes.
-- The configured public keys identify reviewers acceptable to the operator.
-- Model endpoints use HTTP loopback only.
-- The local machine is a single trusted-operator environment, not a hostile multi-tenant
-  host.
+The guarantees assume a trusted local operator and external reviewer-key custody, not
+a hostile multi-tenant host; the full conditions are assumptions, not enforced claims,
+in
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#trust-assumptions).
 
 ## Capability boundaries
 
@@ -63,15 +56,9 @@ authorization receipts.
 
 ## What a receipt binds
 
-- `decision: admit`
-- the normalized knowledge target path
-- SHA-256 of canonical semantic page content
-- reviewer ID and review timestamp
-- trusted key ID and the Ed25519 algorithm
-
-The signature payload is domain separated, and the canonical page representation uses
-parsed fields in fixed order with an LF-normalized body, so verification is stable on
-Windows, macOS, and Linux.
+A receipt binds an admission decision to exact content and a configured reviewer key;
+the [authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md#unsigned-receipt)
+defines the fields and signing payload.
 
 Verification proves control of a configured key and authorization of exact canonical
 content. Operator policy maps keys to reviewers; Ziggurat does not prove that the signer
@@ -79,14 +66,9 @@ was human, attended to the content, or completed a particular review workflow.
 
 ## Reporting a vulnerability
 
-Do not open a public issue. Private vulnerability reporting is not enabled while the
-repository remains private. If you already have private repository access, use its
-Security Advisories area; otherwise use an established private channel to the maintainer
-and do not disclose details publicly. The public-reporting link will become available
-only after the release checklist activates it. Do not submit private vault content,
-credentials, tokens, or reviewer private keys.
-
-This project is pre-release and does not promise a response-time service level.
+Report suspected vulnerabilities privately under
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#reporting-a-vulnerability),
+which specifies safe report contents and promises no response-time service level.
 
 ## Related
 

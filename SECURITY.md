@@ -111,6 +111,8 @@ The human admission capability is an external Ed25519 private key. A receipt bin
 The signature payload is domain separated. The canonical page representation uses
 parsed fields in fixed order and an LF-normalized body, so verification is stable on
 Windows, macOS, and Linux. Review timestamps require canonical UTC ISO-8601 values.
+The exact field and signing contract lives in the
+[authorization protocol](docs/authorization-protocol.md#unsigned-receipt).
 
 ## Attack mapping
 
@@ -184,6 +186,7 @@ approved reference data, not executable instruction and not guaranteed truth.
 
 ## Explicit non-guarantees and residual risks
 
+- Ziggurat is not an OS sandbox or a multi-tenant authorization service.
 - Arbitrary local filesystem access defeats application-level path and process
   boundaries. An attacker who replaces trust configuration and rebuilds can create a
   new trust root.
@@ -229,4 +232,5 @@ approved reference data, not executable instruction and not guaranteed truth.
 - Treat any unexpected proposal, receipt, trust-policy, or index change as a
   potential memory-poisoning incident.
 
-The `--promote` flag does not exist and must not be added.
+Ziggurat ships no signer, apply, approve, or promote command; see the
+[human authority boundary](https://patschmittdev.github.io/Ziggurat/concepts/human-authority-boundary/).

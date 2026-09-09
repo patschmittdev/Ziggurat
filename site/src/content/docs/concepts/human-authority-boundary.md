@@ -22,7 +22,7 @@ The boundary is defined as much by absence as by enforcement:
 
 - No `signer` command.
 - No `apply`, `approve`, or `promote` command.
-- No `--promote` flag on any command.
+- No `--promote` flag on any command; it must remain rejected and must not be added.
 - No function in the shipped codebase that writes knowledge pages, reviewed metadata,
   trusted reviewer keys, or authorization receipts.
 
