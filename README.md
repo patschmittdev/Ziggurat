@@ -202,7 +202,7 @@ npm run dev           # local development server
 npm run check         # type check, production build, built-output validation
 ```
 
-The site is not deployed while this repository is private.
+The published site is at <https://patschmittdev.github.io/Ziggurat/>.
 
 **Local-only gate (CI/Actions paused):** From `site/`, run `npx playwright install chromium` once, then `npm run visual` for visual and accessibility checks; screenshots land in `site/.artifacts/`. This gate is NOT part of `npm run check`.
 

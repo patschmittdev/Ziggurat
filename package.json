@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT",
   "repository": "github:patschmittdev/Ziggurat",
-  "homepage": "https://github.com/patschmittdev/Ziggurat#readme",
+  "homepage": "https://patschmittdev.github.io/Ziggurat/",
   "bugs": {
     "url": "https://github.com/patschmittdev/Ziggurat/issues"
   },
@@ -17,7 +17,9 @@
     "retrieval"
   ],
   "type": "module",
-  "bin": { "ziggurat": "./dist/src/cli/main.js" },
+  "bin": {
+    "ziggurat": "./dist/src/cli/main.js"
+  },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.json",
@@ -30,7 +32,9 @@
     "site:check": "cd site && npm run check",
     "prepublishOnly": "npm run check"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
     "yaml": "^2.8.1",

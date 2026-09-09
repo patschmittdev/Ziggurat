@@ -14,9 +14,11 @@ response-time service level.
 ## Security issues
 
 :::danger[Do not open a public issue for a suspected vulnerability]
-Private vulnerability reporting is not enabled while the repository remains private.
+Use GitHub's private vulnerability reporting for this repository:
+[Report a vulnerability](https://github.com/patschmittdev/Ziggurat/security/advisories/new).
 Follow [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#reporting-a-vulnerability)
-for the private reporting procedure and safe report contents.
+for safe report contents, and do not disclose details publicly before the maintainer has
+responded.
 :::
 
 ## Before you ask
