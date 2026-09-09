@@ -34,9 +34,7 @@ node dist/src/cli/main.js --help
 
 `npm run check` cleans, rebuilds, and runs the full compiled test suite. See the
 [CLI reference](/Ziggurat/reference/cli/#commands) for command purposes.
-The transcript's “evidence-backed” and “immutable” shorthand does not promise semantic
-or factual verification or physical filesystem immutability; see
-[Enforced boundaries](/Ziggurat/security/guarantees/#enforced-boundaries).
+In the help text below, 'immutable' means no-overwrite creation with detectable mutation, not filesystem immutability.
 
 ```text
 Ziggurat: Models propose. Humans decide what persists.

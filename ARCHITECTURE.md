@@ -28,11 +28,11 @@ verifiable human capability before content becomes durable Gold context.
 | `ingest` | Real regular files under `inbox/`, Bronze hashes | New no-overwrite Bronze | Read or delete anything outside the real `inbox/` directory |
 | Loopback refine model | A bounded host-built reference block of Bronze bytes | JSON response only | Access filesystem or tools through Ziggurat, or name its own sources |
 | `refine` host pathway | Bronze citations, target base | One Silver proposal | Write Bronze, knowledge, receipts, trust, reviewed metadata, or indexes |
-| Human reviewer | Bronze, Silver, knowledge | Manual page and external signed receipt | Gain factual certainty from a signature |
+| Human reviewer | Bronze, Silver, knowledge | Manual page and external signed receipt | Treat a signature as factual certainty |
 | `build` | Corpus, receipts, public keys | Generated indexes | Admit a page without valid authorization |
 | General AI client | Gold citations | none | Select review/evidence through shipped MCP |
 | Advisory reviewer tooling | Review/evidence data | none | Assert human identity or authorize Gold |
-| Trusted operator | Entire local vault | Filesystem and process configuration | Delegated trust is outside Ziggurat's guarantees |
+| Trusted operator | Entire local vault | Filesystem and process configuration | Bypass the trust it was delegated |
 
 The decisive capability is possession of a trusted Ed25519 private key outside the
 vault. Public metadata such as `reviewed_by` is not a capability.

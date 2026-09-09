@@ -22,8 +22,7 @@ for them.
 
 ## Pre-release compatibility notes
 
-Unknown-field rejection is enforced everywhere the documentation claims it, which is a
-deliberate break with earlier pre-release tolerance.
+Every schema now rejects unknown fields; earlier pre-release builds tolerated them.
 
 - A Bronze record carrying frontmatter fields outside the documented set no longer
   validates. It is reported by `build` as a rejected corpus entry and is treated as
@@ -42,6 +41,8 @@ For a vault created before the authorization boundary landed, rerun `ziggurat in
 add an empty `config/trust.yaml` and `authorizations/`. Previously reviewed pages remain
 outside Gold until they receive a valid receipt. Knowledge drafts are not migrated into
 Silver.
+
+Indexes built by earlier pre-release builds use a different profile value and fail validation; rebuild with `ziggurat build`.
 
 ## Supported versions
 

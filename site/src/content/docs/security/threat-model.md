@@ -48,8 +48,7 @@ The host places selected Bronze bytes into the request as an explicit, bounded, 
 reference block, and revalidates the returned proposal against the real files. The model
 receives data, never a path, handle, or fetch capability.
 
-`ingest` reads and deletes its source, so its source path is validated as a combined
-arbitrary-read and arbitrary-delete primitive would be.
+`ingest` reads and deletes its source, so an escaping source path would be a combined arbitrary-read and arbitrary-delete primitive.
 
 No production module writes knowledge pages, reviewed metadata, trusted reviewer keys, or
 authorization receipts.
