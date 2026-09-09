@@ -67,7 +67,6 @@ p {
 a {
   color: var(--zg-link);
   text-underline-offset: 0.2em;
-  transition: color var(--zg-dur-tap) ease;
 }
 
 a:hover {
@@ -168,50 +167,6 @@ svg {
   flex: none;
 }
 
-/*
-  The masthead mark, taken from the design export. It sits in ink at rest and
-  takes its tier colours on hover or keyboard focus; the summit aperture stays
-  ink in every state.
-
-  Where hover is unavailable there is no rest state to reward, so the mark is
-  drawn in its tier colours permanently. Nothing about wayfinding depends on
-  either state: the mark is decorative, `aria-hidden`, and the word "Ziggurat"
-  is the accessible name of the link.
-*/
-.wordmark svg rect {
-  fill: currentcolor;
-  transition: fill var(--zg-dur-rule) ease;
-}
-
-.wordmark:hover svg rect:nth-of-type(1),
-.wordmark:focus-visible svg rect:nth-of-type(1) {
-  fill: var(--zg-bronze);
-}
-
-.wordmark:hover svg rect:nth-of-type(2),
-.wordmark:focus-visible svg rect:nth-of-type(2) {
-  fill: var(--zg-silver);
-}
-
-.wordmark:hover svg rect:nth-of-type(3),
-.wordmark:focus-visible svg rect:nth-of-type(3) {
-  fill: var(--zg-gold);
-}
-
-@media (hover: none) {
-  .wordmark svg rect:nth-of-type(1) {
-    fill: var(--zg-bronze);
-  }
-
-  .wordmark svg rect:nth-of-type(2) {
-    fill: var(--zg-silver);
-  }
-
-  .wordmark svg rect:nth-of-type(3) {
-    fill: var(--zg-gold);
-  }
-}
-
 .masthead__nav {
   display: flex;
   flex-wrap: wrap;
@@ -219,30 +174,18 @@ svg {
   gap: var(--zg-space-s) var(--zg-space-m);
 }
 
-/*
-  Hover grammar, taken from the design export. Hover states confirm
-  interactivity and never move layout: the rule is an underline whose colour
-  fades in from transparent, so the text box never changes size. Keyboard focus
-  gets the same treatment as the pointer.
-*/
 .masthead__nav a {
   color: var(--zg-ink-2);
+  text-decoration: none;
   font-size: var(--zg-text--1);
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 0.3em;
-  transition:
-    color var(--zg-dur-tap) ease,
-    text-decoration-color var(--zg-dur-rule) ease;
 }
 
-.masthead__nav a:hover,
-.masthead__nav a:focus-visible {
+.masthead__nav a:hover {
   color: var(--zg-ink);
-  text-decoration-color: currentcolor;
+  text-decoration: underline;
 }
 
 .theme-toggle {
@@ -259,13 +202,9 @@ svg {
   font: inherit;
   font-size: var(--zg-text--2);
   cursor: pointer;
-  transition:
-    color var(--zg-dur-state) ease,
-    border-color var(--zg-dur-state) ease;
 }
 
-.theme-toggle:hover,
-.theme-toggle:focus-visible {
+.theme-toggle:hover {
   color: var(--zg-ink);
   border-color: var(--zg-ink-2);
 }
@@ -415,21 +354,11 @@ svg {
   text-decoration: none;
   font-weight: 600;
   font-size: var(--zg-text--1);
-  transition:
-    background-color var(--zg-dur-state) ease,
-    border-color var(--zg-dur-state) ease,
-    color var(--zg-dur-state) ease;
 }
 
-.action:hover,
-.action:focus-visible {
+.action:hover {
   border-color: var(--zg-ink);
   background: var(--zg-raised);
-}
-
-/* A press is the one place a control may move, and it moves one pixel. */
-.action:active {
-  transform: translateY(1px);
 }
 
 .action--primary {
@@ -438,8 +367,7 @@ svg {
   border-color: var(--zg-ink);
 }
 
-.action--primary:hover,
-.action--primary:focus-visible {
+.action--primary:hover {
   background: var(--zg-ink-2);
   border-color: var(--zg-ink-2);
   color: var(--zg-ground);
@@ -458,7 +386,7 @@ svg {
 .figure__caption {
   border-top: var(--zg-hair) solid var(--zg-rule);
   padding: var(--zg-space-2xs) var(--zg-space-s);
-  font-size: var(--zg-text--1);
+  font-size: var(--zg-text--2);
   color: var(--zg-ink-3);
 }
 
@@ -500,22 +428,17 @@ svg {
 
 .boundary__list li {
   display: grid;
-  grid-template-columns: 0.9em 1fr;
+  grid-template-columns: 1.1rem 1fr;
   gap: var(--zg-space-2xs);
-  align-items: baseline;
-  font-size: var(--zg-text-0);
+  font-size: var(--zg-text--1);
   color: var(--zg-ink);
 }
 
-/* The marker is a rule, not a bullet, so it is set on the x-height of the first
-   line rather than centred in a fixed column. */
 .boundary__list li::before {
   content: '';
-  height: 0.5em;
+  height: 0.55em;
   border-bottom: 2px solid currentcolor;
   color: var(--zg-ink-3);
-  align-self: start;
-  margin-block-start: 0.5em;
 }
 
 .boundary__seam {
@@ -547,7 +470,7 @@ svg {
   gap: var(--zg-space-2xs);
   padding: var(--zg-space-2xs) var(--zg-space-m);
   border-bottom: var(--zg-hair) solid var(--zg-rule);
-  font-size: var(--zg-text--1);
+  font-size: var(--zg-text--2);
   color: var(--zg-ink-2);
   background: var(--zg-raised);
 }
@@ -659,7 +582,7 @@ svg {
   padding: var(--zg-space-s);
   overflow-x: auto;
   font-family: var(--zg-font-mono);
-  font-size: 0.9em;
+  font-size: var(--zg-text--2);
   line-height: 1.6;
   color: var(--zg-ink);
   background: var(--zg-sunk);
@@ -670,7 +593,7 @@ svg {
   margin: 0;
   padding: var(--zg-space-s);
   border-top: var(--zg-hair) solid var(--zg-rule);
-  font-size: var(--zg-text-0);
+  font-size: var(--zg-text--1);
   color: var(--zg-ink-2);
 }
 
@@ -824,7 +747,7 @@ svg {
   width: 100%;
   border-collapse: collapse;
   margin-block-start: var(--zg-space-l);
-  font-size: var(--zg-text-0);
+  font-size: var(--zg-text--1);
   text-align: start;
 }
 
@@ -854,9 +777,6 @@ svg {
 .ledger td {
   color: var(--zg-ink-2);
 }
-
-/* The ledger is a reference plate, not a list of controls. Rows carry no hover
-   state, because a full-row fill on a row that does nothing reads clickable. */
 
 /*
   Below the tablet breakpoint a four-column ledger cannot fit without horizontal
@@ -953,7 +873,7 @@ svg {
 .ledger-pair li {
   padding-block: var(--zg-space-xs);
   border-bottom: var(--zg-hair) solid var(--zg-rule);
-  font-size: var(--zg-text-0);
+  font-size: var(--zg-text--1);
   color: var(--zg-ink-2);
 }
 
@@ -992,7 +912,7 @@ svg {
 }
 
 .path p {
-  font-size: var(--zg-text-0);
+  font-size: var(--zg-text--1);
 }
 
 .path pre {
@@ -1002,7 +922,7 @@ svg {
   border: var(--zg-hair) solid var(--zg-rule);
   overflow-x: auto;
   font-family: var(--zg-font-mono);
-  font-size: 0.9em;
+  font-size: var(--zg-text--2);
   line-height: 1.7;
   color: var(--zg-ink);
 }
@@ -1029,13 +949,13 @@ svg {
 }
 
 .status__grid p {
-  font-size: var(--zg-text-0);
+  font-size: var(--zg-text--1);
 }
 
 .site-footer {
   border-top: var(--zg-hair) solid var(--zg-rule-strong);
   padding-block: var(--zg-space-l) var(--zg-space-xl);
-  font-size: var(--zg-text--1);
+  font-size: var(--zg-text--2);
   color: var(--zg-ink-3);
 }
 
@@ -1053,18 +973,6 @@ svg {
   align-items: center;
   min-height: 44px;
   color: var(--zg-ink-2);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 0.3em;
-  transition:
-    color var(--zg-dur-tap) ease,
-    text-decoration-color var(--zg-dur-rule) ease;
-}
-
-.site-footer nav a:hover,
-.site-footer nav a:focus-visible {
-  color: var(--zg-ink);
-  text-decoration-color: currentcolor;
 }
 
 .site-footer p {
@@ -1137,13 +1045,80 @@ svg {
 }
 
 /* ======================================================================
-   Reduced motion
+   Hover grammar
 
-   The token layer already clamps every transition, but the hover grammar and
-   the press nudge state it locally too, so the intent travels with the rules
-   rather than depending on a backstop somewhere else. State still changes;
-   only the interpolation and the one-pixel travel are removed.
+   One rule: hover states confirm interactivity; they never move layout.
+   The masthead mark sits in ink by default and takes its tier colors on
+   hover or keyboard focus — everywhere else the mark stays colored.
    ====================================================================== */
+
+a {
+  transition: color 140ms ease;
+}
+
+.wordmark svg rect {
+  fill: currentColor;
+  transition: fill 180ms ease;
+}
+
+.wordmark:hover svg rect:nth-of-type(1),
+.wordmark:focus-visible svg rect:nth-of-type(1) {
+  fill: var(--zg-bronze);
+}
+
+.wordmark:hover svg rect:nth-of-type(2),
+.wordmark:focus-visible svg rect:nth-of-type(2) {
+  fill: var(--zg-silver);
+}
+
+.wordmark:hover svg rect:nth-of-type(3),
+.wordmark:focus-visible svg rect:nth-of-type(3) {
+  fill: var(--zg-gold);
+}
+
+/* The aperture (4th rect) stays ink in every state. */
+
+.masthead__nav a {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.3em;
+  transition: color 140ms ease, text-decoration-color 180ms ease;
+}
+
+.masthead__nav a:hover {
+  text-decoration-color: currentColor;
+}
+
+.site-footer nav a {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: color 140ms ease, text-decoration-color 180ms ease;
+}
+
+.site-footer nav a:hover {
+  color: var(--zg-ink);
+  text-decoration-color: currentColor;
+}
+
+.action {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.action:active {
+  transform: translateY(1px);
+}
+
+.theme-toggle {
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.ledger tbody tr {
+  transition: background-color 140ms ease;
+}
+
+.ledger tbody tr:hover {
+  background: var(--zg-raised);
+}
 
 @media (prefers-reduced-motion: reduce) {
   a,
@@ -1151,7 +1126,8 @@ svg {
   .masthead__nav a,
   .site-footer nav a,
   .action,
-  .theme-toggle {
+  .theme-toggle,
+  .ledger tbody tr {
     transition: none;
   }
 
