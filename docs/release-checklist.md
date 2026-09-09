@@ -77,6 +77,8 @@ outstanding content pull requests merge and before the repository becomes public
 - 10. `package.json` and `site/package.json`: both contain `"private": true`.
 - 11. `git ls-files | grep -E "\.ziggurat/|\.pem$|\.key$|\.env$"`: empty (grep exit 1); gitleaks not installed.
 - 12. `git log --format='%ae%n%ce' | sort -u`: both reachable commit emails are GitHub noreply addresses; no personal address found.
+- History vocabulary: no project_names configured; nothing to scan.
+- History scan (git log --all): no sensitive filenames ever added; no private-key or token patterns; fixture keys are test-generated.
 
 ## 4. Post-visibility actions
 
