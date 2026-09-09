@@ -29,7 +29,7 @@ Every item is verifiable locally and must pass before a publication commit merge
       boundary.
 - [x] Every relative link in README.md, ARCHITECTURE.md, SECURITY.md, CONTRIBUTING.md,
       SUPPORT.md, CODE_OF_CONDUCT.md, and `docs/` resolves to a tracked file.
-- [ ] Public claims match enforced behavior. Bounds, limits, flag names, paths, and
+- [x] Public claims match enforced behavior. Bounds, limits, flag names, paths, and
       guarantees in documentation *and in `site/`* are traceable to code or tests.
       Not covered by the 12 mechanical Part-1 gates; a full documentation-vs-code traceability audit was not performed in this pass.
 - [x] No signer, apply, approve, or promote command exists, and `--promote` is still
@@ -79,6 +79,7 @@ outstanding content pull requests merge and before the repository becomes public
 - 12. `git log --format='%ae%n%ce' | sort -u`: both reachable commit emails are GitHub noreply addresses; no personal address found.
 - History vocabulary: no project_names configured; nothing to scan.
 - History scan (git log --all): no sensitive filenames ever added; no private-key or token patterns; fixture keys are test-generated.
+- Claims traceability: three-pass documentation review (accuracy, clarity, consistency) plus a fresh second-reader gate and a scoped re-read, 2026-09-09, merged as PR #9; every checkable claim was verified against src/ and test/, six overclaims and four stale statements corrected.
 
 ## 4. Post-visibility actions
 
