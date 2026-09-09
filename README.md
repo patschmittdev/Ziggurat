@@ -10,6 +10,14 @@ configured Ed25519 key; operator policy assigns that key to a reviewer. That rec
 signature proves key control and exact-content authorization, not humanity, attention,
 or review.
 
+## Why I built this
+
+I built Ziggurat because I worried about memory and context poisoning of my own data
+while autonomous agents research on the open web. The question I kept coming back to
+was: how do you prevent the AI from erroneously promoting a Silver proposal to Gold?
+The answer here is to remove the door. There is no promote command. A human curates the
+Gold layer with a key that no shipped code path holds.
+
 ## The problem: memory poisoning is a durable write attack
 
 Persistent AI context turns a poisoned document, a fabricated preference, or an embedded
@@ -67,6 +75,18 @@ Ziggurat requires external authorization where mem0, Letta, and Zep persist memo
 automatically; see the [Overview](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/getting-started/overview.md#how-it-differs-from-other-agent-memory-systems)
 for the comparison and its limits.
 
+### Why not signed git commits?
+
+A signed commit proves who committed a tree. It does not bind one page's canonical
+content to one admission decision by a key that operator policy names as a reviewer,
+and any tool with commit access, including an agent, can produce one. A detached receipt
+binds a single page digest, target path, reviewer, timestamp, and key; it is verified on
+every `build` and every retrieval; and the key it needs is one no shipped code path
+holds. If your agents never have write access to the vault and every merge is reviewed
+by a person, signed commits plus branch protection may be enough. Ziggurat is for the
+case where agents do write to the vault and persistence must still require a human-held
+key.
+
 ## Quickstart
 
 Requirements: Node.js 22 or newer. Ziggurat is distributed as source, not as a published
@@ -79,6 +99,14 @@ npm ci
 npm run build
 npm run check                       # full test suite
 node dist/src/cli/main.js --help
+```
+
+To see the boundary itself, run only the end-to-end poisoning test. It ingests a poisoned
+source, shows the unsigned candidate excluded, admits a signed page, then rejects the
+same page after a one-byte change:
+
+```bash
+npm run build && node --test dist/test/memory-boundary.test.js
 ```
 
 Create a vault and capture your first evidence record:
