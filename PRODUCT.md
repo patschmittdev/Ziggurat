@@ -1,5 +1,8 @@
 # Product
 
+> Maintainer material: the product schema the documentation site is written against.
+> Evaluators should read README.md, SECURITY.md, and ARCHITECTURE.md instead.
+
 <!-- impeccable:product-schema 1 -->
 
 ## Platform
@@ -8,16 +11,8 @@ web
 
 ## Users
 
-Primary users are AI platform engineers and security engineers who are evaluating
-durable-memory authority boundaries. They arrive deciding whether persistent agent
-memory can be governed at all. Most already know prompt injection and RAG, and are
-skeptical that a review step makes a write surface safe. Their job on this surface is
-to determine, quickly and without running anything, whether Ziggurat's boundary is
-real, and then either read the threat model or run the reference implementation.
-
-Secondary users are maintainers and contributors who need task-oriented operating
-documentation for ingest, refine, review, external authorization, Gold retrieval,
-and integrity recovery.
+Primary users are AI-platform and security engineers evaluating whether durable agent
+memory can be governed. Secondary users are contributors who need operating documentation.
 
 ## Product Purpose
 

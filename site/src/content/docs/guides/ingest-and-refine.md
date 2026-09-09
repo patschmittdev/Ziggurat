@@ -3,8 +3,9 @@ title: Ingest and refine
 description: Capture untrusted evidence, then stage a strict Silver proposal through a loopback model.
 ---
 
-This guide covers the two commands a model pathway touches. Neither of them can produce
-durable memory.
+This guide covers the two commands a model pathway touches. `ingest` persists Bronze
+evidence and `refine` persists a Silver proposal; neither can write Gold, knowledge pages,
+receipts, or trust anchors.
 
 ## Ingest: capture evidence
 

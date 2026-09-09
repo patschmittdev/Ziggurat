@@ -46,7 +46,7 @@ trust claims stronger than the implementation.
 Maintainers preparing a published build follow the
 [release checklist](docs/release-checklist.md).
 
-## Nondelegable memory boundary
+## External key-holder authority
 
 - Models may return strict Silver proposal payloads only.
 - Model and refine pathways must never write Bronze, knowledge pages, reviewed
