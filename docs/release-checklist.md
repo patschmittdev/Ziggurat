@@ -4,6 +4,9 @@ The authoritative gate list for publishing Ziggurat. It separates checks that mu
 on repository content from actions that can only be taken after the repository is
 public.
 
+Sections 2, 4, and 5 are maintainer-only; an evaluator of the trust boundary can skip
+them.
+
 ## 1. Content and code gates
 
 Every item is verifiable locally and must pass before a publication commit merges.

@@ -19,11 +19,7 @@ response-time service level.
 
 ## Supported versions
 
-| Version | Security fixes |
-|---|---|
-| Current `main` | Supported |
-| Released versions | None yet |
-| Earlier commits | Unsupported |
+Only `main` receives security fixes; no versioned release exists yet.
 
 ## Threat model
 
@@ -79,10 +75,20 @@ ceiling enforced while streaming rather than after buffering.
 
 `ingest` reads and deletes its source, so its source path is a combined arbitrary-read
 and arbitrary-delete primitive if it escapes. A source must resolve to a real regular
-file physically under `inbox/`. Absolute paths, `..` traversal, empty segments,
-control characters, directories, symlinks, junctions, other reparse points, hard
-links, and real-parent escapes are all refused before the file is opened, so a
-refused source is never read, copied, or unlinked.
+file physically under `inbox/`. The following are all refused before the file is opened:
+
+- Absolute paths
+- `..` traversal
+- empty segments
+- control characters
+- directories
+- symlinks
+- junctions
+- other reparse points
+- hard links
+- real-parent escapes
+
+A refused source is never read, copied, or unlinked.
 
 Retrieval is bounded per session: 1024 query characters, 20 results per search, and
 200 retained citations. Over-long queries are refused rather than truncated. When the
@@ -135,9 +141,18 @@ to prevent every prompt-injection or model-behavior failure.
 
 ## Fail-closed behavior
 
-Gold eligibility fails for missing or invalid receipt, untrusted key, signature
-mismatch, page mutation, stale verification, invalid Bronze lineage, PII, restricted
-sensitivity, unapproved egress, or unresolved contradiction.
+Gold eligibility fails for:
+
+- missing or invalid receipt
+- untrusted key
+- signature mismatch
+- page mutation
+- stale verification
+- invalid Bronze lineage
+- PII
+- restricted sensitivity
+- unapproved egress
+- unresolved contradiction
 
 Proposal corruption makes Silver and contradiction state unverifiable. Index schema,
 chunk, provenance, trust-label, BM25, trust-policy, or live-corpus mismatch prevents

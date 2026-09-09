@@ -343,3 +343,25 @@ The favicon is a plain single-colour SVG with no fill attributes and no
 - Put an eyebrow label above a heading.
 - Reproduce the poisoned fixture's instruction text. Describe it instead.
 - Claim users, deployments, audits, benchmarks, or production maturity.
+
+## Brand Commitments
+
+- Name: Ziggurat. Thesis line: "Models propose. Humans decide what persists."
+- The historical metaphor stays implicit. The stepped form and summit may be used
+  visually; the copy stays technical. No faux-ancient or religious styling.
+- Tier vocabulary is fixed: Bronze, Silver, Gold, communion, review, evidence.
+- Reference for explanatory discipline only, never for reuse: metaharness.tools, for
+  its generous pacing, integrated systems diagrams, and long-form narrative. None of
+  its branding, layout, assets, code, or prose may be copied.
+- Precise trust language is a brand commitment. Overclaiming is a defect, not a
+  stylistic choice.
+
+## Accessibility & Inclusion
+
+WCAG 2.2 AA is the required standard: contrast, semantic landmarks and headings, a
+skip link, full keyboard operation, visible focus, adequate target sizes, no
+hover-only information, and useful accessible names.
+
+Every narrative fact must remain readable with JavaScript disabled. Motion is
+progressive enhancement only; `prefers-reduced-motion` is honored and scroll-jacking
+is prohibited. Light and dark themes must both be deliberate and legible.

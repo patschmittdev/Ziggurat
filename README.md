@@ -6,8 +6,9 @@ Ziggurat is a human-gated memory firewall: a local TypeScript reference implemen
 that treats durable AI memory as a privileged write surface. An AI can read authorized
 content and return a candidate with byte-validated citations. The refine host can persist
 that model-originated JSON only as Silver. Gold admission requires a valid receipt from a
-configured Ed25519 key; operator policy assigns that key to a reviewer. The signature
-proves key control and exact-content authorization, not humanity, attention, or review.
+configured Ed25519 key; operator policy assigns that key to a reviewer. That receipt's
+signature proves key control and exact-content authorization, not humanity, attention,
+or review.
 
 ## The problem: memory poisoning is a durable write attack
 

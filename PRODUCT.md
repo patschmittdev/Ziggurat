@@ -9,12 +9,11 @@ web
 ## Users
 
 Primary users are AI platform engineers and security engineers who are evaluating
-durable-memory authority boundaries. They arrive while deciding whether persistent
-agent memory can be governed at all, usually already familiar with prompt injection
-and retrieval-augmented generation, and usually skeptical of claims that a review
-step makes a write surface safe. Their job on this surface is to determine, quickly
-and without running anything, whether Ziggurat's boundary is real, and then either
-read the threat model or run the reference implementation.
+durable-memory authority boundaries. They arrive deciding whether persistent agent
+memory can be governed at all. Most already know prompt injection and RAG, and are
+skeptical that a review step makes a write surface safe. Their job on this surface is
+to determine, quickly and without running anything, whether Ziggurat's boundary is
+real, and then either read the threat model or run the reference implementation.
 
 Secondary users are maintainers and contributors who need task-oriented operating
 documentation for ingest, refine, review, external authorization, communion (the
@@ -130,19 +129,13 @@ Documentation-site constraints:
 Undecided and deliberately not invented: adoption numbers, users, benchmarks,
 funding, roadmap dates, and any production-maturity claim.
 
-## Brand Commitments
+## Design and brand
 
-- Name: Ziggurat. Thesis line: "Models propose. Humans decide what persists."
-- The historical metaphor stays implicit. The stepped form and summit may be used
-  visually; the copy stays technical. No faux-ancient or religious styling.
-- Tier vocabulary is fixed: Bronze, Silver, Gold, communion, review, evidence.
-- Reference for explanatory discipline only, never for reuse: metaharness.tools, for
-  its generous pacing, integrated systems diagrams, and long-form narrative. None of
-  its branding, layout, assets, code, or prose may be copied.
-- Precise trust language is a brand commitment. Overclaiming is a defect, not a
-  stylistic choice.
+Visual, brand, and accessibility rules live in DESIGN.md.
 
 ## Evidence on Hand
+
+DESIGN.md is a design-token specification for the site, not evaluator reading.
 
 Real material that exists in this repository and may be shown:
 
@@ -175,13 +168,3 @@ tag.
    because the audience discounts anything that hides it.
 5. **The reader must be able to verify.** Every claim on the site traces to a file,
    a command, or a test in this repository.
-
-## Accessibility & Inclusion
-
-WCAG 2.2 AA is the required standard: contrast, semantic landmarks and headings, a
-skip link, full keyboard operation, visible focus, adequate target sizes, no
-hover-only information, and useful accessible names.
-
-Every narrative fact must remain readable with JavaScript disabled. Motion is
-progressive enhancement only; `prefers-reduced-motion` is honored and scroll-jacking
-is prohibited. Light and dark themes must both be deliberate and legible.

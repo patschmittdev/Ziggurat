@@ -84,7 +84,7 @@ const steps: Step[] = [
     tierLabel: 'GOLD',
     cursor: 152,
     heading: 'Admission requires every check, not just a signature',
-    body: 'build admits a page to Gold only when reviewed status and retrieval eligibility, pii: false, an allowed sensitivity, approved egress, a current verification age, valid hash-verified Bronze lineage, no unresolved contradiction proposal, and a valid receipt all hold together. Missing or invalid authorization leaves the page out.',
+    body: 'build admits a page to Gold only when every check holds: reviewed status, retrieval eligibility, pii: false, an allowed sensitivity, approved egress, current verification age, valid Bronze lineage, no unresolved contradiction, and a valid receipt. Missing or invalid authorization leaves the page out.',
     facts: ['.ziggurat/gold-index.json', 'any unmet check fails closed'],
   },
   {
