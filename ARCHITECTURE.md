@@ -32,7 +32,7 @@ verifiable human capability before content becomes durable Gold context.
 | `build` | Corpus, receipts, public keys | Generated indexes | Admit a page without valid authorization |
 | General AI client | Gold citations | none | Select review/evidence through shipped MCP |
 | Advisory reviewer tooling | Review/evidence data | none | Assert human identity or authorize Gold |
-| Trusted operator | Entire local vault | Filesystem and process configuration | Bypass the trust it was delegated |
+| Trusted operator | Entire local vault | Filesystem and process configuration | Use Ziggurat to constrain operator-level filesystem access |
 
 The decisive capability is possession of a trusted Ed25519 private key outside the
 vault. Public metadata such as `reviewed_by` is not a capability.
