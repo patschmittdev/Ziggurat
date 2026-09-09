@@ -8,11 +8,11 @@ import {
   goldExclusionReasons,
 } from '../src/policy/index.js';
 
-test('communion excludes every artifact without authorized-page provenance', () => {
+test('Gold excludes every artifact without authorized-page provenance', () => {
   for (const artifact_kind of ['bronze-record', 'staged-proposal'] as const) {
     const reasons = contextExclusionReasons(
       { artifact_kind, retrieval_eligible: false, pii: 'false', sensitivity: 'public' },
-      'communion',
+      'gold',
       new Date('2026-01-01T00:00:00Z'),
     );
     assert(reasons.includes('artifact: authorized page required'));
@@ -20,7 +20,7 @@ test('communion excludes every artifact without authorized-page provenance', () 
 });
 
 test('unknown PII is excluded from every model profile', () => {
-  for (const profile of ['communion', 'review', 'evidence'] as const) {
+  for (const profile of ['gold', 'review', 'evidence'] as const) {
     assert(contextExclusionReasons(
       { pii: 'unknown', sensitivity: 'restricted' }, profile, new Date(),
     ).includes('pii: false required'));
@@ -28,7 +28,7 @@ test('unknown PII is excluded from every model profile', () => {
 });
 
 test('true PII is excluded from every model profile', () => {
-  for (const profile of ['communion', 'review', 'evidence'] as const) {
+  for (const profile of ['gold', 'review', 'evidence'] as const) {
     assert(contextExclusionReasons(
       { pii: 'true', sensitivity: 'public' }, profile, new Date(),
     ).includes('pii: false required'));
@@ -36,7 +36,7 @@ test('true PII is excluded from every model profile', () => {
 });
 
 test('omitted pii blocks every model profile', () => {
-  for (const profile of ['communion', 'review', 'evidence'] as const) {
+  for (const profile of ['gold', 'review', 'evidence'] as const) {
     assert(contextExclusionReasons(
       { sensitivity: 'public' }, profile, new Date(),
     ).includes('pii: false required'), `profile ${profile} should block omitted pii`);
@@ -51,7 +51,7 @@ test('lifecycle never permits reviewed metadata to be written by automation', ()
   assert.equal(canTransition('in-review', 'reviewed', 'human'), true);
 });
 
-test('authorized page with false PII has no exclusion reasons for communion', () => {
+test('authorized page with false PII has no exclusion reasons for Gold', () => {
   const reasons = contextExclusionReasons(
     {
       artifact_kind: 'authorized-page',
@@ -61,7 +61,7 @@ test('authorized page with false PII has no exclusion reasons for communion', ()
       last_verified: new Date().toISOString(),
       authorization_verified: true,
     },
-    'communion',
+    'gold',
     new Date(),
   );
   assert.equal(reasons.length, 0);

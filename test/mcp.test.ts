@@ -114,7 +114,7 @@ test('createContextAccess: throws when index does not exist', async () => {
   const root = await makeVault({});
   try {
     await assert.rejects(
-      () => createContextAccess(root, 'communion'),
+      () => createContextAccess(root, 'gold'),
       /no such file|ENOENT|not found/iu,
     );
   } finally {
@@ -122,13 +122,13 @@ test('createContextAccess: throws when index does not exist', async () => {
   }
 });
 
-test('createContextAccess: loads communion index successfully', async () => {
+test('createContextAccess: loads Gold index successfully', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     assert(access instanceof ContextAccess);
-    assert.equal(access.accessProfile, 'communion');
+    assert.equal(access.accessProfile, 'gold');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -142,7 +142,7 @@ test('search: returns results with citation IDs', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('irrigation');
     assert(hits.length >= 1);
     assert(typeof hits[0]?.citation_id === 'string');
@@ -156,7 +156,7 @@ test('search: returns empty for unmatched query', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('xyznonexistentterm');
     assert.deepEqual(hits, []);
   } finally {
@@ -172,7 +172,7 @@ test('read: rejects forged citation ID not from search', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     await assert.rejects(
       () => access.read(randomUUID()),
       /unknown citation/iu,
@@ -186,11 +186,11 @@ test('read: accepts citation ID returned by search on the same instance', async 
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('irrigation');
     assert(hits.length >= 1);
     const payload = await access.read(hits[0]!.citation_id);
-    assert.equal(payload.profile, 'communion');
+    assert.equal(payload.profile, 'gold');
     assert.equal(typeof payload.body, 'string');
     assert.equal(payload.content_role, 'reference');
     assert.equal(payload.instruction_authority, 'none');
@@ -207,8 +207,8 @@ test('read: rejects citation ID from a different access instance', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const instanceA = await createContextAccess(root, 'communion');
-    const instanceB = await createContextAccess(root, 'communion');
+    const instanceA = await createContextAccess(root, 'gold');
+    const instanceB = await createContextAccess(root, 'gold');
 
     const hitsA = await instanceA.search('irrigation');
     assert(hitsA.length >= 1);
@@ -226,7 +226,7 @@ test('read: fails closed when the live authorized corpus changes after search', 
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('irrigation');
     assert(hits.length >= 1);
     await writeFile(
@@ -244,7 +244,7 @@ test('read: rejects a cached citation after revocation and a valid rebuild', asy
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('irrigation');
     assert(hits.length >= 1);
     await writeFile(join(root, 'config', 'trust.yaml'), 'trust:\n  reviewers: []\n', 'utf8');
@@ -266,7 +266,7 @@ test('search: rejects when index is rebuilt with different corpus after creation
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
 
     // Rebuild the index with different content
     const page = makeGoldPage();
@@ -287,14 +287,14 @@ test('search: rejects when index is rebuilt with different corpus after creation
 // Profile isolation
 // ---------------------------------------------------------------------------
 
-test('communion access does not expose review profile label', async () => {
+test('Gold access does not expose review profile label', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('irrigation');
     for (const hit of hits) {
-      assert.equal(hit.profile, 'communion');
+      assert.equal(hit.profile, 'gold');
     }
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -386,7 +386,7 @@ test('search: rejects an empty query', async () => {
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     await assert.rejects(() => access.search(''), /must not be empty/u);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -397,7 +397,7 @@ test('search: refuses an over-long query rather than truncating it', async () =>
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const query = 'irrigation '.repeat(200).slice(0, ACCESS_LIMITS.maxQueryChars + 1);
     assert.equal(query.length, ACCESS_LIMITS.maxQueryChars + 1);
     await assert.rejects(
@@ -431,7 +431,7 @@ test('search: caps returned results at the documented maximum', async () => {
     }
     await buildGoldIndex(root, entries, { asOf: FIXED_DATE });
 
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const hits = await access.search('irrigation');
     assert.equal(hits.length, ACCESS_LIMITS.maxSearchResults);
     assert.equal(new Set(hits.map(h => h.citation_id)).size, hits.length);
@@ -444,7 +444,7 @@ test('search: evicting an old citation revokes it and keeps newer ones valid', a
   const root = await makeVault({});
   try {
     await buildTestVaultWithGoldIndex(root);
-    const access = await createContextAccess(root, 'communion', {
+    const access = await createContextAccess(root, 'gold', {
       maxSearchResults: 1,
       maxSessionCitations: 2,
     });
@@ -473,21 +473,21 @@ test('ContextAccess: rejects unusable limit overrides', async () => {
   try {
     await buildTestVaultWithGoldIndex(root);
     await assert.rejects(
-      () => createContextAccess(root, 'communion', { maxSessionCitations: 0 }),
+      () => createContextAccess(root, 'gold', { maxSessionCitations: 0 }),
       /maxSessionCitations must be a positive integer/u,
     );
     // A result ceiling above the session ceiling would let one search insert citations
     // and then immediately evict the IDs it is returning, so search() would hand back
     // IDs that read() rejects. Reject the combination at construction instead.
     await assert.rejects(
-      () => createContextAccess(root, 'communion', {
+      () => createContextAccess(root, 'gold', {
         maxSearchResults: 10,
         maxSessionCitations: 5,
       }),
       /maxSearchResults \(10\) must not exceed maxSessionCitations \(5\)/u,
     );
     // The equal case is the boundary and must remain allowed.
-    const access = await createContextAccess(root, 'communion', {
+    const access = await createContextAccess(root, 'gold', {
       maxSearchResults: 5,
       maxSessionCitations: 5,
     });

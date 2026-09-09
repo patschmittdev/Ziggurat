@@ -18,12 +18,12 @@ export function makeGoldChunk(
   authorization: VerifiedAuthorization,
 ): GoldChunk {
   return {
-    id: chunkId('communion', path, pageBody),
+    id: chunkId('gold', path, pageBody),
     path,
     heading: page.title,
     body: pageBody,
     bronze_lineage: bronzeLineage,
-    profile: 'communion',
+    profile: 'gold',
     tier: 'gold',
     status: 'reviewed',
     content_role: 'reference',

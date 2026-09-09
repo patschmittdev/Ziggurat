@@ -22,7 +22,7 @@ export const GoldChunkSchema = z.object({
     path: z.string().min(1),
     sha256: Sha256Schema,
   }).strict()),
-  profile: z.literal('communion'),
+  profile: z.literal('gold'),
   tier: z.literal('gold'),
   status: z.literal('reviewed'),
   content_role: z.literal('reference'),
@@ -92,7 +92,7 @@ export type EmbeddingSnapshot = z.infer<typeof EmbeddingSnapshotSchema>;
 
 export const GoldIndexSchema = z.object({
   version: z.literal(2),
-  profile: z.literal('communion'),
+  profile: z.literal('gold'),
   retrieval_mode: z.literal('bm25'),
   built_at: z.string().min(1),
   corpus_fingerprint: Sha256Schema,

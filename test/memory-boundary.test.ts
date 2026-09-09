@@ -178,7 +178,7 @@ test('poisoned source remains inert until separately signed human admission', as
     assert.equal(await runBuild(prepared.root, false, captureIo().io), 0);
     assert.equal((await loadGoldIndex(prepared.root)).chunks.length, 1);
 
-    const access = await createContextAccess(prepared.root, 'communion');
+    const access = await createContextAccess(prepared.root, 'gold');
     const hits = await access.search('supplier memory rule');
     assert(hits.length > 0);
     const retrieved = await access.read(hits[0]!.citation_id);

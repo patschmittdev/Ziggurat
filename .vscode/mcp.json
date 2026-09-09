@@ -1,6 +1,6 @@
 {
   "servers": {
-    "ziggurat-communion": {
+    "ziggurat-gold": {
       "type": "stdio",
       "command": "node",
       "args": [

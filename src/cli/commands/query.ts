@@ -2,14 +2,14 @@ import type { CliIO } from '../main.js';
 import { createContextAccess } from '../../mcp/access.js';
 import { inertSingleLineText, safeJsonStringify } from '../../presentation/inert.js';
 
-/** query always uses the communion profile. */
+/** query always uses the gold profile. */
 export async function runQuery(root: string, query: string | undefined, json: boolean, io: CliIO): Promise<number> {
   if (!query) {
     io.stderr('error: --query is required for the query command\n');
     return 1;
   }
 
-  const access = await createContextAccess(root, 'communion');
+  const access = await createContextAccess(root, 'gold');
   const hits = await access.search(query);
 
   if (json) {

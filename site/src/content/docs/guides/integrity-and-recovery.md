@@ -40,6 +40,8 @@ outputs reconstructed from current source artifacts, then used as runtime inputs
 after verification. `init` does not create a vault `.gitignore`; add vault-local ignore
 rules if the vault uses Git.
 
+Indexes built before the profile value was renamed to `gold` fail validation and must be rebuilt with `ziggurat build`.
+
 Version-1 proposals and indexes are unsupported and must be restaged or rebuilt.
 
 ## Conformance checks

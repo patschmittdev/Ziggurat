@@ -139,23 +139,23 @@ test('RRF: empty lists return empty', () => {
 // ---------------------------------------------------------------------------
 
 test('fingerprint: same inputs produce same hash', () => {
-  const a = computeCorpusFingerprint('communion', 1, [{ path: 'knowledge/p.md', content_hash: 'abc' }]);
-  const b = computeCorpusFingerprint('communion', 1, [{ path: 'knowledge/p.md', content_hash: 'abc' }]);
+  const a = computeCorpusFingerprint('gold', 1, [{ path: 'knowledge/p.md', content_hash: 'abc' }]);
+  const b = computeCorpusFingerprint('gold', 1, [{ path: 'knowledge/p.md', content_hash: 'abc' }]);
   assert.equal(a, b);
 });
 
 test('fingerprint: different content_hash produces different fingerprint', () => {
-  const a = computeCorpusFingerprint('communion', 1, [{ path: 'p.md', content_hash: 'abc' }]);
-  const b = computeCorpusFingerprint('communion', 1, [{ path: 'p.md', content_hash: 'xyz' }]);
+  const a = computeCorpusFingerprint('gold', 1, [{ path: 'p.md', content_hash: 'abc' }]);
+  const b = computeCorpusFingerprint('gold', 1, [{ path: 'p.md', content_hash: 'xyz' }]);
   assert.notEqual(a, b);
 });
 
 test('fingerprint: order of entries does not matter', () => {
-  const a = computeCorpusFingerprint('communion', 1, [
+  const a = computeCorpusFingerprint('gold', 1, [
     { path: 'b.md', content_hash: '2' },
     { path: 'a.md', content_hash: '1' },
   ]);
-  const b = computeCorpusFingerprint('communion', 1, [
+  const b = computeCorpusFingerprint('gold', 1, [
     { path: 'a.md', content_hash: '1' },
     { path: 'b.md', content_hash: '2' },
   ]);
@@ -183,7 +183,7 @@ test('buildGoldIndex: includes only eligible page', async () => {
 
     assert.equal(index.chunks.length, 1);
     assert.equal(index.chunks[0]?.path, 'knowledge/good.md');
-    assert.equal(index.profile, 'communion');
+    assert.equal(index.profile, 'gold');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -237,7 +237,7 @@ test('buildGoldIndex: writes index to disk atomically', async () => {
     await buildGoldIndex(root, [{ path: 'knowledge/p.md', page, pageBody: 'Text.' }], { asOf: FIXED_DATE });
     const loaded = await loadGoldIndex(root);
     assert.equal(loaded.version, 2);
-    assert.equal(loaded.profile, 'communion');
+    assert.equal(loaded.profile, 'gold');
     assert.equal(loaded.chunks.length, 1);
   } finally {
     await rm(root, { recursive: true, force: true });
