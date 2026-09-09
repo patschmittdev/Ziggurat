@@ -11,7 +11,7 @@ verifiable human capability before content becomes durable Gold context.
 | Asset | Location | Security role |
 |---|---|---|
 | Inbox source | `inbox/` | Untrusted capture input |
-| Bronze record | `bronze/` | Immutable, hash-verified evidence |
+| Bronze record | `bronze/` | No-overwrite, hash-verified evidence |
 | Silver proposal | `.ziggurat/proposals/` | Complete but non-authoritative model candidate |
 | Knowledge page | `knowledge/` | Human-authored curated content |
 | Trust policy | `config/trust.yaml` | Reviewer public-key trust anchors |
@@ -25,7 +25,7 @@ verifiable human capability before content becomes durable Gold context.
 | Actor or process | Read | Write | Cannot do |
 |---|---|---|---|
 | Untrusted source | none | Inbox input | Authorize persistence |
-| `ingest` | Real regular files under `inbox/`, Bronze hashes | New immutable Bronze | Read or delete anything outside the real `inbox/` directory |
+| `ingest` | Real regular files under `inbox/`, Bronze hashes | New no-overwrite Bronze | Read or delete anything outside the real `inbox/` directory |
 | Loopback refine model | A bounded host-built reference block of Bronze bytes | JSON response only | Access filesystem or tools through Ziggurat, or name its own sources |
 | `refine` host pathway | Bronze citations, target base | One Silver proposal | Write Bronze, knowledge, receipts, trust, reviewed metadata, or indexes |
 | Human reviewer | Bronze, Silver, knowledge | Manual page and external signed receipt | Gain factual certainty from a signature |
@@ -88,7 +88,7 @@ a path it can dereference; the host reads Bronze on its behalf and revalidates e
 returned citation against the same files afterward.
 
 There is no automated Silver-to-knowledge transition and no promote command.
-Contradiction proposals remain immutable. A reviewer resolves one by listing its ID
+Contradiction proposals are no-overwrite artifacts. A reviewer resolves one by listing its ID
 in the page and signing that exact page.
 
 ## Enforcement points
