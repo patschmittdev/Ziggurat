@@ -33,6 +33,18 @@ describes as
 [AI Memory / Context Poisoning](https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/ai-memory-context-poisoning):
 untrusted content enters a durable store and silently influences later model behaviour.
 
+## How it differs from other agent-memory systems
+
+mem0, Letta, and Zep persist model-originated memory automatically. mem0's `add`
+pipeline lets an LLM decide what to store, Letta agents edit their own memory blocks
+through tools, and Zep extracts facts into its context graph as conversations arrive.
+Those are reasonable defaults for recall quality, and each is better than Ziggurat at
+hosted, multi-tenant retrieval. Ziggurat makes the opposite trade: nothing
+model-originated becomes authorized reference data without a detached Ed25519 receipt
+from a key that operator policy assigns to a human. That is a capability boundary, not a
+review convention, and it is the only thing Ziggurat claims to do better. Vendor
+behaviour is as documented on 2026-09-09; Ziggurat does not integrate with any of them.
+
 ## What it is not
 
 - Not an OS sandbox, and not a multi-tenant authorization service.

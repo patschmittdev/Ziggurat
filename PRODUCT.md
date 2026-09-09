@@ -46,6 +46,13 @@ applies Silver to knowledge. There is no signer, apply, approve, or promote comm
 and no `--promote` flag. A `reviewed_by: alice` string is self-asserted metadata and is
 insufficient by itself.
 
+Comparators, stated once and honestly: mem0, Letta, and Zep persist model-originated
+memory automatically (LLM-decided writes, agent-edited memory blocks, automatic fact
+extraction respectively) and are stronger than Ziggurat at hosted, multi-tenant
+retrieval. Ziggurat's single differentiating claim is the human authorization gate as a
+cryptographic capability. Documentation may name these comparators only with that
+framing, dated to when their behaviour was checked, and never as integrations.
+
 ## Operating Context
 
 Evaluation happens in a browser, often alongside the repository itself, frequently
