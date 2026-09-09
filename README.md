@@ -18,6 +18,10 @@ was: how do you prevent the AI from erroneously promoting a Silver proposal to G
 The answer here is to remove the door. There is no promote command. A human curates the
 Gold layer with a key that no shipped code path holds.
 
+Another reason: I was tired of seeing blatant AI output that no human had reviewed.
+Ziggurat is meant to make the person slow down and read each proposal instead of
+rubber-stamping a queue. The review queue is capped for the same reason.
+
 ## The problem: memory poisoning is a durable write attack
 
 Persistent AI context turns a poisoned document, a fabricated preference, or an embedded
@@ -101,9 +105,9 @@ npm run check                       # full test suite
 node dist/src/cli/main.js --help
 ```
 
-To see the boundary itself, run only the end-to-end poisoning test. It ingests a poisoned
-source, shows the unsigned candidate excluded, admits a signed page, then rejects the
-same page after a one-byte change:
+To see the boundary itself, run only the end-to-end poisoning test.
+It ingests a poisoned source, shows the unsigned candidate excluded, admits a signed page,
+then refuses retrieval once the built Gold index is altered underneath its verification.
 
 ```bash
 npm run build && node --test dist/test/memory-boundary.test.js
