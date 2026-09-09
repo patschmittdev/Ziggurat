@@ -8,7 +8,7 @@ export const UtcDateTimeSchema = z.string().regex(
 export type PiiState = 'true' | 'false' | 'unknown';
 export type Sensitivity = 'public' | 'internal' | 'restricted';
 export type ReviewStatus = 'draft' | 'in-review' | 'reviewed';
-export type AccessProfile = 'communion' | 'review' | 'evidence';
+export type AccessProfile = 'gold' | 'review' | 'evidence';
 
 export const PiiStateSchema = z.union([
   z.literal('true'),
@@ -29,7 +29,7 @@ export const ReviewStatusSchema = z.union([
 ]);
 
 export const AccessProfileSchema = z.union([
-  z.literal('communion'),
+  z.literal('gold'),
   z.literal('review'),
   z.literal('evidence'),
 ]);

@@ -9,16 +9,15 @@ web
 ## Users
 
 Primary users are AI platform engineers and security engineers who are evaluating
-durable-memory authority boundaries. They arrive while deciding whether persistent
-agent memory can be governed at all, usually already familiar with prompt injection
-and retrieval-augmented generation, and usually skeptical of claims that a review
-step makes a write surface safe. Their job on this surface is to determine, quickly
-and without running anything, whether Ziggurat's boundary is real, and then either
-read the threat model or run the reference implementation.
+durable-memory authority boundaries. They arrive deciding whether persistent agent
+memory can be governed at all. Most already know prompt injection and RAG, and are
+skeptical that a review step makes a write surface safe. Their job on this surface is
+to determine, quickly and without running anything, whether Ziggurat's boundary is
+real, and then either read the threat model or run the reference implementation.
 
 Secondary users are maintainers and contributors who need task-oriented operating
-documentation for ingest, refine, review, external authorization, communion, and
-integrity recovery.
+documentation for ingest, refine, review, external authorization, Gold retrieval,
+and integrity recovery.
 
 ## Product Purpose
 
@@ -41,10 +40,11 @@ limits, without having been told anything untrue.
 
 The authorization boundary is a cryptographic capability boundary, not a review
 convention. Gold admission requires a detached Ed25519 receipt from a key configured
-in `config/trust.yaml`. No shipped path creates authorization, signs receipts, or
-applies Silver to knowledge. There is no signer, apply, approve, or promote command
-and no `--promote` flag. A `reviewed_by: alice` string is self-asserted metadata and is
-insufficient by itself.
+in `config/trust.yaml`. Ziggurat ships no signer, apply, approve, or promote
+command; see the
+[human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
+A `reviewed_by: alice` string is self-asserted metadata and is insufficient by
+itself.
 
 Comparators, stated once and honestly: mem0, Letta, and Zep persist model-originated
 memory automatically (LLM-decided writes, agent-edited memory blocks, automatic fact
@@ -74,36 +74,35 @@ The pipeline the documentation must explain:
    the knowledge page, and uses an external Ed25519 signer following
    `docs/authorization-protocol.md`. Ziggurat does not enforce that workflow as proof
    of human attention.
-5. `build` rebuilds three physically separate indexes: communion (eligible,
+5. `build` rebuilds three physically separate indexes: gold (eligible,
    externally key-authorized Gold only), review (Silver whose candidate and every
    source pass model-access privacy filters, plus Gold), and evidence (Bronze that
    passes integrity and model-access privacy filters, plus Gold).
-6. `mcp` serves communion only, read only, exposing `search_context` and
+6. `mcp` serves Gold only, read only, exposing `search_context` and
    `read_context`.
 
 ## Capabilities and Constraints
 
-Confirmed product facts the site must preserve exactly:
+Confirmed product facts the site must preserve exactly; the
+[guarantees page](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/security/guarantees.md)
+owns their explanation:
 
-- Gold means authorized reference data. It never means factual truth, divine
-  authority, or instruction authority. Every retrieved chunk, Gold included, reports
-  `content_role: reference` and `instruction_authority: none`.
-- Three claims stay distinct: provenance (bytes match captured evidence),
-  persistence authorization (a configured key approved this exact page), and
-  instruction authority (always none).
-- The refine host persists exactly one model-originated artifact type: strict v2
-  Silver JSON under `.ziggurat/proposals/`. It does not write Bronze, knowledge pages,
-  reviewed metadata, trust anchors, receipts, or indexes.
+- Every retrieved chunk carries `content_role: reference` and
+  `instruction_authority: none`; see
+  [Gold's limits](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
+- Distinct claims: provenance, persistence authorization, and instruction authority.
+- Refine output: one model-originated artifact type, strict v2 Silver JSON under
+  `.ziggurat/proposals/`; no writes to Bronze, knowledge pages, reviewed metadata,
+  trust anchors, receipts, or indexes.
 - Every Silver citation is revalidated against stored Bronze text, hashes, and line
-  ranges on disk. This establishes citation integrity, not semantic entailment or
-  factual truth.
-- Model and embedding endpoints are HTTP loopback only. The refine adapter, which is
-  the only shipped caller, additionally refuses redirects and enforces a 30 second
-  deadline with 1 MiB request and response ceilings.
+  ranges on disk; no semantic entailment or factual truth guarantee.
+- Model and embedding endpoints: HTTP loopback only; refine is the only shipped
+  caller, with no redirects, a 30 second deadline, and 1 MiB request and response
+  ceilings.
 - Retrieval bounds: 1,024 query UTF-16 code units, 20 results per search, and 200
   retained citations per session; evicted IDs become invalid.
-- Version 0.1 is a pre-release, single-operator reference implementation.
-  `package.json` stays `private: true` and the project is source-distributed; the
+- Version 0.1: pre-release, single-operator, source-distributed;
+  `package.json` stays `private: true`; the
   `ziggurat` npm package name must not be depended on.
 - Named non-guarantees must remain visible: not an OS sandbox, not multi-tenant
   authorization, no key custody or revocation service, no hosted identity, no
@@ -130,19 +129,13 @@ Documentation-site constraints:
 Undecided and deliberately not invented: adoption numbers, users, benchmarks,
 funding, roadmap dates, and any production-maturity claim.
 
-## Brand Commitments
+## Design and brand
 
-- Name: Ziggurat. Thesis line: "Models propose. Humans decide what persists."
-- The historical metaphor stays implicit. The stepped form and summit may be used
-  visually; the copy stays technical. No faux-ancient or religious styling.
-- Tier vocabulary is fixed: Bronze, Silver, Gold, communion, review, evidence.
-- Reference for explanatory discipline only, never for reuse: metaharness.tools, for
-  its generous pacing, integrated systems diagrams, and long-form narrative. None of
-  its branding, layout, assets, code, or prose may be copied.
-- Precise trust language is a brand commitment. Overclaiming is a defect, not a
-  stylistic choice.
+Visual, brand, and accessibility rules live in DESIGN.md.
 
 ## Evidence on Hand
+
+DESIGN.md is a design-token specification for the site, not evaluator reading.
 
 Real material that exists in this repository and may be shown:
 
@@ -175,13 +168,3 @@ tag.
    because the audience discounts anything that hides it.
 5. **The reader must be able to verify.** Every claim on the site traces to a file,
    a command, or a test in this repository.
-
-## Accessibility & Inclusion
-
-WCAG 2.2 AA is the required standard: contrast, semantic landmarks and headings, a
-skip link, full keyboard operation, visible focus, adequate target sizes, no
-hover-only information, and useful accessible names.
-
-Every narrative fact must remain readable with JavaScript disabled. Motion is
-progressive enhancement only; `prefers-reduced-motion` is honored and scroll-jacking
-is prohibited. Light and dark themes must both be deliberate and legible.

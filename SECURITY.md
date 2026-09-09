@@ -19,11 +19,7 @@ response-time service level.
 
 ## Supported versions
 
-| Version | Security fixes |
-|---|---|
-| Current `main` | Supported |
-| Released versions | None yet |
-| Earlier commits | Unsupported |
+Only `main` receives security fixes; no versioned release exists yet.
 
 ## Threat model
 
@@ -43,8 +39,8 @@ reviewer trust anchors, detached authorization receipts, isolated indexes, and
 retrieved citations.
 
 Actors are untrusted source authors, the loopback refinement model, human reviewers,
-the trusted local operator, general communion clients, and advisory review/evidence
-tooling. Advisory access does not establish human identity.
+the trusted local operator, general Gold retrieval clients,
+and advisory review/evidence tooling. Advisory access does not establish human identity.
 
 ## Trust assumptions
 
@@ -79,10 +75,20 @@ ceiling enforced while streaming rather than after buffering.
 
 `ingest` reads and deletes its source, so its source path is a combined arbitrary-read
 and arbitrary-delete primitive if it escapes. A source must resolve to a real regular
-file physically under `inbox/`. Absolute paths, `..` traversal, empty segments,
-control characters, directories, symlinks, junctions, other reparse points, hard
-links, and real-parent escapes are all refused before the file is opened, so a
-refused source is never read, copied, or unlinked.
+file physically under `inbox/`. The following are all refused before the file is opened:
+
+- Absolute paths
+- `..` traversal
+- empty segments
+- control characters
+- directories
+- symlinks
+- junctions
+- other reparse points
+- hard links
+- real-parent escapes
+
+A refused source is never read, copied, or unlinked.
 
 Retrieval is bounded per session: 1024 query characters, 20 results per search, and
 200 retained citations. Over-long queries are refused rather than truncated. When the
@@ -105,6 +111,8 @@ The human admission capability is an external Ed25519 private key. A receipt bin
 The signature payload is domain separated. The canonical page representation uses
 parsed fields in fixed order and an LF-normalized body, so verification is stable on
 Windows, macOS, and Linux. Review timestamps require canonical UTC ISO-8601 values.
+The exact field and signing contract lives in the
+[authorization protocol](docs/authorization-protocol.md#unsigned-receipt).
 
 ## Attack mapping
 
@@ -126,18 +134,27 @@ to prevent every prompt-injection or model-behavior failure.
 | Review and diff transparency | Complete Silver candidates and evidence in `review` |
 | Presentation sanitization | Candidate bodies are indented; quoted fields and control characters are escaped |
 | Integrity | Receipt binding plus complete chunk, BM25, policy, and live-corpus verification |
-| Isolation | Separate communion, review, and evidence indexes |
+| Isolation | Separate gold, review, and evidence indexes |
 | Revalidation | Verification age and signed page metadata |
 | Versioning and rollback | Source artifacts in Git; generated indexes rebuilt |
-| Least privilege | Model writes Silver only; MCP reads communion only; refine payloads are host-selected and bounded |
+| Least privilege | Model writes Silver only; MCP reads Gold only; refine payloads are host-selected and bounded |
 | Suspicious instruction handling | Preserved as evidence and always labeled non-instructional |
 | Resource bounds | Adapter timeout and 1 MiB body caps; bounded refine reference; bounded query, result, and citation counts |
 
 ## Fail-closed behavior
 
-Gold eligibility fails for missing or invalid receipt, untrusted key, signature
-mismatch, page mutation, stale verification, invalid Bronze lineage, PII, restricted
-sensitivity, unapproved egress, or unresolved contradiction.
+Gold eligibility fails for:
+
+- missing or invalid receipt
+- untrusted key
+- signature mismatch
+- page mutation
+- stale verification
+- invalid Bronze lineage
+- PII
+- restricted sensitivity
+- unapproved egress
+- unresolved contradiction
 
 Proposal corruption makes Silver and contradiction state unverifiable. Index schema,
 chunk, provenance, trust-label, BM25, trust-policy, or live-corpus mismatch prevents
@@ -158,17 +175,13 @@ project name a human configured. An absent file still uses documented defaults.
 
 ## Provenance is not instruction authority
 
-Three different claims must not be conflated:
-
-1. **Provenance:** these bytes match captured evidence.
-2. **Persistence authorization:** a configured reviewer key approved this exact page.
-3. **Instruction authority:** whether text may direct a model or tool.
-
-Ziggurat implements the first two. It always sets the third to none. Gold is
-approved reference data, not executable instruction and not guaranteed truth.
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`; see
+[provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ## Explicit non-guarantees and residual risks
 
+- Ziggurat is not an OS sandbox or a multi-tenant authorization service.
 - Arbitrary local filesystem access defeats application-level path and process
   boundaries. An attacker who replaces trust configuration and rebuilds can create a
   new trust root.
@@ -189,10 +202,12 @@ approved reference data, not executable instruction and not guaranteed truth.
 - Stolen or misused reviewer private keys can authorize poisoned content.
 - Human reviewers can make mistakes, collude, or approve false claims.
 - Signatures do not detect semantic deception that a reviewer accepts.
-- Gold text can still contain prompt injection. Consumers must honor
-  `instruction_authority: none`.
+- Gold text can still contain prompt injection; see
+  [instruction authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md#3-instruction-authority).
 - Review output intentionally displays untrusted content. Terminals and downstream
   renderers must not treat it as active markup or commands.
+- No GUI review system is provided; review is a terminal rendering plus an external
+  signing step.
 - The implementation does not provide hardware key storage, revocation services,
   threshold approval, remote attestation, hosted identity, tenant isolation, or
   transport security.
@@ -212,4 +227,5 @@ approved reference data, not executable instruction and not guaranteed truth.
 - Treat any unexpected proposal, receipt, trust-policy, or index change as a
   potential memory-poisoning incident.
 
-The `--promote` flag does not exist and must not be added.
+Ziggurat ships no signer, apply, approve, or promote command; see the
+[human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).

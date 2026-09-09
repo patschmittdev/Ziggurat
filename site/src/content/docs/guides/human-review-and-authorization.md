@@ -3,10 +3,11 @@ title: Human review and external authorization
 description: A recommended review workflow before build performs Gold admission.
 ---
 
-This is the recommended operator workflow. Ziggurat intentionally ships no signer, apply,
-approve, or promote command, because external key custody is part of the authority
-boundary. Gold eligibility does not prove that this workflow occurred: a Silver proposal,
-the `review` command, hand authorship, and a Git commit are not machine-enforced
+This is the recommended operator workflow. Ziggurat ships no signer, apply, approve,
+or promote command; see the
+[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
+Gold eligibility does not prove that this workflow occurred: a Silver proposal, the
+`review` command, hand authorship, and a Git commit are not machine-enforced
 prerequisites.
 
 ## Procedure
@@ -88,10 +89,9 @@ Review timestamps require canonical UTC ISO-8601 values.
 
 ## Why a signature is not enough on its own
 
-The receipt is necessary, not sufficient. `build` also requires reviewed status and
-retrieval eligibility, `pii: false`, an allowed sensitivity, approved egress, a current
-verification age, valid hash-verified Bronze lineage, and no unresolved contradiction
-proposal. Any unmet check fails closed.
+The receipt is necessary but not sufficient: `build` fails closed unless the complete
+[Gold eligibility checklist](/Ziggurat/concepts/tiers/#gold-authorized-reference-admission)
+passes.
 
 ## Resolving a contradiction
 
@@ -103,8 +103,10 @@ page. Until then the contradiction blocks Gold.
 
 A valid signature proves control of a configured key and authorization of exact canonical
 content. It does not prove humanity, attention, completion of this workflow, semantic
-support, or factual truth, and it never grants instruction authority. A stolen key, a
-compromised reviewer, or an inattentive approval can authorize harmful content.
+support, or factual truth; see
+[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+A stolen key, a compromised reviewer, or an inattentive approval can authorize harmful
+content.
 
 ## Related
 

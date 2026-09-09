@@ -11,13 +11,18 @@ Ziggurat's authorization boundary is a capability. Gold admission requires a det
 Ed25519 receipt produced by a key configured in the operator's trust policy. No shipped
 signing path accepts or uses a private key.
 
+A receipt is different in kind. It is a detached signature over a canonical
+representation of the exact page, verified against a public key in `config/trust.yaml`.
+Operator policy assigns that key to a reviewer. Producing a receipt requires control of
+the corresponding private key.
+
 ## What does not exist
 
 The boundary is defined as much by absence as by enforcement:
 
 - No `signer` command.
 - No `apply`, `approve`, or `promote` command.
-- No `--promote` flag on any command.
+- No `--promote` flag on any command; it must remain rejected and must not be added.
 - No function in the shipped codebase that writes knowledge pages, reviewed metadata,
   trusted reviewer keys, or authorization receipts.
 
@@ -31,11 +36,6 @@ A curated page can carry `status: reviewed` and `reviewed_by: alice`. Anything t
 write the page can write those fields, so they record a self-asserted claim rather than
 establishing one. Ziggurat validates and binds them to the receipt, but they remain
 insufficient without valid external authorization.
-
-A receipt is different in kind. It is a detached signature over a canonical
-representation of the exact page, verified against a public key in `config/trust.yaml`.
-Operator policy assigns that key to a reviewer. Producing a receipt requires control of
-the corresponding private key.
 
 ## What the key holder is actually asserting
 

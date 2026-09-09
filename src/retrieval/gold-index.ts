@@ -94,10 +94,10 @@ export async function buildGoldIndex(
   const policy_fingerprint = trustPolicyFingerprint(config);
   const index: GoldIndex = {
     version: 2,
-    profile: 'communion',
+    profile: 'gold',
     retrieval_mode: 'bm25',
     built_at: (options.asOf ?? new Date()).toISOString(),
-    corpus_fingerprint: indexCorpusFingerprint('communion', chunks, policy_fingerprint),
+    corpus_fingerprint: indexCorpusFingerprint('gold', chunks, policy_fingerprint),
     policy_fingerprint,
     chunks,
     bm25: buildBm25(chunks.map(chunk => ({
@@ -132,7 +132,7 @@ export async function checkIndexFreshness(
   }
   const { chunks, config } = await collectEligibleGoldChunks(root, candidates, options);
   const expected = indexCorpusFingerprint(
-    'communion',
+    'gold',
     chunks,
     trustPolicyFingerprint(config),
   );

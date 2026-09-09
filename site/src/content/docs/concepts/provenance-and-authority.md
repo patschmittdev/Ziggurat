@@ -24,9 +24,8 @@ a lie does not make it true.
 **Claim:** a signer controlling a configured key authorized this exact page.
 
 Established by a detached Ed25519 receipt verified against a public key in
-`config/trust.yaml`. The receipt binds the decision, the normalized target path, the
-SHA-256 of the canonical semantic page content, the reviewer ID, the review timestamp,
-and the trusted key ID.
+`config/trust.yaml`, with the fields defined in the
+[authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md#unsigned-receipt).
 
 Authorization says nothing about factual truth, humanity, attention, or review quality.
 It records that a configured key signed a decision about specific canonical content at a
@@ -46,6 +45,10 @@ instruction_authority: none
 
 Consumers must honour that label. Approved text can still contain prompt injection, and
 approval never converts reference data into a command.
+
+Gold is externally authorized reference data, not a truth or safety label, divine
+authority, or proof of human review. A client that treats retrieved content as
+instructions steps outside the boundary Ziggurat maintains.
 
 ## Why the separation matters
 

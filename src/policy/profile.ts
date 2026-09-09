@@ -25,7 +25,7 @@ export interface GoldCandidate {
 
 /**
  * Returns reasons why a record is ineligible for model context under the given profile.
- * Communion is Gold-only. PII true/unknown blocks all profiles.
+ * The Gold profile is Gold-only. PII true/unknown blocks all profiles.
  * No caller may elevate the profile after initialization.
  */
 export function contextExclusionReasons(
@@ -39,7 +39,7 @@ export function contextExclusionReasons(
     reasons.push('pii: false required');
   }
 
-  if (profile === 'communion') {
+  if (profile === 'gold') {
     if (record.artifact_kind !== 'authorized-page') {
       reasons.push('artifact: authorized page required');
     }
@@ -50,7 +50,7 @@ export function contextExclusionReasons(
       reasons.push('authorization: verified human receipt required');
     }
     if (record.sensitivity === 'restricted') {
-      reasons.push('sensitivity: restricted not permitted for communion');
+      reasons.push('sensitivity: restricted not permitted for Gold');
     }
     const stalenessReason = stalenessExclusion(record.last_verified, asOf);
     if (stalenessReason !== undefined) {

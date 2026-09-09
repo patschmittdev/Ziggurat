@@ -171,7 +171,7 @@ async function buildAndWriteProfileIndex(
 
 export async function loadProfileIndex(
   root: string,
-  profile: Exclude<AccessProfile, 'communion'>,
+  profile: Exclude<AccessProfile, 'gold'>,
 ): Promise<ProfileIndex> {
   const filename = profile === 'review' ? 'review-index.json' : 'evidence-index.json';
   const text = await readFile(join(root, '.ziggurat', filename), 'utf8');

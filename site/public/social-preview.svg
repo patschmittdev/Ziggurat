@@ -11,6 +11,6 @@
     <text x="474" y="372" fill="#a9afb3" font-size="34">Models propose. Humans decide what persists.</text>
   </g>
   <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="19" fill="#8a9095">
-    <text x="474" y="440">bronze: immutable · silver: proposals only · gold: human-authorized</text>
+    <text x="474" y="440">bronze: no-overwrite · silver: proposals only · gold: human-authorized</text>
   </g>
 </svg>

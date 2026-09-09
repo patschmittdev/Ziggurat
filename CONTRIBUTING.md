@@ -51,14 +51,17 @@ Maintainers preparing a published build follow the
 - Models may return strict Silver proposal payloads only.
 - Model and refine pathways must never write Bronze, knowledge pages, reviewed
   metadata, trusted reviewer keys, authorization receipts, or indexes.
-- Do not add a signer, apply, approve, or promote command.
-- The `--promote` flag does not exist and must remain rejected.
+- Ziggurat ships no signer, apply, approve, or promote command; preserve the
+  [human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 - A `reviewed_by` string is not authority. Gold requires a verified detached
   Ed25519 receipt from `config/trust.yaml`.
 - Review and evidence indexes are advisory or forensic. They never prove human
   identity.
-- Shipped MCP startup is communion-only and exposes two read-only tools.
-- All retrieved content is reference data with `instruction_authority: none`.
+- Shipped MCP startup serves the Gold index only and exposes
+  two read-only tools.
+- Every retrieved chunk carries `content_role: reference` and
+  `instruction_authority: none`; see
+  [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ## Silver proposal changes
 
@@ -78,7 +81,7 @@ Invalid proposal state must fail closed.
   key.
 - Any field used to establish trust or retrieval behavior must be covered by index
   integrity.
-- Preserve physical separation: communion is Gold only, review is Silver plus Gold,
+- Preserve physical separation: the Gold index holds authorization-valid Gold only, review is Silver plus Gold,
   and evidence is Bronze plus curated Gold.
 - Verify stored index state against both its own contents and the live corpus at
   startup, search, and citation read.

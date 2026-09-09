@@ -189,12 +189,12 @@ export class ContextAccess {
   }
 
   private async reloadIndex(): Promise<GoldIndex | ProfileIndex> {
-    if (this.profile === 'communion') return loadGoldIndex(this.root);
+    if (this.profile === 'gold') return loadGoldIndex(this.root);
     return loadProfileIndex(this.root, this.profile);
   }
 
   private runSearch(index: GoldIndex | ProfileIndex, query: string): SearchResult[] {
-    if (this.profile === 'communion') {
+    if (this.profile === 'gold') {
       const ranked = bm25Search(query, (index as GoldIndex).bm25);
       const chunkMap = new Map((index as GoldIndex).chunks.map(c => [c.id, c]));
       const results: SearchResult[] = [];
@@ -220,7 +220,7 @@ export class ContextAccess {
   }
 
   private extractLineage(index: GoldIndex | ProfileIndex, chunkId: string): Array<{ path: string; sha256: string }> {
-    if (this.profile === 'communion') {
+    if (this.profile === 'gold') {
       const chunk = (index as GoldIndex).chunks.find(c => c.id === chunkId);
       return chunk?.bronze_lineage ?? [];
     }
@@ -238,7 +238,7 @@ export async function createContextAccess(
   limits?: Partial<AccessLimits>,
 ): Promise<ContextAccess> {
   let index: GoldIndex | ProfileIndex;
-  if (profile === 'communion') {
+  if (profile === 'gold') {
     index = await loadGoldIndex(root);
   } else {
     index = await loadProfileIndex(root, profile);

@@ -78,7 +78,7 @@ function buildConformanceCases(root: string) {
       },
     },
     {
-      case: { id: 'C002', description: 'Non-reviewed page is blocked from communion', category: 'lifecycle' },
+      case: { id: 'C002', description: 'Non-reviewed page is blocked from Gold', category: 'lifecycle' },
       run: async () => {
         const blocked = (await eligibilityReasons(root, { status: 'draft' }))
           .includes('status: reviewed required');

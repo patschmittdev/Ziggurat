@@ -16,8 +16,8 @@ global link.
 | `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...` | Stage a strict Silver proposal through a loopback model |
 | `ziggurat review --root <vault>` | Render human review packets from staged proposals |
 | `ziggurat build --root <vault>` | Rebuild all three isolated indexes |
-| `ziggurat query --root <vault> --query <text>` | Query authorized Gold communion |
-| `ziggurat mcp --root <vault>` | Start the communion-only read-only MCP server |
+| `ziggurat query --root <vault> --query <text>` | Query authorized Gold |
+| `ziggurat mcp --root <vault>` | Start the read-only Gold MCP server |
 | `ziggurat eval --root <vault>` | Run built-in conformance cases |
 | `ziggurat check --root <repo> [--audit-clean-room]` | Audit a tree you intend to publish |
 
@@ -83,8 +83,8 @@ that misplaces the flag fails loudly instead of exiting zero without auditing an
 
 ## Commands that do not exist
 
-There is no `signer`, `apply`, `approve`, or `promote` command, and no `--promote` flag.
-This is a deliberate, permanent property of the design.
+Ziggurat ships no signer, apply, approve, or promote command; see the
+[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
 
 ## Related
 

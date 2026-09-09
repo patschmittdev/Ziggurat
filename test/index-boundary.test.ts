@@ -211,7 +211,7 @@ test('build keeps Silver, Gold, and Bronze in their canonical isolated indexes',
   }
 });
 
-test('communion rejects tampered trust labels in a stored index', async () => {
+test('Gold rejects tampered trust labels in a stored index', async () => {
   const { root } = await writeVault();
   try {
     await runBuild(root, false, SILENT_IO);
@@ -221,7 +221,7 @@ test('communion rejects tampered trust labels in a stored index', async () => {
     };
     index.chunks[0]!['content_role'] = 'instruction';
     await writeFile(indexPath, JSON.stringify(index), 'utf8');
-    await assert.rejects(() => createContextAccess(root, 'communion'));
+    await assert.rejects(() => createContextAccess(root, 'gold'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -246,7 +246,7 @@ for (const [name, mutate] of [
     index.bm25.doc_count = 999;
   }],
 ] as const) {
-  test(`communion rejects tampered ${name}`, async () => {
+  test(`Gold rejects tampered ${name}`, async () => {
     const { root } = await writeVault();
     try {
       await runBuild(root, false, SILENT_IO);
@@ -254,18 +254,18 @@ for (const [name, mutate] of [
       const index = JSON.parse(await readFile(indexPath, 'utf8')) as MutableGoldIndex;
       mutate(index);
       await writeFile(indexPath, JSON.stringify(index), 'utf8');
-      await assert.rejects(() => createContextAccess(root, 'communion'));
+      await assert.rejects(() => createContextAccess(root, 'gold'));
     } finally {
       await rm(root, { recursive: true, force: true });
     }
   });
 }
 
-test('communion search fails closed when authorization state becomes stale', async () => {
+test('Gold search fails closed when authorization state becomes stale', async () => {
   const { root } = await writeVault();
   try {
     await runBuild(root, false, SILENT_IO);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     const receiptPath = join(root, 'authorizations', 'approved.md.authorization.json');
     const receipt = JSON.parse(await readFile(receiptPath, 'utf8')) as Record<string, unknown>;
     receipt['reviewed_at'] = '2026-08-30T00:00:00Z';
@@ -276,11 +276,11 @@ test('communion search fails closed when authorization state becomes stale', asy
   }
 });
 
-test('communion search fails closed when the trusted reviewer policy changes', async () => {
+test('Gold search fails closed when the trusted reviewer policy changes', async () => {
   const { root } = await writeVault();
   try {
     await runBuild(root, false, SILENT_IO);
-    const access = await createContextAccess(root, 'communion');
+    const access = await createContextAccess(root, 'gold');
     await writeFile(
       join(root, 'config', 'trust.yaml'),
       'trust:\n  reviewers: []\n',

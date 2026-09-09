@@ -128,4 +128,4 @@ ceiling evicts the oldest IDs, which then become invalid.
 ## Related
 
 - [CLI reference](/Ziggurat/reference/cli/)
-- [MCP communion](/Ziggurat/guides/mcp-communion/)
+- [Gold MCP](/Ziggurat/guides/mcp-gold/)

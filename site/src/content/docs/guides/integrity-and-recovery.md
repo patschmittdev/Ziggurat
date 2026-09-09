@@ -50,22 +50,11 @@ ziggurat eval --root <vault>
 
 `eval` runs the built-in conformance cases against a vault.
 
-## Revoking poisoned memory
+## Key and incident handling
 
-1. Remove or correct the page and its receipt.
-2. If the vault uses Git, commit the change so its history records what was removed and
-   when.
-3. Rebuild all indexes.
-
-Treat any unexpected proposal, receipt, trust-policy, or index change as a potential
-memory-poisoning incident.
-
-## Key incidents
-
-- Never store a reviewer private key in the vault. `ziggurat check` flags PEM private-key
-  material.
-- Remove a compromised public key from `config/trust.yaml`, rebuild, and inspect every
-  receipt issued by that key.
+Keep private keys outside the vault and follow
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#key-and-incident-handling)
+for compromised keys, poisoned memory, and unexpected state changes.
 
 ## A note on availability
 

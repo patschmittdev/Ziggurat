@@ -29,14 +29,16 @@ of how well it is written.
 - The refine host may persist model-originated content only as strict Silver JSON. No
   model pathway may write Bronze, knowledge pages, reviewed metadata, trust
   configuration, authorization receipts, or indexes.
-- No signer, apply, approve, or promote command may be added. `--promote` must not exist.
+- Ziggurat ships no signer, apply, approve, or promote command; preserve the
+  [human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
 - Gold admission must continue to require a detached Ed25519 receipt from a configured
   key. Operator policy maps keys to reviewers; signatures do not prove human attention.
-- Every retrieved chunk must continue to report `content_role: reference` and
-  `instruction_authority: none`.
+- Every retrieved chunk carries `content_role: reference` and
+  `instruction_authority: none`; preserve the
+  [label contract](/Ziggurat/concepts/provenance-and-authority/).
 - Model and embedding endpoints must remain HTTP loopback only.
-- Shipped MCP must remain communion-only and read-only.
-- The communion, review, and evidence indexes must remain physically separate.
+- Shipped MCP must remain Gold-only and read-only.
+- The gold, review, and evidence indexes must remain physically separate.
 
 ## Documentation site
 

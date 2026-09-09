@@ -61,7 +61,7 @@ export default defineConfig({
           items: [
             { slug: 'guides/ingest-and-refine' },
             { slug: 'guides/human-review-and-authorization' },
-            { slug: 'guides/mcp-communion' },
+            { slug: 'guides/mcp-gold' },
             { slug: 'guides/integrity-and-recovery' },
           ],
         },

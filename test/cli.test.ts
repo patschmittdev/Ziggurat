@@ -224,11 +224,13 @@ test('the audit flag names the gate and does not change what check reports', asy
   }
 });
 
-test('global help lists the communion-only and proposal-only surfaces', async () => {
+test('global help lists the Gold-only and proposal-only surfaces', async () => {
   const { io, captured } = makeIO();
   const code = await runCli(['--help'], io);
   assert.equal(code, 0);
-  assert.match(captured.out, /ziggurat mcp --root/iu);
+  assert(captured.out.split('\n').includes('  query    Query authorized Gold'));
+  assert(captured.out.split('\n').includes('  mcp      Start the read-only Gold MCP server'));
+  assert(captured.out.split('\n').includes('Gold MCP: ziggurat mcp --root <vault>'));
   assert.match(captured.out, /Silver proposal/iu);
   assert(!captured.out.includes('--profile'));
   assert(!captured.out.includes('--promote'));
@@ -383,7 +385,7 @@ test('refine requires model endpoint in config', async () => {
 // mcp command
 // ---------------------------------------------------------------------------
 
-test('mcp is communion-only and does not require a profile selector', async () => {
+test('mcp is Gold-only and does not require a profile selector', async () => {
   const root = await makeVault();
   try {
     const { io, captured } = makeIO();
@@ -423,7 +425,7 @@ test('query requires --query flag', async () => {
   }
 });
 
-test('query always uses communion (fails with missing index, not wrong profile)', async () => {
+test('query always uses Gold (fails with missing index, not wrong profile)', async () => {
   const root = await makeVault();
   try {
     const { io, captured } = makeIO();

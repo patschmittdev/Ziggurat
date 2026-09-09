@@ -12,7 +12,7 @@ const url = (path: string) => `${base}/${path.replace(/^\//, '')}`;
 const repo = 'https://github.com/patschmittdev/Ziggurat';
 const title = 'Ziggurat — models propose, humans decide what persists';
 const description =
-  'A human-gated memory firewall. A model can draft an evidence-backed candidate for durable AI memory; only a human holding an external Ed25519 key can authorize it.';
+  'A human-gated memory firewall. A model can draft an evidence-backed candidate for durable AI memory; nothing is admitted without a detached Ed25519 receipt from a key that operator policy assigns to a human reviewer.';
 
 type Step = {
   level: string;
@@ -40,7 +40,7 @@ const steps: Step[] = [
     tierLabel: 'BRONZE',
     cursor: 456,
     heading: 'Capture preserves it without believing it',
-    body: 'ingest is the only writer of Bronze. The source must resolve to a real regular file physically under inbox/; absolute paths, traversal, symlinks, junctions, other reparse points, hard links, and directories are refused before the file is opened, copied, or deleted. The record is immutable and body-hash verified, and the hostile text is kept exactly as written, because Bronze is evidence rather than memory.',
+    body: 'ingest is the only writer of Bronze. The source must resolve to a real regular file physically under inbox/; absolute paths, traversal, symlinks, junctions, other reparse points, hard links, and directories are refused before the file is opened, copied, or deleted. The record is no-overwrite and body-hash verified; later mutation is detectable, not prevented. The hostile text is kept exactly as written, because Bronze is evidence rather than memory.',
     facts: ['sensitivity: restricted', 'pii: unknown', 'body_sha256 verified'],
   },
   {
@@ -62,8 +62,8 @@ const steps: Step[] = [
     tierLabel: 'REFUSED',
     cursor: 263,
     heading: 'A page that reviews itself changes nothing',
-    body: 'A curated page can carry status: reviewed and any reviewer name its author likes. build reads it, and communion does not change. There is no signer, apply, approve, or promote command and no --promote flag, so there is no capability behind the string.',
-    facts: ['reviewed_by is uninterpreted metadata', 'no shipped code path admits a page'],
+    body: 'A curated page can carry status: reviewed and any reviewer name its author likes. build reads it, and the Gold index does not change. There is no signer, apply, approve, or promote command and no --promote flag, so there is no capability behind the string.',
+    facts: ['reviewed_by is self-asserted metadata', 'no shipped code path admits a page without a valid receipt'],
   },
   {
     level: '04',
@@ -84,29 +84,29 @@ const steps: Step[] = [
     tierLabel: 'GOLD',
     cursor: 152,
     heading: 'Admission requires every check, not just a signature',
-    body: 'build admits a page to Gold only when reviewed status and retrieval eligibility, pii: false, an allowed sensitivity, approved egress, a current verification age, valid hash-verified Bronze lineage, no unresolved contradiction proposal, and a valid receipt all hold together. Missing or invalid authorization leaves the page out.',
+    body: 'build admits a page to Gold only when every check holds: reviewed status, retrieval eligibility, pii: false, an allowed sensitivity, approved egress, current verification age, valid Bronze lineage, no unresolved contradiction, and a valid receipt. Missing or invalid authorization leaves the page out.',
     facts: ['.ziggurat/gold-index.json', 'any unmet check fails closed'],
   },
   {
     level: '06',
     tier: 'none',
-    tierLabel: 'COMMUNION',
+    tierLabel: 'GOLD',
     cursor: 62,
     heading: 'Authorized is still not instruction authority',
-    body: 'Shipped MCP startup is communion-only and read-only, exposing exactly search_context and read_context. Retrieval is bounded to 1024 query characters, 20 results per search, and 200 retained citations per session; reaching the ceiling evicts the oldest citation IDs, which revokes them. Every returned chunk, Gold included, reports content_role: reference and instruction_authority: none.',
+    body: 'Shipped MCP startup is Gold-only and read-only, exposing exactly search_context and read_context. Retrieval is bounded to 1024 query characters, 20 results per search, and 200 retained citations per session; reaching the ceiling evicts the oldest citation IDs, which revokes them. Every returned chunk, Gold included, reports content_role: reference and instruction_authority: none.',
     facts: ['search_context, read_context', 'instruction_authority: none'],
   },
 ];
 
 const enforced = [
-  '<strong>ingest</strong> is the only Bronze writer, and captures are immutable and body-hash verified.',
+  '<strong>ingest</strong> is the only Bronze writer, and captures are no-overwrite and body-hash verified; later mutation is detectable, not prevented.',
   'An ingest source must resolve to a real regular file physically under <code>inbox/</code>.',
   '<strong>refine</strong> can write only strict version-2 artifacts under <code>.ziggurat/proposals/</code>.',
   'Silver candidates cannot carry status, reviewer, receipt, or admission metadata.',
   'Every Silver citation must match exact Bronze bytes, hashes, and line ranges.',
   'Gold requires a detached Ed25519 receipt from a key configured in <code>config/trust.yaml</code>.',
-  'Communion, review, and evidence are physically separate version-2 indexes.',
-  'Shipped MCP startup is communion-only and exposes exactly two read-only tools.',
+  'gold, review, and evidence are physically separate version-2 indexes.',
+  'Shipped MCP startup is Gold-only and exposes exactly two read-only tools.',
   'Model endpoints are HTTP loopback only, with redirects disabled, a 30 second deadline, and 1 MiB request and response ceilings.',
   'Every returned chunk reports <code>content_role: reference</code> and <code>instruction_authority: none</code>.',
 ];
@@ -116,7 +116,7 @@ const notGuaranteed = [
   'An attacker with arbitrary vault filesystem access can replace the trust policy, sources, receipts, and indexes, then rebuild.',
   'A stolen reviewer key, a compromised reviewer, or an inattentive approval can authorize harmful or false content.',
   'A valid signature proves control of a configured key and approval of exact content. It does not prove factual truth.',
-  'Approved text can still contain prompt injection. Gold approval never grants instruction authority.',
+  'Approved text can still contain prompt injection; see <a href="/Ziggurat/concepts/provenance-and-authority/">provenance and authority</a>.',
   'Application-level path checks cannot fully close time-of-check to time-of-use windows.',
   'No key custody, revocation service, hosted identity, transport security, or GUI review system is provided.',
 ];
@@ -211,9 +211,10 @@ const notGuaranteed = [
             </p>
             <p>
               A model can read authorized content and draft a complete, evidence-backed
-              candidate. It cannot admit that candidate to durable shared memory. Only a
-              human holding an external Ed25519 private key can, and that key is never
-              reachable from any shipped code path.
+              candidate. It cannot admit that candidate to durable shared memory. Only the
+              holder of an external Ed25519 private key that operator policy assigns to a reviewer
+              can, and that key is never reachable from any shipped code path.
+              The receipt proves key control and exact-content authorization, not humanity or attention.
             </p>
             <div class="actions">
               <a class="action action--primary" href="#ascent">Trace the boundary</a>
@@ -233,7 +234,7 @@ const notGuaranteed = [
             <div class="boundary__zone boundary__zone--above">
               <p class="boundary__zone-label" id="boundary-above">Only an external key holder may</p>
               <ul class="boundary__list" aria-labelledby="boundary-above">
-                <li>admit a curated page to durable communion memory</li>
+                <li>admit a curated page to durable Gold memory</li>
               </ul>
             </div>
             <div class="boundary__seam">
@@ -356,7 +357,7 @@ retrieval_eligible: true
 ---</code></pre>
             <p class="artifact__note">
               Self-asserted metadata changes nothing. Without a matching receipt the page stays
-              out of Gold and out of communion, whatever it says about itself.
+              out of Gold and out of the Gold index, whatever it says about itself.
             </p>
           </article>
 
@@ -401,8 +402,10 @@ retrieval_eligible: true
             <figure class="figure" data-reveal="2">
               <AscentFigure />
               <figcaption class="figure__caption">
-                <b>Figure 3.</b> Gold is externally authorized reference data. It is not truth,
-                not safety, and not instruction authority.
+                <b>Figure 3.</b> Every retrieved chunk carries
+                <code>content_role: reference</code>
+                and <code>instruction_authority: none</code>; see
+                <a href={url('concepts/provenance-and-authority/')}>Gold's limits</a>.
               </figcaption>
             </figure>
           </div>
@@ -457,7 +460,7 @@ retrieval_eligible: true
             <tr>
               <th scope="row">gold-index.json</th>
               <td data-label="Contents">Authorized Gold only</td>
-              <td data-label="Intended use">Communion answer context</td>
+              <td data-label="Intended use">Answer context</td>
               <td data-label="Shipped MCP">Exposed, read only</td>
             </tr>
             <tr>
@@ -485,7 +488,7 @@ retrieval_eligible: true
             <svg viewBox="0 0 480 196" role="img" aria-labelledby="iso-title iso-desc">
               <title id="iso-title">Three separate index files</title>
               <desc id="iso-desc">
-                Shipped MCP startup has a single arrow, and it points only at the communion
+                Shipped MCP startup has a single arrow, and it points only at the Gold
                 index. The review and evidence indexes stand apart with no connection to the
                 MCP server and no connection to each other, because they are separate files
                 rather than views over one store.
@@ -614,7 +617,7 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
           </p>
           <p>
             It is not a hosted service, not an OS sandbox, and not a substitute for external key
-            custody. Continuous integration runs the full suite on Linux, macOS, and Windows
+            custody. Continuous integration is configured to run the full suite on Linux, macOS, and Windows
             against Node.js 22 and 24. There are no users, deployments, third-party audits, or
             benchmarks to report, and none are claimed.
           </p>

@@ -1,13 +1,13 @@
 ---
-title: MCP communion
-description: Serve authorized Gold to an AI client over a read-only, communion-only MCP server.
+title: Gold MCP
+description: Serve authorized Gold to an AI client over a read-only, Gold-only MCP server.
 ---
 
 ```bash
 ziggurat mcp --root <vault>
 ```
 
-Shipped MCP startup is communion-only and read-only. There is no selectable profile, so
+Shipped MCP startup is Gold-only and read-only. There is no selectable profile, so
 review and evidence cannot be reached through it.
 
 ## Tools
@@ -35,17 +35,12 @@ evicted ID fails closed with the same error as a forged ID.
 
 ## What every result says
 
-```text
-content_role: reference
-instruction_authority: none
-```
-
-This is true of every chunk, Gold included.
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`.
 
 :::caution[Consumers must honour the label]
-Gold approval never grants instruction authority. Approved text can still contain prompt
-injection, so a client that treats retrieved content as instructions has stepped outside
-the boundary Ziggurat maintains.
+Approved text can still contain prompt injection; see
+[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
 :::
 
 ## Verification before every read
@@ -57,7 +52,7 @@ returning a degraded answer.
 
 ## Editor binding
 
-The VS Code binding in `.vscode/mcp.json` starts communion without a selectable profile.
+The VS Code binding in `.vscode/mcp.json` starts the Gold MCP server without a selectable profile.
 Configure model and embedding endpoints only in `config/adapters.yaml`, and only as HTTP
 loopback addresses.
 
@@ -67,7 +62,7 @@ loopback addresses.
 ziggurat query --root <vault> --query "<text>"
 ```
 
-`query` reads the same communion index from the terminal.
+`query` reads the same Gold index from the terminal.
 
 ## Related
 

@@ -21,9 +21,8 @@ the refine host validates and persists; every citation is revalidated against st
 Bronze text. **Gold** is eligible knowledge content admitted by `build` after a detached
 Ed25519 receipt from a configured key and every other eligibility check pass.
 
-No shipped path creates authorization, signs receipts, or applies Silver to knowledge.
-There is no signer, apply, approve, or promote command, and no `--promote` flag. `build`
-admits only independently authored, externally authorized eligible pages.
+Ziggurat ships no signer, apply, approve, or promote command; see the
+[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
 
 ## What this is for
 
@@ -51,13 +50,12 @@ behaviour is as documented on 2026-09-09; Ziggurat does not integrate with any o
 - Not a key custody, revocation, or hosted identity service.
 - Not a claim about truth. A valid signature proves that a configured key approved exact
   content. It does not make that content correct.
-- Not instruction authority. Every retrieved chunk, Gold included, reports
-  `content_role: reference` and `instruction_authority: none`.
+- Every retrieved chunk carries `content_role: reference` and
+  `instruction_authority: none`.
 
 :::caution[Gold is authorization, not truth]
-Gold means *externally authorized reference data*. It is not a safety label, not a
-factual guarantee, and never a licence for a model to follow instructions found inside
-the text.
+Gold carries no truth or safety guarantee; see
+[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
 :::
 
 ## Where to go next

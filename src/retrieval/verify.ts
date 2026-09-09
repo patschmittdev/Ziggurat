@@ -38,7 +38,7 @@ export async function computeLiveFingerprint(
     parseZigguratConfig(root),
   ]);
   const policy = trustPolicyFingerprint(config);
-  if (profile === 'communion') {
+  if (profile === 'gold') {
     const { chunks } = await collectEligibleGoldChunks(root, curated, {
       asOf,
       config,

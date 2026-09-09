@@ -32,11 +32,9 @@ npm run check
 node dist/src/cli/main.js --help
 ```
 
-`npm run check` cleans, rebuilds, and runs the full compiled test suite. `--help` prints
-the command list. In that output, “evidence-backed” means citations are byte-validated
-against stored Bronze text; it does not claim semantic or factual verification.
-“Immutable” is CLI shorthand for no-overwrite creation through ingest plus detection of
-later body mutation, not physical filesystem immutability.
+`npm run check` cleans, rebuilds, and runs the full compiled test suite. See the
+[CLI reference](/Ziggurat/reference/cli/#commands) for command purposes.
+In the help text below, 'immutable' means no-overwrite creation with detectable mutation, not filesystem immutability.
 
 ```text
 Ziggurat: Models propose. Humans decide what persists.
@@ -49,8 +47,8 @@ Commands:
   refine   Stage an evidence-backed Silver proposal
   review   Render staged Silver proposals for human review
   build    Rebuild isolated indexes; unsigned content stays out of Gold
-  query    Query authorized Gold communion
-  mcp      Start the communion-only read-only MCP server
+  query    Query authorized Gold
+  mcp      Start the read-only Gold MCP server
   check    Audit clean-room and key-material policy
   eval     Run conformance checks
 ```

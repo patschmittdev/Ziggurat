@@ -15,9 +15,9 @@ signing, approval, apply, or promotion command.
 - Reviewer private keys stay outside the vault and model-accessible processes.
 - `config/trust.yaml` contains only Ed25519 public keys.
 - A valid receipt proves that a configured key signed the exact canonical page.
-- A valid receipt does not prove factual truth, reviewer attention, or instruction
-  authority.
-- Every admitted chunk remains `content_role: reference` with
+- A valid receipt does not prove factual truth or reviewer attention; see
+  [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
+- Every retrieved chunk carries `content_role: reference` and
   `instruction_authority: none`.
 
 ## Trusted reviewer configuration

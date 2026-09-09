@@ -3,6 +3,9 @@ title: Attack-control mapping
 description: Each recommended memory-poisoning control and the specific Ziggurat enforcement that implements it.
 ---
 
+[ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md#enforcement-points)
+enumerates the enforcement points; this page maps Microsoft's control names onto them.
+
 The primary scenario is Microsoft's AI memory and context poisoning technique. The same
 failure can begin as indirect prompt injection, become persistent data poisoning, and
 exploit weak retrieval-store integrity. The linked Microsoft catalog maps those stages to
@@ -10,37 +13,36 @@ OWASP LLM01, LLM04, and LLM08 and to MITRE ATLAS context and RAG poisoning techn
 
 ## Operational control summary
 
-The normative mapping and exact enforcement points live in
-[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md) and
-[ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md).
-Operationally, inspect these boundaries:
+The normative mapping is in
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#attack-controls).
 
-- **Capture:** inbox real-path checks precede reads and deletion; ingest creates canonical
-  Bronze text without overwriting and records its body SHA-256.
-- **Proposal staging:** the host bounds and labels selected Bronze text, validates strict
-  model-originated v2 JSON, and checks citation path, hash, range, and quote integrity.
-  Those checks do not establish semantic support or factual truth.
-- **Authorization and admission:** no shipped path creates authorization or applies Silver
-  to knowledge. `build` verifies a configured-key receipt and every other Gold eligibility
-  rule before admission. A signature proves key control, not humanity or review quality.
-- **Retrieval:** communion, review, and evidence are separate files; shipped MCP opens only
-  communion. This reduces accidental cross-profile selection but is not process or tenant
-  isolation.
-- **Resource and integrity checks:** loopback transport, request/response bounds, retrieval
-  limits, policy fingerprints, BM25 data, chunk integrity, and live corpus state fail
-  closed as specified in the canonical documents.
+| Memory-poisoning control | Enforcement point or workflow |
+|---|---|
+| Source approval | Inbox boundary, Bronze store, Gold eligibility |
+| Provenance | Evidence validator, index verifier |
+| Memory write governance | Receipt verifier, external signing workflow |
+| Schema-bound memory | Proposal contract, corpus collector, index verifier |
+| Review and diff transparency | Human review packets |
+| Presentation sanitization | Human review packet rendering |
+| Integrity | Page canonicalizer, receipt verifier, index verifier |
+| Isolation | Profile builders |
+| Revalidation | Gold eligibility, index verifier |
+| Versioning and rollback | Git workflow, profile builders |
+| Least privilege | Proposal store, refine reference builder, MCP server |
+| Suspicious instruction handling | Refine reference builder, index verifier |
+| Resource bounds | Adapter transport, refine reference builder, MCP server |
 
 ## Fail-closed behaviour
 
-Gold eligibility fails for a missing or invalid receipt, an untrusted key, a signature
-mismatch, page mutation, stale verification, invalid Bronze lineage, PII, restricted
-sensitivity, unapproved egress, or an unresolved contradiction.
+Gold admission fails closed unless every check in the
+[Gold eligibility checklist](/Ziggurat/concepts/tiers/#gold-authorized-reference-admission)
+passes.
 
-Proposal corruption makes Silver and contradiction state unverifiable. An index schema,
-chunk, provenance, trust-label, BM25, trust-policy, or live-corpus mismatch prevents
-startup or the next search or read.
+Proposal corruption and index mismatches fail closed as specified in
+[SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#fail-closed-behavior).
 
 ## What this mapping does not claim
 
-Implementing a control is not the same as eliminating a risk. See
-[Guarantees and residual risks](/Ziggurat/security/guarantees/) for what remains.
+These controls do not establish semantic support, factual truth, humanity, review
+quality, or process or tenant isolation; see the
+[residual risks](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#explicit-non-guarantees-and-residual-risks).

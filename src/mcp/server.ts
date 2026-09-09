@@ -5,18 +5,18 @@ import { registerContextTools } from './tools.js';
 export { createContextAccess } from './access.js';
 export { registerContextTools } from './tools.js';
 
-/** Creates the shipped communion-only MCP server. */
+/** Creates the shipped Gold-only MCP server. */
 export async function createMcpServer(root: string): Promise<McpServer> {
-  const access = await createContextAccess(root, 'communion');
+  const access = await createContextAccess(root, 'gold');
   const server = new McpServer({
-    name: 'ziggurat-communion',
+    name: 'ziggurat-gold',
     version: '0.1.0',
   });
   registerContextTools(server, access);
   return server;
 }
 
-/** Starts the communion-only MCP server over stdio. */
+/** Starts the Gold-only MCP server over stdio. */
 export async function startMcpServer(root: string): Promise<void> {
   const { StdioServerTransport } = await import('@modelcontextprotocol/server/stdio');
   const server = await createMcpServer(root);
