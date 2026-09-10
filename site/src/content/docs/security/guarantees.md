@@ -45,7 +45,7 @@ owns the normative threat model and residual risks.
   200 citations retained per session. Older citation IDs become invalid when evicted.
 - Every retrieved chunk carries `content_role: reference` and
   `instruction_authority: none`; see [provenance and authority](../concepts/provenance-and-authority.md).
-- Model and embedding endpoints are limited to HTTP loopback addresses. The adapter never
+- The model endpoint is limited to HTTP loopback addresses. The adapter never
   follows redirects, bounds every request with a 30 second timeout, and refuses request or
   response bodies over 1 MiB.
 - Bronze records, configuration files, proposals, receipts, and indexes all reject

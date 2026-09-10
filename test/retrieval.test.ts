@@ -5,7 +5,6 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { sha256Text } from '../src/bronze/canonical.js';
 import { tokenize, buildBm25, bm25Search } from '../src/retrieval/bm25.js';
-import { reciprocalRankFusion } from '../src/retrieval/rrf.js';
 import { computeCorpusFingerprint } from '../src/retrieval/fingerprint.js';
 import { buildGoldIndex, checkIndexFreshness, loadGoldIndex } from '../src/retrieval/gold-index.js';
 import type { CuratedPage } from '../src/contracts/index.js';
@@ -114,27 +113,6 @@ test('bm25Search: ties broken by lexical id order', () => {
 });
 
 // ---------------------------------------------------------------------------
-// RRF
-// ---------------------------------------------------------------------------
-
-test('RRF uses fixed k=60 and stable path tie-breaking', () => {
-  const result = reciprocalRankFusion([
-    ['a', 'b', 'c'],
-    ['b', 'a', 'd'],
-  ], 60);
-  assert.deepEqual(result.map((e) => e.id).slice(0, 2), ['a', 'b']);
-});
-
-test('RRF: document appearing in only one list still scores', () => {
-  const result = reciprocalRankFusion([['x', 'y'], ['z']], 60);
-  assert(result.some(e => e.id === 'z'));
-});
-
-test('RRF: empty lists return empty', () => {
-  assert.deepEqual(reciprocalRankFusion([], 60), []);
-});
-
-// ---------------------------------------------------------------------------
 // Fingerprint
 // ---------------------------------------------------------------------------
 
@@ -165,6 +143,25 @@ test('fingerprint: order of entries does not matter', () => {
 // ---------------------------------------------------------------------------
 // Gold index
 // ---------------------------------------------------------------------------
+
+test('buildGoldIndex: uses bm25 without embeddings', async () => {
+  const root = await makeVault({
+    'bronze/src.md': makeBronzeContent('Evidence.\n'),
+  });
+  try {
+    const page = makeGoldPage({ sources: ['bronze/src.md'] });
+    await authorizeTestPage(root, 'knowledge/p.md', page, 'Gold content.', TEST_REVIEWER);
+    const index = await buildGoldIndex(root, [
+      { path: 'knowledge/p.md', page, pageBody: 'Gold content.' },
+    ], { asOf: FIXED_DATE });
+
+    assert.equal(index.chunks.length, 1);
+    assert.equal(index.retrieval_mode, 'bm25');
+    assert.equal('embeddings' in index, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 test('buildGoldIndex: includes only eligible page', async () => {
   const bronzeBody = '# Source\n\nEvidence.\n';

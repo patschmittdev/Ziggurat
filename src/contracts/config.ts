@@ -11,7 +11,6 @@ export interface ZigguratConfig {
   privacy: { default_sensitivity: 'restricted'; default_pii: 'unknown' };
   adapters: {
     model_endpoint?: string;
-    embedding_endpoint?: string;
   };
   trust: z.infer<typeof TrustPolicySchema>;
 }
@@ -38,7 +37,6 @@ export const ZigguratConfigSchema = z.object({
   }).strict(),
   adapters: z.object({
     model_endpoint: z.string().url().optional(),
-    embedding_endpoint: z.string().url().optional(),
   }).strict(),
   trust: TrustPolicySchema,
 }).strict();
@@ -101,14 +99,11 @@ async function loadYamlFile(filePath: string): Promise<unknown> {
 }
 
 function buildAdapters(
-  raw: { model_endpoint?: string | undefined; embedding_endpoint?: string | undefined },
+  raw: { model_endpoint?: string | undefined },
 ): ZigguratConfig['adapters'] {
   const adapters: ZigguratConfig['adapters'] = {};
   if (raw.model_endpoint !== undefined) {
     adapters.model_endpoint = raw.model_endpoint;
-  }
-  if (raw.embedding_endpoint !== undefined) {
-    adapters.embedding_endpoint = raw.embedding_endpoint;
   }
   return adapters;
 }
@@ -135,7 +130,7 @@ export async function parseZigguratConfig(root: string): Promise<ZigguratConfig>
 
   const parsed = ZigguratConfigSchema.parse(merged);
 
-  for (const key of ['model_endpoint', 'embedding_endpoint'] as const) {
+  for (const key of ['model_endpoint'] as const) {
     const endpoint = parsed.adapters[key];
     if (endpoint !== undefined) {
       const url = new URL(endpoint);

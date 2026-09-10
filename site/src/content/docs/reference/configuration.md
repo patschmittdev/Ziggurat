@@ -69,7 +69,8 @@ adapters: {}
 | Key | Type | Notes |
 |---|---|---|
 | `adapters.model_endpoint` | URL, optional | HTTP loopback only |
-| `adapters.embedding_endpoint` | URL, optional | HTTP loopback only |
+
+Retrieval is lexical (BM25) over the Gold index. No embeddings are computed and no vector index exists.
 
 Only `http:` on `localhost`, `127.0.0.1`, or `[::1]` is accepted. Any other scheme or
 host fails configuration loading.
@@ -116,10 +117,9 @@ file by hand before every release.
 | CLI JSON excerpt length | 300 UTF-16 code units | `query --json` |
 | Gold verification age | 90 days | `build`, `query`, MCP |
 
-The loopback restriction applies to both configured endpoints. The deadline, redirect
+The loopback restriction applies to the configured model endpoint. The deadline, redirect
 refusal, and byte ceilings are enforced by the refine adapter, which is the only shipped
-code that issues a request; nothing in the current implementation calls
-`embedding_endpoint`, so configuring it has no runtime effect beyond validation.
+code that issues a request.
 
 Oversize refine records are omitted rather than truncated, and every omission is reported
 with a reason. Over-long queries are refused rather than truncated. Reaching the citation

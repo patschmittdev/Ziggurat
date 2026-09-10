@@ -44,6 +44,8 @@ Silver.
 
 Indexes built by earlier pre-release builds use a different profile value and fail validation; rebuild with `ziggurat build`.
 
+`adapters.embedding_endpoint` is no longer accepted; remove it from `config/adapters.yaml`.
+
 ## Supported versions
 
 | Version | Security fixes |

@@ -36,7 +36,7 @@ of how well it is written.
 - Every retrieved chunk carries `content_role: reference` and
   `instruction_authority: none`; preserve the
   [label contract](../concepts/provenance-and-authority.md).
-- Model and embedding endpoints must remain HTTP loopback only.
+- The model endpoint must remain HTTP loopback only.
 - Shipped MCP must remain Gold-only and read-only.
 - The gold, review, and evidence indexes must remain physically separate.
 
