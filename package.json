@@ -22,7 +22,7 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.json",
     "test": "npm run clean && npm run build && node --test \"dist/test/*.test.js\"",
-    "check": "npm run test && npm run check:links",
+    "check": "npm run test && node --test scripts/check-docs-links.test.mjs && npm run check:links",
     "check:links": "node scripts/check-docs-links.mjs",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm run build",

@@ -41,7 +41,7 @@ function markdownWithoutCode(source) {
     }).join('\n');
 }
 
-function githubHeadingSlugs(source) {
+export function githubHeadingSlugs(source) {
   const slugs = new Set();
   const lines = markdownWithoutCode(source).split('\n');
   for (let index = 0; index < lines.length; index++) {
@@ -54,7 +54,7 @@ function githubHeadingSlugs(source) {
     }
     if (heading === undefined) continue;
     const text = decodeHtml(heading.replace(/<[^>]*>/g, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1'));
-    const base = text.toLowerCase().replace(/[^\p{L}\p{N}\p{M} -]/gu, '').replace(/ /g, '-');
+    const base = text.toLowerCase().replace(/[^\p{L}\p{N}\p{M} _-]/gu, '').replace(/ /g, '-');
     let slug = base;
     for (let suffix = 1; slugs.has(slug); suffix++) slug = `${base}-${suffix}`;
     slugs.add(slug);
@@ -62,7 +62,7 @@ function githubHeadingSlugs(source) {
   return slugs;
 }
 
-function markdownLinks(source) {
+export function markdownLinks(source) {
   const links = [];
   const definitions = new Map();
   const label = (value) => value.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -71,7 +71,7 @@ function markdownLinks(source) {
       definitions.set(label(id), angle ?? bare);
       return '';
     });
-  const withoutInlineLinks = text.replace(/!?\[(?:[^\]\\]|\\.)*\]\(\s*(?:<([^>\n]*)>|((?:[^\s()]|\([^()]*\))*))(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g, (_, angle, bare) => {
+  const withoutInlineLinks = text.replace(/!?\[(?:[^\[\]\\]|\\.|\[(?:[^\[\]\\]|\\.)*\])*\]\(\s*(?:<([^>\n]*)>|((?:[^\s()]|\([^()]*\))*))(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g, (_, angle, bare) => {
     links.push(angle ?? bare);
     return '';
   });
@@ -133,25 +133,27 @@ async function checkLink(raw, file) {
   }
 }
 
-try {
-  for (const entry of await readdir(join(ROOT, 'docs'), { withFileTypes: true })) {
-    if (entry.isFile() && entry.name.endsWith('.md')) queue.push(join(ROOT, 'docs', entry.name));
-  }
-} catch (error) {
-  fail(join(ROOT, 'docs'), '(scan)', error.message);
-}
-for (let index = 0; index < queue.length; index++) {
-  const file = queue[index];
-  if (scanned.has(file)) continue;
-  scanned.add(file);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const source = await readFile(file, 'utf8');
-    counts.files++;
-    if (inside(SITE_DOCS, file)) counts.sitePages++;
-    for (const url of markdownLinks(source)) await checkLink(url, file);
+    for (const entry of await readdir(join(ROOT, 'docs'), { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith('.md')) queue.push(join(ROOT, 'docs', entry.name));
+    }
   } catch (error) {
-    fail(file, '(scan)', error.message);
+    fail(join(ROOT, 'docs'), '(scan)', error.message);
   }
+  for (let index = 0; index < queue.length; index++) {
+    const file = queue[index];
+    if (scanned.has(file)) continue;
+    scanned.add(file);
+    try {
+      const source = await readFile(file, 'utf8');
+      counts.files++;
+      if (inside(SITE_DOCS, file)) counts.sitePages++;
+      for (const url of markdownLinks(source)) await checkLink(url, file);
+    } catch (error) {
+      fail(file, '(scan)', error.message);
+    }
+  }
+  console.log(`check-docs-links: ${counts.failures ? 'FAIL' : 'OK'}. ${counts.files} file(s) scanned; ${counts.links} link(s) checked (${counts.relative} relative, ${counts.repository} repository blob); ${counts.anchors} heading anchor(s); ${counts.sitePages} linked site page(s) scanned; ${counts.failures} failure(s).`);
+  process.exitCode = counts.failures ? 1 : 0;
 }
-console.log(`check-docs-links: ${counts.failures ? 'FAIL' : 'OK'}. ${counts.files} file(s) scanned; ${counts.links} link(s) checked (${counts.relative} relative, ${counts.repository} repository blob); ${counts.anchors} heading anchor(s); ${counts.sitePages} linked site page(s) scanned; ${counts.failures} failure(s).`);
-process.exitCode = counts.failures ? 1 : 0;

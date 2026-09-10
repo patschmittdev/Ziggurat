@@ -71,7 +71,7 @@ function markdownWithoutCode(source) {
     }).join('\n');
 }
 
-function githubHeadingSlugs(source) {
+export function githubHeadingSlugs(source) {
   const slugs = new Set();
   const lines = markdownWithoutCode(source).split('\n');
   for (let index = 0; index < lines.length; index++) {
@@ -84,7 +84,7 @@ function githubHeadingSlugs(source) {
     }
     if (heading === undefined) continue;
     const text = decodeHtml(heading.replace(/<[^>]*>/g, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1'));
-    const base = text.toLowerCase().replace(/[^\p{L}\p{N}\p{M} -]/gu, '').replace(/ /g, '-');
+    const base = text.toLowerCase().replace(/[^\p{L}\p{N}\p{M} _-]/gu, '').replace(/ /g, '-');
     let slug = base;
     for (let suffix = 1; slugs.has(slug); suffix++) slug = `${base}-${suffix}`;
     slugs.add(slug);
@@ -434,4 +434,4 @@ async function main() {
   );
 }
 
-await main();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

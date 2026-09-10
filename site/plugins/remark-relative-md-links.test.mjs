@@ -27,6 +27,18 @@ test('preserves fragments and rewrites nested link nodes', () => {
   assert.equal(link.url, expected);
 });
 
+test('rewrites reference-style definitions with the same URL rules', () => {
+  const definition = { type: 'definition', identifier: 't', url: '../concepts/tiers.md#body_sha256' };
+  const reference = { type: 'linkReference', identifier: 't' };
+  const absolute = { type: 'definition', identifier: 'home', url: '/Ziggurat/' };
+  const external = { type: 'definition', identifier: 'repo', url: 'https://github.com/patschmittdev/Ziggurat/blob/main/README.md' };
+  remarkRelativeMdLinks()({ type: 'root', children: [reference, definition, absolute, external] }, file);
+  assert.equal(definition.url, '/Ziggurat/concepts/tiers/#body_sha256');
+  assert.deepEqual(reference, { type: 'linkReference', identifier: 't' });
+  assert.equal(absolute.url, '/Ziggurat/');
+  assert.equal(external.url, 'https://github.com/patschmittdev/Ziggurat/blob/main/README.md');
+});
+
 test('maps index files to directory routes', () => {
   assert.equal(rewriteRelativeMdLink('./index.md', file), '/Ziggurat/guides/');
   assert.equal(rewriteRelativeMdLink('../index.md', file), '/Ziggurat/');

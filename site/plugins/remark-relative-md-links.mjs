@@ -31,7 +31,7 @@ export default function remarkRelativeMdLinks() {
   return (tree, file) => {
     /** @param {MarkdownNode} node */
     function visit(node) {
-      if (node.type === 'link' && typeof node.url === 'string') {
+      if ((node.type === 'link' || node.type === 'definition') && typeof node.url === 'string') {
         node.url = rewriteRelativeMdLink(node.url, file);
       }
       for (const child of node.children ?? []) visit(child);
