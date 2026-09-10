@@ -82,14 +82,6 @@ export const Bm25SnapshotSchema = z.object({
 
 export type Bm25Snapshot = z.infer<typeof Bm25SnapshotSchema>;
 
-export const EmbeddingSnapshotSchema = z.object({
-  model: z.string().min(1),
-  dimensions: z.number().int().min(1),
-  vectors: z.record(z.string(), z.array(z.number())),
-}).strict();
-
-export type EmbeddingSnapshot = z.infer<typeof EmbeddingSnapshotSchema>;
-
 export const GoldIndexSchema = z.object({
   version: z.literal(2),
   profile: z.literal('gold'),
@@ -115,11 +107,6 @@ export const ProfileIndexSchema = z.object({
 }).strict();
 
 export type ProfileIndex = z.infer<typeof ProfileIndexSchema>;
-
-export interface RrfEntry {
-  id: string;
-  score: number;
-}
 
 export interface SearchResult {
   chunk_id: string;

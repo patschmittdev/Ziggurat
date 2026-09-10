@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   BronzeRecordSchema,
   CuratedPageSchema,
+  GoldIndexSchema,
   RefinementProposalPayloadSchema,
   RefinementProposalSchema,
   TrustConfigSchema,
@@ -400,7 +401,7 @@ test('parseZigguratConfig: rejects non-loopback adapter endpoint', async () => {
 });
 
 test('parseZigguratConfig: rejects non-HTTP schemes even on loopback', async () => {
-  const adapters = 'adapters:\n  embedding_endpoint: https://localhost/embeddings\n';
+  const adapters = 'adapters:\n  model_endpoint: https://localhost/api\n';
   await withTempConfig({ adapters }, async (root) => {
     await assert.rejects(() => parseZigguratConfig(root), /http.*loopback|loopback.*http/iu);
   });
@@ -428,6 +429,51 @@ const VALID_CONFIG_OBJECT = {
   adapters: {},
   trust: { reviewers: [] },
 };
+
+test('GoldIndexSchema: rejects embeddings as an unknown field', () => {
+  const index = GoldIndexSchema.parse({
+    version: 2,
+    profile: 'gold',
+    retrieval_mode: 'bm25',
+    built_at: '2026-07-30T00:00:00Z',
+    corpus_fingerprint: 'a'.repeat(64),
+    policy_fingerprint: 'b'.repeat(64),
+    chunks: [],
+    bm25: {
+      k1: 1.5,
+      b: 0.75,
+      avg_doc_length: 0,
+      doc_count: 0,
+      doc_lengths: {},
+      term_doc_freqs: {},
+    },
+  });
+  const result = GoldIndexSchema.safeParse({
+    ...index,
+    embeddings: { model: 'unused', dimensions: 1, vectors: {} },
+  });
+  assert.equal(result.success, false);
+  if (!result.success) {
+    const issue = result.error.issues.find((entry) => entry.code === 'unrecognized_keys');
+    assert.ok(issue);
+    assert.deepEqual(issue.path, []);
+    assert.deepEqual(issue.keys, ['embeddings']);
+  }
+});
+
+test('ZigguratConfigSchema: rejects embedding_endpoint with the adapters issue path', () => {
+  const result = ZigguratConfigSchema.safeParse({
+    ...VALID_CONFIG_OBJECT,
+    adapters: { embedding_endpoint: 'http://localhost/api' },
+  });
+  assert.equal(result.success, false);
+  if (!result.success) {
+    const issue = result.error.issues.find((entry) => entry.code === 'unrecognized_keys');
+    assert.ok(issue);
+    assert.deepEqual(issue.path, ['adapters']);
+    assert.deepEqual(issue.keys, ['embedding_endpoint']);
+  }
+});
 
 test('BronzeRecordSchema: accepts the documented field set', () => {
   assert.equal(BronzeRecordSchema.safeParse(VALID_BRONZE_RECORD).success, true);
