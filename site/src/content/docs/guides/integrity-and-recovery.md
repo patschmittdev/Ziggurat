@@ -64,5 +64,5 @@ anyway is the failure this project exists to prevent.
 
 ## Related
 
-- [Isolated indexes](/Ziggurat/concepts/isolated-indexes/)
-- [Security guarantees and residual risks](/Ziggurat/security/guarantees/)
+- [Isolated indexes](../concepts/isolated-indexes.md)
+- [Security guarantees and residual risks](../security/guarantees.md)

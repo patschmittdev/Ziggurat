@@ -40,7 +40,7 @@ Every retrieved chunk carries `content_role: reference` and
 
 :::caution[Consumers must honour the label]
 Approved text can still contain prompt injection; see
-[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+[provenance and authority](../concepts/provenance-and-authority.md).
 :::
 
 ## Verification before every read
@@ -66,5 +66,5 @@ ziggurat query --root <vault> --query "<text>"
 
 ## Related
 
-- [Isolated indexes](/Ziggurat/concepts/isolated-indexes/)
-- [Configuration](/Ziggurat/reference/configuration/)
+- [Isolated indexes](../concepts/isolated-indexes.md)
+- [Configuration](../reference/configuration.md)

@@ -63,5 +63,5 @@ default that a configuration flag can relax.
 
 ## Related
 
-- [Security guarantees and residual risks](/Ziggurat/security/guarantees/)
+- [Security guarantees and residual risks](../security/guarantees.md)
 - [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md)

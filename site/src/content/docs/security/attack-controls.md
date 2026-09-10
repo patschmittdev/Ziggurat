@@ -35,7 +35,7 @@ The normative mapping is in
 ## Fail-closed behaviour
 
 Gold admission fails closed unless every check in the
-[Gold eligibility checklist](/Ziggurat/concepts/tiers/#gold-authorized-reference-admission)
+[Gold eligibility checklist](../concepts/tiers.md#gold-authorized-reference-admission)
 passes.
 
 Proposal corruption and index mismatches fail closed as specified in

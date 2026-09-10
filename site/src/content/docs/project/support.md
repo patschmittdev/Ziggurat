@@ -24,13 +24,13 @@ for the private reporting procedure and safe report contents.
 Several common questions are already answered:
 
 - Why there is no promote command:
-  [The human authority boundary](/Ziggurat/concepts/human-authority-boundary/)
+  [The human authority boundary](../concepts/human-authority-boundary.md)
 - Why a page will not enter Gold:
-  [Integrity verification and recovery](/Ziggurat/guides/integrity-and-recovery/)
+  [Integrity verification and recovery](../guides/integrity-and-recovery.md)
 - What Gold does and does not mean:
-  [Provenance, authorization, and instruction authority](/Ziggurat/concepts/provenance-and-authority/)
+  [Provenance, authorization, and instruction authority](../concepts/provenance-and-authority.md)
 - What is not guaranteed:
-  [Guarantees and residual risks](/Ziggurat/security/guarantees/)
+  [Guarantees and residual risks](../security/guarantees.md)
 
 ## Canonical source
 

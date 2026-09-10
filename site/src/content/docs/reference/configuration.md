@@ -127,5 +127,5 @@ ceiling evicts the oldest IDs, which then become invalid.
 
 ## Related
 
-- [CLI reference](/Ziggurat/reference/cli/)
-- [Gold MCP](/Ziggurat/guides/mcp-gold/)
+- [CLI reference](./cli.md)
+- [Gold MCP](../guides/mcp-gold.md)

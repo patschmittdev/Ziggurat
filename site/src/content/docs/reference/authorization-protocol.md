@@ -63,5 +63,5 @@ TypeScript implementation remains the authoritative verifier.
 
 ## Related
 
-- [Human review and external authorization](/Ziggurat/guides/human-review-and-authorization/)
-- [The human authority boundary](/Ziggurat/concepts/human-authority-boundary/)
+- [Human review and external authorization](../guides/human-review-and-authorization.md)
+- [The human authority boundary](../concepts/human-authority-boundary.md)

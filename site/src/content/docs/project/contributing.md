@@ -30,12 +30,12 @@ of how well it is written.
   model pathway may write Bronze, knowledge pages, reviewed metadata, trust
   configuration, authorization receipts, or indexes.
 - Ziggurat ships no signer, apply, approve, or promote command; preserve the
-  [human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
+  [human authority boundary](../concepts/human-authority-boundary.md).
 - Gold admission must continue to require a detached Ed25519 receipt from a configured
   key. Operator policy maps keys to reviewers; signatures do not prove human attention.
 - Every retrieved chunk carries `content_role: reference` and
   `instruction_authority: none`; preserve the
-  [label contract](/Ziggurat/concepts/provenance-and-authority/).
+  [label contract](../concepts/provenance-and-authority.md).
 - Model and embedding endpoints must remain HTTP loopback only.
 - Shipped MCP must remain Gold-only and read-only.
 - The gold, review, and evidence indexes must remain physically separate.
@@ -75,5 +75,5 @@ asset reference in the built output and fails on any root-relative URL that esca
 
 ## Related
 
-- [Project status](/Ziggurat/project/status/)
-- [Repository policies](/Ziggurat/project/policies/)
+- [Project status](./status.md)
+- [Repository policies](./policies.md)

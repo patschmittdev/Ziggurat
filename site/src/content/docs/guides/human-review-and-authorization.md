@@ -5,7 +5,7 @@ description: A recommended review workflow before build performs Gold admission.
 
 This is the recommended operator workflow. Ziggurat ships no signer, apply, approve,
 or promote command; see the
-[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
+[human authority boundary](../concepts/human-authority-boundary.md).
 Gold eligibility does not prove that this workflow occurred: a Silver proposal, the
 `review` command, hand authorship, and a Git commit are not machine-enforced
 prerequisites.
@@ -34,7 +34,7 @@ prerequisites.
    key outside the vault and model-accessible processes; no shipped signing path accepts
    or uses it.
 
-5. **Follow the [authorization protocol](/Ziggurat/reference/authorization-protocol/)** to
+5. **Follow the [authorization protocol](../reference/authorization-protocol.md)** to
    compute the canonical page digest, sign the domain-separated payload, and store the
    strict detached receipt under `authorizations/`.
 
@@ -90,7 +90,7 @@ Review timestamps require canonical UTC ISO-8601 values.
 ## Why a signature is not enough on its own
 
 The receipt is necessary but not sufficient: `build` fails closed unless the complete
-[Gold eligibility checklist](/Ziggurat/concepts/tiers/#gold-authorized-reference-admission)
+[Gold eligibility checklist](../concepts/tiers.md#gold-authorized-reference-admission)
 passes.
 
 ## Resolving a contradiction
@@ -104,11 +104,11 @@ page. Until then the contradiction blocks Gold.
 A valid signature proves control of a configured key and authorization of exact canonical
 content. It does not prove humanity, attention, completion of this workflow, semantic
 support, or factual truth; see
-[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+[provenance and authority](../concepts/provenance-and-authority.md).
 A stolen key, a compromised reviewer, or an inattentive approval can authorize harmful
 content.
 
 ## Related
 
-- [The human authority boundary](/Ziggurat/concepts/human-authority-boundary/)
-- [Authorization protocol](/Ziggurat/reference/authorization-protocol/)
+- [The human authority boundary](../concepts/human-authority-boundary.md)
+- [Authorization protocol](../reference/authorization-protocol.md)

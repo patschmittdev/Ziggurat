@@ -16,7 +16,7 @@ owns the normative threat model and residual risks.
   normalization with no-overwrite creation; body-hash verification detects later
   mutation.
 - `ingest` refuses unsafe source paths before any read, copy, or deletion; see the
-  [ingest path rules](/Ziggurat/guides/ingest-and-refine/#ingest-capture-evidence).
+  [ingest path rules](../guides/ingest-and-refine.md#ingest-capture-evidence).
 - `refine` can write only strict version-2 artifacts under `.ziggurat/proposals/`.
 - The refine model receives canonical Bronze text the host selected, in a bounded,
   labelled reference block. The shipped interface gives it no path it can fetch and no
@@ -27,7 +27,7 @@ owns the normative threat model and residual risks.
 - No shipped function writes knowledge pages, reviewed metadata, trusted reviewer keys,
   or authorization receipts.
 - Ziggurat ships no signer, apply, approve, or promote command; see the
-  [human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
+  [human authority boundary](../concepts/human-authority-boundary.md).
 - Gold requires a detached Ed25519 receipt from a configured key, as defined in the
   [authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md#unsigned-receipt).
   Operator policy assigns keys to reviewers; verification does not prove humanity,
@@ -44,7 +44,7 @@ owns the normative threat model and residual risks.
 - Retrieval is bounded: at most 1,024 query UTF-16 code units, 20 results per search, and
   200 citations retained per session. Older citation IDs become invalid when evicted.
 - Every retrieved chunk carries `content_role: reference` and
-  `instruction_authority: none`; see [provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+  `instruction_authority: none`; see [provenance and authority](../concepts/provenance-and-authority.md).
 - Model and embedding endpoints are limited to HTTP loopback addresses. The adapter never
   follows redirects, bounds every request with a 30 second timeout, and refuses request or
   response bodies over 1 MiB.

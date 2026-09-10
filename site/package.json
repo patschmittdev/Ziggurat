@@ -13,7 +13,7 @@
     "sync": "astro sync",
     "typecheck": "astro check",
     "validate": "node scripts/validate-build.mjs",
-    "check": "npm run typecheck && npm run build && npm run validate"
+    "check": "npm run typecheck && node --test plugins/remark-relative-md-links.test.mjs && npm run build && npm run validate"
   },
   "engines": { "node": ">=22.12.0" },
   "dependencies": {

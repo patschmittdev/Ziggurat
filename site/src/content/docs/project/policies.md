@@ -28,5 +28,5 @@ Report any disagreement you find as a documentation bug.
 
 ## Related
 
-- [Contributing](/Ziggurat/project/contributing/)
-- [Project status](/Ziggurat/project/status/)
+- [Contributing](./contributing.md)
+- [Project status](./status.md)

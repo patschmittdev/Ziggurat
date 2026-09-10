@@ -84,9 +84,9 @@ that misplaces the flag fails loudly instead of exiting zero without auditing an
 ## Commands that do not exist
 
 Ziggurat ships no signer, apply, approve, or promote command; see the
-[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
+[human authority boundary](../concepts/human-authority-boundary.md).
 
 ## Related
 
-- [Configuration](/Ziggurat/reference/configuration/)
-- [Authorization protocol](/Ziggurat/reference/authorization-protocol/)
+- [Configuration](./configuration.md)
+- [Authorization protocol](./authorization-protocol.md)

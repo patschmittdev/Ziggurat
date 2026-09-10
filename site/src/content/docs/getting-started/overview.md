@@ -22,7 +22,7 @@ Bronze text. **Gold** is eligible knowledge content admitted by `build` after a 
 Ed25519 receipt from a configured key and every other eligibility check pass.
 
 Ziggurat ships no signer, apply, approve, or promote command; see the
-[human authority boundary](/Ziggurat/concepts/human-authority-boundary/).
+[human authority boundary](../concepts/human-authority-boundary.md).
 
 ## What this is for
 
@@ -55,20 +55,20 @@ behaviour is as documented on 2026-09-09; Ziggurat does not integrate with any o
 
 :::caution[Gold is authorization, not truth]
 Gold carries no truth or safety guarantee; see
-[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+[provenance and authority](../concepts/provenance-and-authority.md).
 :::
 
 ## Where to go next
 
-- [Installation](/Ziggurat/getting-started/installation/) builds the CLI from source and verifies
+- [Installation](./installation.md) builds the CLI from source and verifies
   it.
-- [Your first vault](/Ziggurat/getting-started/first-vault/) creates a vault and captures
+- [Your first vault](./first-vault.md) creates a vault and captures
   evidence.
-- [The garden walkthrough](/Ziggurat/getting-started/garden-walkthrough/) runs the poisoned-memory
+- [The garden walkthrough](./garden-walkthrough.md) runs the poisoned-memory
   scenario end to end.
-- [The human authority boundary](/Ziggurat/concepts/human-authority-boundary/) explains why the
+- [The human authority boundary](../concepts/human-authority-boundary.md) explains why the
   boundary is a capability rather than a convention.
-- [Threat model](/Ziggurat/security/threat-model/) covers assets, actors, assumptions, and
+- [Threat model](../security/threat-model.md) covers assets, actors, assumptions, and
   residual risk.
 
 ## Canonical specifications

@@ -65,7 +65,7 @@ The host reads Bronze on the model's behalf and builds a bounded reference block
 
 Each record carries its verified `body_sha256` and its body as 1-based lines, labelled
 `content_role: reference` and `instruction_authority: none`; see
-[provenance and authority](/Ziggurat/concepts/provenance-and-authority/).
+[provenance and authority](../concepts/provenance-and-authority.md).
 Oversize records are omitted rather than truncated, and every omission is reported
 with a reason.
 
@@ -107,5 +107,5 @@ markup or commands.
 
 ## Next
 
-[Human review and external authorization](/Ziggurat/guides/human-review-and-authorization/)
+[Human review and external authorization](./human-review-and-authorization.md)
 covers what happens after the packet is on screen.

@@ -38,7 +38,7 @@ node dist/src/cli/main.js ingest --root ./my-vault --file inbox/some-note.md
 ```
 
 `ingest` refuses unsafe source paths before any read, copy, or unlink; see the
-[ingest path rules](/Ziggurat/guides/ingest-and-refine/#ingest-capture-evidence).
+[ingest path rules](../guides/ingest-and-refine.md#ingest-capture-evidence).
 
 Fresh captures default to `sensitivity: restricted` and `pii: unknown`, which keeps them
 out of the model-readable evidence index until a human resolves their privacy state.
@@ -73,8 +73,8 @@ That is the expected result, not a failure.
 
 ## Next
 
-- [The garden walkthrough](/Ziggurat/getting-started/garden-walkthrough/) shows the full
+- [The garden walkthrough](./garden-walkthrough.md) shows the full
   poisoned-memory scenario.
-- [Ingest and refine](/Ziggurat/guides/ingest-and-refine/) covers staging a Silver proposal.
-- [Human review and external authorization](/Ziggurat/guides/human-review-and-authorization/)
+- [Ingest and refine](../guides/ingest-and-refine.md) covers staging a Silver proposal.
+- [Human review and external authorization](../guides/human-review-and-authorization.md)
   covers what it takes to reach Gold.
