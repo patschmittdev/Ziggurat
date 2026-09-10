@@ -238,14 +238,11 @@ svg {
    ====================================================================== */
 
 .band {
-  padding-block: var(--zg-space-2xl);
-  border-top: var(--zg-hair) solid var(--zg-rule-strong);
+  padding-block: var(--zg-space-xl) var(--zg-space-xl);
 }
 
-.band--flush {
-  border-top: 0;
-  padding-block-start: var(--zg-space-xl);
-}
+.band::before { content: ''; display: block; height: var(--zg-hair); background: var(--zg-rule-strong); margin-block-end: var(--zg-space-2xl); }
+.band--flush::before { display: none; }
 
 .band__head {
   max-width: var(--zg-measure);
@@ -269,6 +266,18 @@ svg {
 
 .prose > * + * {
   margin-block-start: var(--zg-space-s);
+}
+
+.band__kicker {
+  font-size: var(--zg-text--1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--zg-ink-3);
+  margin: 0 0 var(--zg-space-2xs);
+}
+
+.band__kicker + h2 {
+  margin-block-start: 0;
 }
 
 /* ======================================================================
@@ -327,7 +336,7 @@ svg {
 .thesis {
   display: grid;
   gap: var(--zg-space-xl);
-  padding-block: var(--zg-space-l) var(--zg-space-2xl);
+  padding-block: var(--zg-space-l) var(--zg-space-xl);
 }
 
 @media (min-width: 64rem) {
@@ -350,7 +359,7 @@ svg {
   align-items: center;
   min-height: 44px;
   padding: var(--zg-space-2xs) var(--zg-space-m);
-  border: var(--zg-hair) solid var(--zg-rule-strong);
+  border: var(--zg-hair) solid color-mix(in srgb, var(--zg-ink) 60%, transparent);
   color: var(--zg-ink);
   text-decoration: none;
   font-weight: 600;
@@ -490,15 +499,6 @@ svg {
    2. Durable write
    ====================================================================== */
 
-.pull {
-  font-size: var(--zg-text-2);
-  line-height: var(--zg-leading-snug);
-  letter-spacing: -0.018em;
-  color: var(--zg-ink);
-  max-width: 34ch;
-  font-weight: 600;
-}
-
 .split {
   display: grid;
   gap: var(--zg-space-xl);
@@ -601,148 +601,6 @@ svg {
 }
 
 /* ======================================================================
-   4. The ascent
-   ====================================================================== */
-
-.ascent__body {
-  display: grid;
-  gap: var(--zg-space-xl);
-  margin-block-start: var(--zg-space-xl);
-}
-
-@media (min-width: 64rem) {
-  .ascent__body {
-    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
-    column-gap: var(--zg-space-xl);
-    align-items: start;
-  }
-
-  .ascent__stage {
-    position: sticky;
-    top: var(--zg-space-m);
-  }
-}
-
-.ascent__stage .figure {
-  background: var(--zg-raised);
-}
-
-.ascent__stage svg {
-  width: 100%;
-  height: auto;
-}
-
-.ascent__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  counter-reset: level -1;
-}
-
-.step {
-  display: grid;
-  grid-template-columns: var(--zg-rail) minmax(0, 1fr);
-  gap: 0 var(--zg-space-m);
-  padding-block: var(--zg-space-l);
-  border-top: var(--zg-hair) solid var(--zg-rule);
-}
-
-.step:first-child {
-  border-top: 0;
-  padding-block-start: 0;
-}
-
-/*
-  The elevation index is a measured datum, not a decorative eyebrow: the reader
-  is ascending a structure and the level is the fact that orders the sequence.
-*/
-.step__datum {
-  grid-row: 1 / span 3;
-  border-inline-end: var(--zg-hair) solid var(--zg-rule);
-  padding-inline-end: var(--zg-space-2xs);
-  text-align: end;
-  font-family: var(--zg-font-mono);
-  font-size: var(--zg-text--2);
-  color: var(--zg-ink-3);
-  line-height: 1.3;
-}
-
-.step__datum b {
-  display: block;
-  color: var(--zg-ink);
-  font-size: var(--zg-text-1);
-  font-weight: 600;
-}
-
-.step__tier {
-  display: block;
-  margin-block-start: var(--zg-space-3xs);
-  padding: 0.15em 0.4em;
-  font-size: var(--zg-text--2);
-  letter-spacing: 0.04em;
-}
-
-.step__tier[data-tier='bronze'] {
-  background: var(--zg-bronze-solid);
-  color: var(--zg-on-bronze);
-}
-
-.step__tier[data-tier='silver'] {
-  background: var(--zg-silver-solid);
-  color: var(--zg-on-silver);
-}
-
-.step__tier[data-tier='gold'] {
-  background: var(--zg-gold-solid);
-  color: var(--zg-on-gold);
-}
-
-.step__tier[data-tier='refused'] {
-  background: var(--zg-refuse-solid);
-  color: var(--zg-on-refuse);
-}
-
-.step__tier[data-tier='none'] {
-  border: var(--zg-hair) solid var(--zg-rule-strong);
-  color: var(--zg-ink-3);
-}
-
-.step h3 {
-  font-size: var(--zg-text-2);
-  letter-spacing: -0.02em;
-  margin-block-end: var(--zg-space-2xs);
-}
-
-.step p {
-  font-size: var(--zg-text-0);
-}
-
-.step__facts {
-  margin: var(--zg-space-s) 0 0;
-  padding: 0;
-  display: grid;
-  gap: var(--zg-space-3xs);
-  list-style: none;
-  font-family: var(--zg-font-mono);
-  font-size: var(--zg-text--2);
-  color: var(--zg-ink-2);
-  border-inline-start: var(--zg-hair) solid var(--zg-rule-strong);
-  padding-inline-start: var(--zg-space-s);
-}
-
-/* Machine facts are long unbreakable strings, so they must be allowed to break. */
-.step__facts li {
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 48rem) {
-  .step {
-    grid-template-columns: 4.5rem minmax(0, 1fr);
-    column-gap: var(--zg-space-s);
-  }
-}
-
-/* ======================================================================
    5. Isolated indexes
    ====================================================================== */
 
@@ -824,15 +682,6 @@ svg {
   }
 }
 
-.isolation-fig {
-  padding: var(--zg-space-m);
-  margin-block-start: var(--zg-space-l);
-}
-
-.isolation-fig svg {
-  width: 100%;
-  height: auto;
-}
 
 /* ======================================================================
    6. Guarantees beside non-guarantees
@@ -902,6 +751,11 @@ svg {
   align-items: start;
 }
 
+.path:last-child {
+  padding-block-end: 0;
+  border-bottom: 0;
+}
+
 @media (min-width: 60rem) {
   .path {
     grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
@@ -938,29 +792,41 @@ svg {
    8. Status and footer
    ====================================================================== */
 
-.status__grid {
-  display: grid;
-  gap: var(--zg-space-m);
+.status__body {
+  max-width: var(--zg-measure);
   margin-block-start: var(--zg-space-l);
 }
 
-@media (min-width: 60rem) {
-  .status__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--zg-space-xl);
-  }
+.status__body p {
+  font-size: var(--zg-text--1);
 }
 
-.status__grid p {
+.status__body dl {
+  margin: var(--zg-space-m) 0 0;
+}
+
+.status__body dt {
   font-size: var(--zg-text--1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--zg-ink-3);
+}
+
+.status__body dd {
+  margin: var(--zg-space-3xs) 0 0;
+}
+
+.status__body dd + dt {
+  margin-block-start: var(--zg-space-s);
 }
 
 .site-footer {
-  border-top: var(--zg-hair) solid var(--zg-rule-strong);
-  padding-block: var(--zg-space-l) var(--zg-space-xl);
+  padding-block: 0 var(--zg-space-xl);
   font-size: var(--zg-text--1);
   color: var(--zg-ink-3);
 }
+
+.site-footer > .wrap::before { content: ''; display: block; height: var(--zg-hair); background: var(--zg-rule-strong); margin-block-end: var(--zg-space-2xl); }
 
 .site-footer nav ul {
   display: flex;

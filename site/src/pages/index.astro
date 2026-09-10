@@ -4,7 +4,6 @@ import '../styles/home.css';
 import '../styles/motion.css';
 import ThemeScript from '../components/ThemeScript.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
-import AscentFigure from '../components/AscentFigure.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const url = (path: string) => `${base}/${path.replace(/^\//, '')}`;
@@ -13,90 +12,6 @@ const repo = 'https://github.com/patschmittdev/Ziggurat';
 const title = 'Ziggurat: models propose, humans decide what persists';
 const description =
   'A human-gated memory firewall. A model can draft an evidence-backed candidate for durable AI memory; nothing is admitted without a detached Ed25519 receipt from a key that operator policy assigns to a human reviewer.';
-
-type Step = {
-  level: string;
-  tier: 'none' | 'bronze' | 'silver' | 'gold' | 'refused';
-  tierLabel: string;
-  cursor: number;
-  heading: string;
-  body: string;
-  facts: string[];
-};
-
-const steps: Step[] = [
-  {
-    level: '00',
-    tier: 'none',
-    tierLabel: 'SOURCE',
-    cursor: 604,
-    heading: 'An untrusted document arrives',
-    body: 'The garden fixture includes a plausible-looking memo that instructs an AI to skip review and to remember a vendor as approved. Nothing in the capture path treats an inbox file as trustworthy, and nothing about its wording gives it standing.',
-    facts: ['inbox/poisoned-memory-rule.md', 'trust level: none'],
-  },
-  {
-    level: '01',
-    tier: 'bronze',
-    tierLabel: 'BRONZE',
-    cursor: 456,
-    heading: 'Capture preserves it without believing it',
-    body: 'ingest is the only writer of Bronze. The source must resolve to a real regular file physically under inbox/; absolute paths, traversal, symlinks, junctions, other reparse points, hard links, and directories are refused before the file is opened, copied, or deleted. The record is no-overwrite and body-hash verified; later mutation is detectable, not prevented. The hostile text is kept exactly as written, because Bronze is evidence rather than memory.',
-    facts: ['sensitivity: restricted', 'pii: unknown', 'body_sha256 verified'],
-  },
-  {
-    level: '02',
-    tier: 'silver',
-    tierLabel: 'SILVER',
-    cursor: 340,
-    heading: 'A model may draft, and may write nothing else',
-    body: 'The host reads Bronze on the model’s behalf. Each refine request carries a bounded reference block of host-selected records: at most 12 records, 32 KiB per record, and 256 KiB in total. Each record is labelled as non-instructional reference, with oversize records omitted rather than truncated. The model is handed no path it could fetch. It returns JSON, and the refine pathway can stage only a strict schema-version-2 proposal, whose every citation is revalidated against the real Bronze bytes, hashes, and line ranges.',
-    facts: [
-      '.ziggurat/proposals/<id>.json',
-      'no status, reviewer, or receipt fields',
-      'a fabricated quote or digest fails staging',
-    ],
-  },
-  {
-    level: '03',
-    tier: 'refused',
-    tierLabel: 'REFUSED',
-    cursor: 263,
-    heading: 'A page that reviews itself changes nothing',
-    body: 'A curated page can carry status: reviewed and any reviewer name its author likes. build reads it, and the Gold index does not change. There is no signer, apply, approve, or promote command and no --promote flag, so there is no capability behind the string.',
-    facts: ['reviewed_by is self-asserted metadata', 'no shipped code path admits a page without a valid receipt'],
-  },
-  {
-    level: '04',
-    tier: 'none',
-    tierLabel: 'SIGNED',
-    cursor: 214,
-    heading: 'An external key crosses the gap',
-    body: 'A human reads the review packet, independently verifies the cited Bronze, authors the page by hand, and signs a detached receipt using an Ed25519 private key kept outside the vault and outside model-accessible processes. The receipt binds the decision, the normalized target path, the canonical page digest, the reviewer, the review timestamp, and the trusted key.',
-    facts: [
-      'authorizations/<page>.authorization.json',
-      'public key listed in config/trust.yaml',
-      'the private key never enters the vault',
-    ],
-  },
-  {
-    level: '05',
-    tier: 'gold',
-    tierLabel: 'GOLD',
-    cursor: 152,
-    heading: 'Admission requires every check, not just a signature',
-    body: 'build admits a page to Gold only when every check holds: reviewed status, retrieval eligibility, pii: false, an allowed sensitivity, approved egress, current verification age, valid Bronze lineage, no unresolved contradiction, and a valid receipt. Missing or invalid authorization leaves the page out.',
-    facts: ['.ziggurat/gold-index.json', 'any unmet check fails closed'],
-  },
-  {
-    level: '06',
-    tier: 'none',
-    tierLabel: 'GOLD',
-    cursor: 62,
-    heading: 'Authorized is still not instruction authority',
-    body: 'Shipped MCP startup is Gold-only and read-only, exposing exactly search_context and read_context. Retrieval is bounded to 1024 query characters, 20 results per search, and 200 retained citations per session; reaching the ceiling evicts the oldest citation IDs, which revokes them. Every returned chunk, Gold included, reports content_role: reference and instruction_authority: none.',
-    facts: ['search_context, read_context', 'instruction_authority: none'],
-  },
-];
 
 const enforced = [
   '<strong>ingest</strong> is the only Bronze writer, and captures are no-overwrite and body-hash verified; later mutation is detectable, not prevented.',
@@ -262,21 +177,13 @@ const notGuaranteed = [
       <section class="band wrap" aria-labelledby="durable-title">
         <div class="split">
           <div class="prose" data-reveal="1">
+            <p class="band__kicker">The problem</p>
             <h2 id="durable-title">Durable memory turns one poisoned document into a repeated write</h2>
-            <p class="pull">
-              A prompt injection that fails is an incident. A prompt injection that persists is
-              an asset.
-            </p>
             <p>
               Persistent context means a poisoned document, a fabricated preference, or an
               embedded instruction outlives the session that introduced it. One bad write keeps
               paying out, and the payout is silent: later sessions read it as ordinary
               background.
-            </p>
-            <p>
-              Microsoft's <a href="https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/ai-memory-context-poisoning">AI Memory / Context Poisoning</a> entry describes the technique and recommends
-              governing memory writes, provenance, integrity, review, isolation, versioning, and
-              rollback. Ziggurat implements those controls as a Medallion pipeline.
             </p>
           </div>
 
@@ -336,6 +243,7 @@ const notGuaranteed = [
       <!-- 3. Metadata is not authority -->
       <section class="band wrap" aria-labelledby="metadata-title">
         <div class="band__head prose" data-reveal="1">
+          <p class="band__kicker">Metadata vs authorization</p>
           <h2 id="metadata-title">A reviewed_by field is a claim. A receipt is a capability.</h2>
           <p>
             Anything that can write the page can write the string. Review metadata records that
@@ -386,59 +294,43 @@ retrieval_eligible: true
         </div>
       </section>
 
-      <!-- 4. The ascent -->
-      <section class="band wrap ascent" id="ascent" aria-labelledby="ascent-title">
+      <!-- 4. The walkthrough summary -->
+      <section class="band wrap" id="ascent" aria-labelledby="ascent-title">
         <div class="band__head prose" data-reveal="1">
+          <p class="band__kicker">How it moves</p>
           <h2 id="ascent-title">Follow a poisoned memo up the structure</h2>
-          <p>
-            The seven levels below are the real path a hostile document takes through a vault.
-            The section beside them is drawn complete: nothing here depends on scrolling, and
-            nothing here depends on scripting.
-          </p>
         </div>
-
-        <div class="ascent__body">
-          <div class="ascent__stage">
-            <figure class="figure" data-reveal="2">
-              <AscentFigure />
-              <figcaption class="figure__caption">
-                <b>Figure 3.</b> Every retrieved chunk carries
-                <code>content_role: reference</code>
-                and <code>instruction_authority: none</code>; see
-                <a href={url('concepts/provenance-and-authority/')}>Gold's limits</a>.
-              </figcaption>
-            </figure>
-          </div>
-
-          <ol class="ascent__steps" data-reveal="3">
-            {
-              steps.map((step) => (
-                <li class="step" data-level={step.level} data-cursor={step.cursor}>
-                  <div class="step__datum">
-                    <b>{step.level}</b>
-                    <span class="step__tier" data-tier={step.tier}>
-                      {step.tierLabel}
-                    </span>
-                  </div>
-                  <h3>{step.heading}</h3>
-                  <div>
-                    <p>{step.body}</p>
-                    <ul class="step__facts" translate="no">
-                      {step.facts.map((fact) => (
-                        <li>{fact}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </li>
-              ))
-            }
-          </ol>
-        </div>
+        <table class="ledger" data-reveal="2">
+          <thead>
+            <tr>
+              <th scope="col">Step</th>
+              <th scope="col">Boundary</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Capture</th>
+              <td data-label="Boundary">Bronze: no-overwrite, hash-verified</td>
+            </tr>
+            <tr>
+              <th scope="row">Propose</th>
+              <td data-label="Boundary">Silver: model-originated, byte-checked citations, no authority</td>
+            </tr>
+            <tr>
+              <th scope="row">Admit</th>
+              <td data-label="Boundary">Gold: only with an external Ed25519 receipt</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="prose" data-reveal="3">
+          <a href={url('getting-started/garden-walkthrough/')}>Follow the full seven-step walkthrough</a>
+        </p>
       </section>
 
       <!-- 5. Physical index separation -->
       <section class="band wrap" aria-labelledby="isolation-title">
         <div class="band__head prose" data-reveal="1">
+          <p class="band__kicker">Storage</p>
           <h2 id="isolation-title">Three indexes, physically separate</h2>
           <p>
             build writes three separate version-2 indexes rather than one store with filters.
@@ -477,55 +369,12 @@ retrieval_eligible: true
             </tr>
           </tbody>
         </table>
-
-        <div class="split" style="margin-block-start: var(--zg-space-l)" data-reveal="3">
-          <p class="prose">
-            Review and evidence access is advisory. It is never proof of a human identity or of
-            an authorization decision, and neither index is opened by shipped MCP startup.
-          </p>
-
-          <figure class="figure isolation-fig">
-            <svg viewBox="0 0 480 196" role="img" aria-labelledby="iso-title iso-desc">
-              <title id="iso-title">Three separate index files</title>
-              <desc id="iso-desc">
-                Shipped MCP startup has a single arrow, and it points only at the Gold
-                index. The review and evidence indexes stand apart with no connection to the
-                MCP server and no connection to each other, because they are separate files
-                rather than views over one store.
-              </desc>
-
-              <text class="fig-label--small" x="0" y="14">shipped MCP startup</text>
-              <path class="fig-stroke-ink" stroke-width="1.5" d="M64 22V52" />
-              <path class="fig-ink" d="M59 52h10l-5 8Z"></path>
-
-              <rect x="0" y="62" width="140" height="66" fill="var(--zg-gold-field)" stroke="var(--zg-rule-strong)" stroke-width="1.5"></rect>
-              <text class="fig-label--small" x="12" y="88">gold-index</text>
-              <text class="fig-label--small" x="12" y="110">Gold only</text>
-              <text class="fig-label--small" x="0" y="152">exposed, read only</text>
-
-              <rect x="170" y="62" width="140" height="66" fill="var(--zg-silver-field)" stroke="var(--zg-rule-strong)" stroke-width="1.5"></rect>
-              <text class="fig-label--small" x="182" y="88">review-index</text>
-              <text class="fig-label--small" x="182" y="110">Silver + Gold</text>
-              <text class="fig-label--small" x="170" y="152">not exposed</text>
-
-              <rect x="340" y="62" width="140" height="66" fill="var(--zg-bronze-field)" stroke="var(--zg-rule-strong)" stroke-width="1.5"></rect>
-              <text class="fig-label--small" x="352" y="88">evidence-index</text>
-              <text class="fig-label--small" x="352" y="110">Bronze + Gold</text>
-              <text class="fig-label--small" x="340" y="152">not exposed</text>
-
-              <text class="fig-label--small" x="0" y="188">no shared store, and no path between the three files</text>
-            </svg>
-            <figcaption class="figure__caption">
-              <b>Figure 4.</b> Separation is structural. A filter is a runtime decision; a
-              separate file is not.
-            </figcaption>
-          </figure>
-        </div>
       </section>
 
       <!-- 6. Guarantees beside non-guarantees -->
       <section class="band wrap" aria-labelledby="guarantees-title">
         <div class="band__head prose" data-reveal="1">
+          <p class="band__kicker">Guarantees</p>
           <h2 id="guarantees-title">What is enforced, and what is not</h2>
           <p>
             The second column is not a disclaimer. A boundary you cannot describe the edges of is
@@ -552,6 +401,7 @@ retrieval_eligible: true
       <!-- 7. Evaluation paths -->
       <section class="band wrap" aria-labelledby="evaluate-title">
         <div class="band__head prose" data-reveal="1">
+          <p class="band__kicker">Run it</p>
           <h2 id="evaluate-title">Three ways to check this yourself</h2>
         </div>
 
@@ -607,20 +457,25 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
       <!-- 8. Honest status -->
       <section class="band wrap" aria-labelledby="status-title">
         <div class="band__head prose" data-reveal="1">
+          <p class="band__kicker">Status</p>
           <h2 id="status-title">Where this actually is</h2>
         </div>
-        <div class="status__grid" data-reveal="2">
+        <div class="status__body prose" data-reveal="2">
           <p>
-            Version 0.1 is a pre-release, single-operator reference implementation. The package
-            is private and source-distributed, so do not depend on the ziggurat npm package name.
+            The package is private and source-distributed, so do not depend on the ziggurat npm package name.
             Contracts, index formats, and CLI behaviour may change before 1.0.
           </p>
           <p>
-            It is not a hosted service, not an OS sandbox, and not a substitute for external key
-            custody. Continuous integration is configured to run the full suite on Linux, macOS, and Windows
+            Continuous integration is configured to run the full suite on Linux, macOS, and Windows
             against Node.js 22 and 24. There are no users, deployments, third-party audits, or
             benchmarks to report, and none are claimed.
           </p>
+          <dl>
+            <dt>What it is</dt>
+            <dd>pre-release, single-operator, source-distributed</dd>
+            <dt>What it is not</dt>
+            <dd>hosted service, OS sandbox, key custody</dd>
+          </dl>
         </div>
         <div class="actions" data-reveal="3">
           <a class="action action--primary" href={url('getting-started/overview/')}>Read the documentation</a>
@@ -651,74 +506,6 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
     </footer>
 
     <script>
-      /**
-       * Ascent controller.
-       *
-       * Adds a datum cursor that tracks the level being read. It is enabled only on wide
-       * viewports, where the section is sticky, and never when reduced motion is requested.
-       * It adds emphasis and removes nothing, so every fact stays legible in every state.
-       */
-      const figure = document.querySelector<SVGSVGElement>('[data-ascent-figure]');
-      const steps = Array.from(document.querySelectorAll<HTMLElement>('.step[data-cursor]'));
-
-      if (figure && steps.length > 0) {
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-        const wide = window.matchMedia('(min-width: 64rem)');
-        let observer: IntersectionObserver | null = null;
-
-        const clear = () => {
-          for (const step of steps) {
-            const level = step.dataset.level;
-            figure.querySelector(`.lvl[data-lvl="${Number(level)}"]`)?.classList.remove('is-active');
-          }
-          for (const group of figure.querySelectorAll('.lvl')) group.classList.remove('is-active');
-          figure.removeAttribute('data-active');
-          figure.style.removeProperty('--cursor-y');
-        };
-
-        const activate = (step: HTMLElement) => {
-          const index = steps.indexOf(step);
-          if (index < 0) return;
-          for (const group of figure.querySelectorAll('.lvl')) group.classList.remove('is-active');
-          figure.querySelector(`.lvl[data-lvl="${index}"]`)?.classList.add('is-active');
-          figure.style.setProperty('--cursor-y', `${step.dataset.cursor ?? 0}px`);
-          figure.setAttribute('data-active', '');
-        };
-
-        const disconnect = () => {
-          observer?.disconnect();
-          observer = null;
-          clear();
-        };
-
-        const connect = () => {
-          if (observer) return;
-          observer = new IntersectionObserver(
-            (entries) => {
-              const visible = entries
-                .filter((entry) => entry.isIntersecting)
-                .map((entry) => entry.target as HTMLElement);
-              if (visible.length > 0) {
-                visible.sort((a, b) => steps.indexOf(a) - steps.indexOf(b));
-                const first = visible[0];
-                if (first) activate(first);
-              }
-            },
-            { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
-          );
-          for (const step of steps) observer.observe(step);
-        };
-
-        const sync = () => {
-          if (reduced.matches || !wide.matches) disconnect();
-          else connect();
-        };
-
-        reduced.addEventListener('change', sync);
-        wide.addEventListener('change', sync);
-        sync();
-      }
-
       /**
        * Section-entry reveals.
        *
