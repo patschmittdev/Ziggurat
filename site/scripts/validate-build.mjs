@@ -12,18 +12,22 @@
  *   2. every internal link resolves to a real file in dist/
  *   3. every fragment resolves to an id in the target document
  *   4. every referenced asset exists, including root-relative url() in built CSS
+ *   5. page headings, metadata, language, resource URLs, and new-tab links are valid
+ *   6. repository blob links resolve to local files and Markdown heading anchors
  *
  * Uses only Node built-ins. No network access, no dependency, no heuristics.
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, posix, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SITE_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const REPO_ROOT = resolve(SITE_ROOT, '..');
 const DIST = join(SITE_ROOT, 'dist');
 const BASE = '/Ziggurat';
 const ORIGIN = 'https://patschmittdev.github.io';
+const REPO_BLOB = 'https://github.com/patschmittdev/Ziggurat/blob/main/';
 
 /** Schemes that leave the site and are not this script's business. */
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -35,6 +39,156 @@ const problems = [];
 
 /** @type {Map<string, Set<string>>} distRelativePath -> ids in that document */
 const idCache = new Map();
+
+const counts = { h1: 0, description: 0, canonical: 0, lang: 0, httpPages: 0, resources: 0, insecure: 0, noopener: 0, repositoryLinks: 0, repositoryAnchors: 0 };
+/** @type {Map<string, Set<string>>} */
+const headingCache = new Map();
+
+function decodeHtml(value) {
+  return value.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (entity, name) => {
+    const lower = name.toLowerCase();
+    if (lower.startsWith('#')) {
+      const code = lower.startsWith('#x') ? parseInt(lower.slice(2), 16) : Number(lower.slice(1));
+      return code <= 0x10ffff ? String.fromCodePoint(code) : entity;
+    }
+    return { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }[lower] ?? entity;
+  });
+}
+
+function markdownWithoutCode(source) {
+  let fence = '';
+  return source.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .split(/\r?\n/).map((line) => {
+      const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
+      if (fence) {
+        if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length &&
+            line.slice(marker[0].length).trim() === '') fence = '';
+        return '';
+      }
+      if (marker) { fence = marker[1]; return ''; }
+      return line;
+    }).join('\n');
+}
+
+function githubHeadingSlugs(source) {
+  const slugs = new Set();
+  const lines = markdownWithoutCode(source).split('\n');
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    let heading = line.match(/^ {0,3}#{1,6}[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/)?.[1];
+    if (heading === undefined && line.trim() && !/^ {4}|^\t/.test(line) &&
+        /^ {0,3}(?:=+|-+)[ \t]*$/.test(lines[index + 1] ?? '')) {
+      heading = line.trim();
+      index++;
+    }
+    if (heading === undefined) continue;
+    const text = decodeHtml(heading.replace(/<[^>]*>/g, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1'));
+    const base = text.toLowerCase().replace(/[^\p{L}\p{N}\p{M} -]/gu, '').replace(/ /g, '-');
+    let slug = base;
+    for (let suffix = 1; slugs.has(slug); suffix++) slug = `${base}-${suffix}`;
+    slugs.add(slug);
+  }
+  return slugs;
+}
+
+function attributes(tag) {
+  /** @type {Record<string, string>} */
+  const result = {};
+  for (const match of tag.matchAll(/([^\s=<>/]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)) {
+    result[match[1].toLowerCase()] = decodeHtml(match[2] ?? match[3] ?? match[4]);
+  }
+  return result;
+}
+
+function checkResource(raw, file) {
+  if (!raw.trim()) return;
+  counts.resources++;
+  if (/^http:\/\//i.test(raw.trim())) {
+    counts.insecure++;
+    problems.push({ file, url: raw, reason: 'resource URL must not use http://' });
+  }
+}
+
+function checkCssResources(css, file) {
+  for (const match of css.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)|@import\s+["']([^"']+)["']/gi)) {
+    checkResource(match[1] ?? match[2], file);
+  }
+}
+
+async function checkRepositoryLink(raw, file) {
+  if (!raw.startsWith(REPO_BLOB)) return;
+  counts.repositoryLinks++;
+  try {
+    const url = new URL(raw);
+    const path = decodeURIComponent(url.pathname.slice('/patschmittdev/Ziggurat/blob/main/'.length));
+    const target = resolve(REPO_ROOT, path);
+    const repoRelative = relative(REPO_ROOT, target);
+    if (!repoRelative || isAbsolute(repoRelative) || repoRelative === '..' || repoRelative.startsWith(`..${sep}`) ||
+        !(await exists(target))) {
+      problems.push({ file, url: raw, reason: 'repository blob target is not a file inside the repository' });
+      return;
+    }
+    if (!url.hash) return;
+    counts.repositoryAnchors++;
+    if (!headingCache.has(target)) headingCache.set(target, githubHeadingSlugs(await readFile(target, 'utf8')));
+    const fragment = decodeURIComponent(url.hash.slice(1));
+    if (!headingCache.get(target)?.has(fragment)) {
+      problems.push({ file, url: raw, reason: `fragment #${fragment} has no matching GitHub heading in ${repoRelative}` });
+    }
+  } catch (error) {
+    problems.push({ file, url: raw, reason: `cannot validate repository link: ${error.message}` });
+  }
+}
+
+async function checkPageRequirements(html, file) {
+  const markup = html.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/(<(script|style)\b[^>]*>)[\s\S]*?<\/\2\s*>/gi, '$1');
+  const tags = [...markup.matchAll(/<([a-z][a-z0-9:-]*)\b((?:"[^"]*"|'[^']*'|[^'">])*)>/gi)]
+    .map((match) => ({ name: match[1].toLowerCase(), attrs: attributes(match[2]) }));
+  const h1 = tags.filter((tag) => tag.name === 'h1').length;
+  counts.h1++;
+  counts.description++;
+  counts.canonical++;
+  counts.lang++;
+  counts.httpPages++;
+  const fail = (reason) => problems.push({ file, url: pageUrlFor(file), reason });
+  if (h1 !== 1) fail(`expected exactly one h1; found ${h1}`);
+  if (!tags.some(({ name, attrs }) => name === 'meta' && attrs.name?.toLowerCase() === 'description' && attrs.content?.trim())) {
+    fail('missing non-empty meta description');
+  }
+  if (!tags.some(({ name, attrs }) => name === 'link' && attrs.rel?.toLowerCase().split(/\s+/).includes('canonical') && attrs.href?.trim())) {
+    fail('missing canonical link');
+  }
+  if (!tags.some(({ name, attrs }) => name === 'html' && attrs.lang === 'en')) fail('html must declare lang="en"');
+
+  for (const { name, attrs } of tags) {
+    if (name === 'a') {
+      if (attrs.target?.toLowerCase() === '_blank') {
+        counts.noopener++;
+        if (!attrs.rel?.toLowerCase().split(/\s+/).includes('noopener')) {
+          problems.push({ file, url: attrs.href ?? '(no href)', reason: 'target="_blank" link must include rel="noopener"' });
+        }
+      }
+      if (attrs.href) await checkRepositoryLink(attrs.href, file);
+    }
+    for (const attribute of ['src', 'poster']) {
+      if (attrs[attribute]) checkResource(attrs[attribute], file);
+    }
+    if (name === 'object' && attrs.data) checkResource(attrs.data, file);
+    if (['link', 'image', 'use'].includes(name)) {
+      for (const attribute of ['href', 'xlink:href']) if (attrs[attribute]) checkResource(attrs[attribute], file);
+    }
+    if (attrs.srcset) {
+      for (const candidate of attrs.srcset.split(',')) checkResource(candidate.trim().split(/\s+/)[0], file);
+    }
+    if (name === 'meta' && /^(?:og:(?:image|video|audio)(?::url|:secure_url)?|twitter:image)$/i.test(attrs.property ?? attrs.name ?? '') && attrs.content) {
+      checkResource(attrs.content, file);
+    }
+    if (attrs.style) checkCssResources(attrs.style, file);
+  }
+  for (const match of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) checkCssResources(match[1], file);
+}
 
 async function walk(dir) {
   /** @type {string[]} */
@@ -195,6 +349,8 @@ async function checkHtml(file) {
   const pageUrl = pageUrlFor(distRelative);
   const html = await readFile(file, 'utf8');
 
+  await checkPageRequirements(html, distRelative);
+
   /** @type {Set<string>} */
   const seen = new Set();
   for (const match of html.matchAll(/\s(?:href|src)="([^"]*)"/g)) {
@@ -216,6 +372,7 @@ async function checkHtml(file) {
 async function checkCss(file) {
   const distRelative = relative(DIST, file);
   const css = await readFile(file, 'utf8');
+  checkCssResources(css, distRelative);
   /** @type {Set<string>} */
   const seen = new Set();
   for (const match of css.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)) {
@@ -270,7 +427,10 @@ async function main() {
   console.log(
     `validate-build: OK. ${html.length} page(s) and ${css.length} stylesheet(s) checked; ` +
       `${checkedLinks} document(s) scanned for heading targets; ` +
-      `every internal link, fragment, and asset resolves under ${BASE}/.`,
+      `every internal link, fragment, and asset resolves under ${BASE}/; ` +
+      `h1 ${counts.h1}, description ${counts.description}, canonical ${counts.canonical}, lang ${counts.lang}, ` +
+      `http-resource pages ${counts.httpPages}, resource URLs ${counts.resources}, insecure resources ${counts.insecure}, ` +
+      `noopener links ${counts.noopener}, outbound repository links ${counts.repositoryLinks}, repository anchors ${counts.repositoryAnchors}.`,
   );
 }
 
