@@ -33,7 +33,7 @@ node dist/src/cli/main.js --help
 ```
 
 `npm run check` cleans, rebuilds, and runs the full compiled test suite. See the
-[CLI reference](/Ziggurat/reference/cli/#commands) for command purposes.
+[CLI reference](../reference/cli.md#commands) for command purposes.
 In the help text below, 'immutable' means no-overwrite creation with detectable mutation, not filesystem immutability.
 
 ```text
@@ -66,7 +66,7 @@ npm link
 
 ## Next
 
-Create a vault in [Your first vault](/Ziggurat/getting-started/first-vault/).
+Create a vault in [Your first vault](./first-vault.md).
 
 ## Build the documentation site
 

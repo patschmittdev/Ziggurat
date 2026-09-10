@@ -48,7 +48,7 @@ A valid signature proves two things and no more:
 It does not prove that the signer was human, attended to the page, followed the recommended
 review workflow, or judged semantic support correctly. It also does not prove the content
 is true, safe, complete, or well-judged. See
-[Provenance, authorization, and instruction authority](/Ziggurat/concepts/provenance-and-authority/).
+[Provenance, authorization, and instruction authority](./provenance-and-authority.md).
 
 ## Where the key lives
 
@@ -66,6 +66,6 @@ something else.
 
 ## Related
 
-- [Human review and external authorization](/Ziggurat/guides/human-review-and-authorization/)
-- [Authorization protocol](/Ziggurat/reference/authorization-protocol/)
+- [Human review and external authorization](../guides/human-review-and-authorization.md)
+- [Authorization protocol](../reference/authorization-protocol.md)
 - [ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md)

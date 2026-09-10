@@ -68,7 +68,7 @@ unsupported and must be restaged or rebuilt.
 
 :::caution[Gold is not a truth label]
 Every retrieved chunk carries `content_role: reference` and
-`instruction_authority: none`; see [Gold's limits](/Ziggurat/concepts/provenance-and-authority/).
+`instruction_authority: none`; see [Gold's limits](./provenance-and-authority.md).
 :::
 
 ## Crossing between tiers
@@ -87,5 +87,5 @@ listing its ID in the signed page.
 
 ## Related
 
-- [Ingest and refine](/Ziggurat/guides/ingest-and-refine/)
-- [The human authority boundary](/Ziggurat/concepts/human-authority-boundary/)
+- [Ingest and refine](../guides/ingest-and-refine.md)
+- [The human authority boundary](./human-authority-boundary.md)

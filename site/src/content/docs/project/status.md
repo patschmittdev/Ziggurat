@@ -54,5 +54,5 @@ Indexes built by earlier pre-release builds use a different profile value and fa
 
 ## Related
 
-- [Contributing](/Ziggurat/project/contributing/)
-- [Support](/Ziggurat/project/support/)
+- [Contributing](./contributing.md)
+- [Support](./support.md)

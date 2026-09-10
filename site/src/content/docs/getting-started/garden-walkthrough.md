@@ -59,7 +59,7 @@ steps.
 
 ## Next
 
-- [The human authority boundary](/Ziggurat/concepts/human-authority-boundary/) explains what the
+- [The human authority boundary](../concepts/human-authority-boundary.md) explains what the
   script stops at.
-- [Attack-control mapping](/Ziggurat/security/attack-controls/) maps this scenario to the
+- [Attack-control mapping](../security/attack-controls.md) maps this scenario to the
   memory-poisoning controls it implements.

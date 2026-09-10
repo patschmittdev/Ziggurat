@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import remarkRelativeMdLinks from './plugins/remark-relative-md-links.mjs';
 
 const repository = 'https://github.com/patschmittdev/Ziggurat';
 
@@ -9,6 +10,7 @@ export default defineConfig({
   site: 'https://patschmittdev.github.io',
   base: '/Ziggurat',
   trailingSlash: 'ignore',
+  markdown: { remarkPlugins: [remarkRelativeMdLinks] },
   integrations: [
     starlight({
       title: 'Ziggurat',

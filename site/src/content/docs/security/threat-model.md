@@ -71,5 +71,5 @@ which specifies safe report contents and promises no response-time service level
 
 ## Related
 
-- [Attack-control mapping](/Ziggurat/security/attack-controls/)
-- [Guarantees and residual risks](/Ziggurat/security/guarantees/)
+- [Attack-control mapping](./attack-controls.md)
+- [Guarantees and residual risks](./guarantees.md)

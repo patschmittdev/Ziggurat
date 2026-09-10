@@ -51,5 +51,5 @@ ignore rules before committing them.
 
 ## Related
 
-- [Integrity verification and recovery](/Ziggurat/guides/integrity-and-recovery/)
-- [Gold MCP](/Ziggurat/guides/mcp-gold/)
+- [Integrity verification and recovery](../guides/integrity-and-recovery.md)
+- [Gold MCP](../guides/mcp-gold.md)
