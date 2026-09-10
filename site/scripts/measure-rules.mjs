@@ -98,7 +98,7 @@ try {
 
       const gaps = bands.map((band) => {
         const previous = band.previousElementSibling;
-        const content = [...previous.querySelectorAll('h1, h2, h3, p, li, pre, table, figcaption, dt, dd, .action')].filter(visible);
+        const content = [...previous.querySelectorAll('h1, h2, h3, p, li, pre, table, figure, figcaption, dt, dd, .action')].filter(visible);
         if (!content.length) throw new Error('No content at band boundary');
         const last = content.reduce((a, b) => rect(a).bottom > rect(b).bottom ? a : b);
         const heading = band.querySelector('h2');
