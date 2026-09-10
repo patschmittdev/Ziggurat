@@ -238,14 +238,11 @@ svg {
    ====================================================================== */
 
 .band {
-  padding-block: var(--zg-space-2xl);
-  border-top: var(--zg-hair) solid var(--zg-rule-strong);
+  padding-block: var(--zg-space-xl) var(--zg-space-xl);
 }
 
-.band--flush {
-  border-top: 0;
-  padding-block-start: var(--zg-space-xl);
-}
+.band::before { content: ''; display: block; height: var(--zg-hair); background: var(--zg-rule-strong); margin-block-end: var(--zg-space-2xl); }
+.band--flush::before { display: none; }
 
 .band__head {
   max-width: var(--zg-measure);
@@ -327,7 +324,7 @@ svg {
 .thesis {
   display: grid;
   gap: var(--zg-space-xl);
-  padding-block: var(--zg-space-l) var(--zg-space-2xl);
+  padding-block: var(--zg-space-l) var(--zg-space-xl);
 }
 
 @media (min-width: 64rem) {
@@ -902,6 +899,11 @@ svg {
   align-items: start;
 }
 
+.path:last-child {
+  padding-block-end: 0;
+  border-bottom: 0;
+}
+
 @media (min-width: 60rem) {
   .path {
     grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
@@ -956,11 +958,12 @@ svg {
 }
 
 .site-footer {
-  border-top: var(--zg-hair) solid var(--zg-rule-strong);
-  padding-block: var(--zg-space-l) var(--zg-space-xl);
+  padding-block: 0 var(--zg-space-xl);
   font-size: var(--zg-text--1);
   color: var(--zg-ink-3);
 }
+
+.site-footer > .wrap::before { content: ''; display: block; height: var(--zg-hair); background: var(--zg-rule-strong); margin-block-end: var(--zg-space-2xl); }
 
 .site-footer nav ul {
   display: flex;
