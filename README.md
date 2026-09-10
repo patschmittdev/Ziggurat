@@ -204,6 +204,8 @@ npm run check         # type check, production build, built-output validation
 
 The site is not deployed while this repository is private.
 
+**Local-only gate (CI/Actions paused):** From `site/`, run `npx playwright install chromium` once, then `npm run visual` for visual and accessibility checks; screenshots land in `site/.artifacts/`. This gate is NOT part of `npm run check`.
+
 Canonical repository specifications:
 
 - [Architecture](ARCHITECTURE.md) - assets, actors, trust boundaries, enforcement points
