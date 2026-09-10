@@ -197,14 +197,15 @@ svg {
   min-width: 44px;
   padding-inline: var(--zg-space-2xs);
   background: transparent;
-  border: var(--zg-hair) solid var(--zg-rule-strong);
+  border: var(--zg-hair) solid transparent;
   color: var(--zg-ink-2);
   font: inherit;
   font-size: var(--zg-text--2);
   cursor: pointer;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
   color: var(--zg-ink);
   border-color: var(--zg-ink-2);
 }
@@ -436,8 +437,10 @@ svg {
 
 .boundary__list li::before {
   content: '';
-  height: 0.55em;
-  border-bottom: 2px solid currentcolor;
+  width: 0.4em;
+  height: 0.4em;
+  background: currentcolor;
+  margin-block-start: 0.45em;
   color: var(--zg-ink-3);
 }
 
@@ -955,7 +958,7 @@ svg {
 .site-footer {
   border-top: var(--zg-hair) solid var(--zg-rule-strong);
   padding-block: var(--zg-space-l) var(--zg-space-xl);
-  font-size: var(--zg-text--2);
+  font-size: var(--zg-text--1);
   color: var(--zg-ink-3);
 }
 
