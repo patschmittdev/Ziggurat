@@ -13,6 +13,8 @@ Every item is verifiable locally and must pass before a publication commit merge
 
 - [x] `npm ci` installs cleanly and reports no vulnerabilities.
 - [x] `npm run check` passes. It cleans, builds, and runs the full compiled suite.
+- [x] `npm run check:links` passes as part of `npm run check` after the tests.
+      Evidence (2026-09-09): 29 files scanned, 110 links checked, 0 failures.
 - [x] With Node.js 22.12.0 or newer, `npm ci` inside `site/` installs cleanly and reports
       no vulnerabilities. Root `npm ci` does not install site dependencies.
 - [x] After the site install, `npm run site:check` passes. It type-checks the
