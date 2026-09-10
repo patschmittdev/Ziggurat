@@ -1049,7 +1049,7 @@ svg {
 
    One rule: hover states confirm interactivity; they never move layout.
    The masthead mark sits in ink by default and takes its tier colors on
-   hover or keyboard focus — everywhere else the mark stays colored.
+   hover or keyboard focus. Everywhere else the mark stays colored.
    ====================================================================== */
 
 a {
