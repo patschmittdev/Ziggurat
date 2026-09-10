@@ -53,8 +53,8 @@ returning a degraded answer.
 ## Editor binding
 
 The VS Code binding in `.vscode/mcp.json` starts the Gold MCP server without a selectable profile.
-Configure model and embedding endpoints only in `config/adapters.yaml`, and only as HTTP
-loopback addresses.
+Configure the model endpoint only in `config/adapters.yaml`, and only as an HTTP
+loopback address.
 
 ## Command-line equivalent
 

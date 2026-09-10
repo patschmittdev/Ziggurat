@@ -91,7 +91,7 @@ owns their explanation:
   trust anchors, receipts, or indexes.
 - Every Silver citation is revalidated against stored Bronze text, hashes, and line
   ranges on disk; no semantic entailment or factual truth guarantee.
-- Model and embedding endpoints: HTTP loopback only; refine is the only shipped
+- Model endpoint: HTTP loopback only; refine is the only shipped
   caller, with no redirects, a 30 second deadline, and 1 MiB request and response
   ceilings.
 - Retrieval bounds: 1,024 query UTF-16 code units, 20 results per search, and 200

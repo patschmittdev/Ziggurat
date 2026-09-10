@@ -10,6 +10,8 @@ separate file is a structural one.
 The Gold index holds eligible knowledge chunks externally
 authorized by a configured key.
 
+Retrieval is lexical (BM25) over the Gold index. No embeddings are computed and no vector index exists.
+
 | Index | Contents | Intended use |
 |---|---|---|
 | `.ziggurat/gold-index.json` | Authorized Gold only | Answer context |
