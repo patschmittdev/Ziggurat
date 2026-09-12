@@ -9,6 +9,10 @@ import { runQuery } from './commands/query.js';
 import { runMcp } from './commands/mcp.js';
 import { runCheck } from './commands/check.js';
 import { runEval } from './commands/eval.js';
+import { RefinementError } from '../refine/errors.js';
+import { AdapterError } from '../refine/adapter.js';
+import { IndexVerificationError } from '../retrieval/verify.js';
+import { inertSingleLineText } from '../presentation/inert.js';
 
 export interface CliIO {
   stdout: (text: string) => void;
@@ -25,11 +29,11 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
   try {
     parsed = parseCliArgs(args);
   } catch (err) {
-    io.stderr(`error: ${err instanceof Error ? err.message : String(err)}\n`);
+    io.stderr(`error: ${inertSingleLineText(err instanceof Error ? err.message : String(err))}\n`);
     return 1;
   }
 
-  const { command, root, file, query, sources, json, help } = parsed;
+  const { command, root, file, query, sources, target, order, cursor, json, help } = parsed;
   if (help) {
     io.stdout(renderHelp(command));
     return 0;
@@ -39,8 +43,8 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
     switch (command) {
       case 'init':    return await runInit(root, io);
       case 'ingest':  return await runIngest(root, file, json, io);
-      case 'refine':  return await runRefine(root, query, json, io, { sources });
-      case 'review':  return await runReview(root, json, io);
+      case 'refine':  return await runRefine(root, query, json, io, { sources, target });
+      case 'review':  return await runReview(root, json, io, { order, cursor });
       case 'build':   return await runBuild(root, json, io);
       case 'query':   return await runQuery(root, query, json, io);
       case 'mcp':     return await runMcp(root, json, io);
@@ -50,7 +54,21 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
     io.stderr('error: command is required\n');
     return 1;
   } catch (err) {
-    io.stderr(`error: ${err instanceof Error ? err.message : String(err)}\n`);
+    if (err instanceof IndexVerificationError) {
+      const message = inertSingleLineText(err.message);
+      io.stderr(json
+        ? JSON.stringify({ error: { code: err.code, message, reason_codes: err.reason_codes } }) + '\n'
+        : `error [${err.code}]: ${message}\n`);
+      return 1;
+    }
+    if (err instanceof RefinementError || err instanceof AdapterError) {
+      const message = inertSingleLineText(err.message);
+      io.stderr(json
+        ? JSON.stringify({ error: { code: err.code, message } }) + '\n'
+        : `error [${err.code}]: ${message}\n`);
+      return 1;
+    }
+    io.stderr(`error: ${inertSingleLineText(err instanceof Error ? err.message : String(err))}\n`);
     return 1;
   }
 
@@ -59,8 +77,8 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
       const usage: Record<import('./args.js').CliCommand, string> = {
         init: 'ziggurat init --root <vault>',
         ingest: 'ziggurat ingest --root <vault> --file <inbox-file>',
-        refine: 'ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...',
-        review: 'ziggurat review --root <vault>',
+        refine: 'ziggurat refine --root <vault> --query <request> [--source <bronze-path>]... [--target <knowledge-path>]',
+        review: 'ziggurat review --root <vault> [--order priority|oldest] [--cursor <token>]',
         build: 'ziggurat build --root <vault>',
         query: 'ziggurat query --root <vault> --query <text>',
         mcp: 'ziggurat mcp --root <vault>',
@@ -87,6 +105,7 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
       '',
       'Gold MCP: ziggurat mcp --root <vault>',
       'Common options: --root <vault> --json --help',
+      'review options: --order priority|oldest --cursor <token> (read-only, state-bound pagination).',
       'check option:  --audit-clean-room  Select the clean-room release audit.',
       '               check runs that audit either way; the flag names the gate',
       '               explicitly and is rejected by every other command.',

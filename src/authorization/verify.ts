@@ -15,6 +15,7 @@ import {
   canonicalReceiptContent,
 } from './canonical.js';
 import { assertRealPathWithinRoot } from '../fs/boundary.js';
+import type { PolicyReason, PolicyReasonCode } from '../policy/reasons.js';
 
 export interface VerifiedAuthorization {
   receipt_path: string;
@@ -31,6 +32,7 @@ export interface VerifiedAuthorization {
 export interface AuthorizationReport {
   valid: boolean;
   reasons: string[];
+  reason_details: PolicyReason[];
   authorization?: VerifiedAuthorization;
 }
 
@@ -51,9 +53,18 @@ export async function verifyPageAuthorization(
   body: string,
   config: ZigguratConfig,
 ): Promise<AuthorizationReport> {
-  const reasons: string[] = [];
+  const reason_details: PolicyReason[] = [];
   let receipt: AuthorizationReceipt;
   const receiptPath = authorizationReceiptPath(targetPath);
+  const reject = (code: PolicyReasonCode, message: string, field?: string): void => {
+    reason_details.push({
+      code, message, path: receiptPath, ...(field === undefined ? {} : { field }),
+    });
+  };
+  const rejected = (): AuthorizationReport => {
+    reason_details.sort((a, b) => a.message < b.message ? -1 : a.message > b.message ? 1 : 0);
+    return { valid: false, reasons: reason_details.map(reason => reason.message), reason_details };
+  };
 
   try {
     const fullReceiptPath = join(root, receiptPath);
@@ -61,60 +72,62 @@ export async function verifyPageAuthorization(
     const parsed = JSON.parse(await readFile(fullReceiptPath, 'utf8')) as unknown;
     const result = AuthorizationReceiptSchema.safeParse(parsed);
     if (!result.success) {
-      return { valid: false, reasons: ['authorization receipt failed strict schema validation'] };
+      reject('authorization.receipt-schema-invalid', 'authorization receipt failed strict schema validation');
+      return rejected();
     }
     receipt = result.data;
   } catch {
-    return { valid: false, reasons: ['authorization receipt is missing or unreadable'] };
+    reject('authorization.receipt-unreadable', 'authorization receipt is missing or unreadable');
+    return rejected();
   }
 
   const contentSha256 = canonicalPageSha256(targetPath, page, body);
   if (receipt.target_path !== targetPath) {
-    reasons.push('authorization target path does not match page');
+    reject('authorization.target-mismatch', 'authorization target path does not match page', 'target_path');
   }
   if (receipt.content_sha256 !== contentSha256) {
-    reasons.push('authorization content digest does not match page');
+    reject('authorization.content-mismatch', 'authorization content digest does not match page', 'content_sha256');
   }
   if (receipt.reviewer_id !== page.reviewed_by) {
-    reasons.push('authorization reviewer identity does not match page');
+    reject('authorization.reviewer-mismatch', 'authorization reviewer identity does not match page', 'reviewer_id');
   }
   if (receipt.reviewed_at !== page.reviewed_at) {
-    reasons.push('authorization review timestamp does not match page');
+    reject('authorization.reviewed-at-mismatch', 'authorization review timestamp does not match page', 'reviewed_at');
   }
 
   const reviewer = config.trust.reviewers.find(candidate =>
     candidate.reviewer_id === receipt.reviewer_id && candidate.key_id === receipt.key_id);
   if (reviewer === undefined) {
-    reasons.push('authorization reviewer key is not trusted');
+    reject('authorization.key-untrusted', 'authorization reviewer key is not trusted', 'key_id');
   } else {
     try {
       const publicKey = createPublicKey(reviewer.public_key_pem);
       if (publicKey.asymmetricKeyType !== 'ed25519') {
-        reasons.push('authorization key must be Ed25519');
+        reject('authorization.key-algorithm', 'authorization key must be Ed25519', 'key_id');
       } else {
         const signature = decodeCanonicalBase64(receipt.signature);
         if (signature === null || signature.length !== 64) {
-          reasons.push('authorization signature is not canonical Ed25519 base64');
+          reject('authorization.signature-encoding', 'authorization signature is not canonical Ed25519 base64', 'signature');
         } else if (!verify(
           null,
           authorizationSigningPayload(receipt),
           publicKey,
           signature,
         )) {
-          reasons.push('authorization signature verification failed');
+          reject('authorization.signature-invalid', 'authorization signature verification failed', 'signature');
         }
       }
     } catch {
-      reasons.push('authorization public key is invalid');
+      reject('authorization.key-invalid', 'authorization public key is invalid', 'key_id');
     }
   }
 
-  reasons.sort();
-  if (reasons.length > 0) return { valid: false, reasons };
+  if (reason_details.length > 0) return rejected();
 
   return {
     valid: true,
     reasons: [],
+    reason_details: [],
     authorization: {
       receipt_path: receiptPath,
       receipt_sha256: sha256Text(canonicalReceiptContent(receipt)),

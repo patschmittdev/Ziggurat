@@ -61,9 +61,9 @@ export const ProfileChunkSchema = z.object({
   path: z.string().min(1),
   heading: z.string().min(1),
   body: z.string().min(1),
-  profile: z.enum(['review', 'evidence']),
   tier: z.enum(['gold', 'silver', 'bronze']),
   status: z.enum(['bronze', 'staged', 'reviewed']),
+  profile: z.enum(['review', 'evidence']),
   content_role: z.literal('reference'),
   instruction_authority: z.literal('none'),
   provenance: ProfileProvenanceSchema,
@@ -71,13 +71,23 @@ export const ProfileChunkSchema = z.object({
 
 export type ProfileChunk = z.infer<typeof ProfileChunkSchema>;
 
+// z.record strips "__proto__". Validate entries, then define plain own properties
+// so arbitrary search keys survive loading and deep-strict snapshot verification.
+function searchRecord<T>(valueSchema: z.ZodType<T>) {
+  return z.preprocess(
+    input => input !== null && typeof input === 'object' && !Array.isArray(input)
+      ? Object.entries(input) : null,
+    z.array(z.tuple([z.string(), valueSchema])),
+  ).transform(entries => Object.fromEntries(entries) as Record<string, T>);
+}
+
 export const Bm25SnapshotSchema = z.object({
   k1: z.number(),
   b: z.number(),
   avg_doc_length: z.number(),
   doc_count: z.number(),
-  doc_lengths: z.record(z.string(), z.number()),
-  term_doc_freqs: z.record(z.string(), z.record(z.string(), z.number())),
+  doc_lengths: searchRecord(z.number()),
+  term_doc_freqs: searchRecord(searchRecord(z.number())),
 }).strict();
 
 export type Bm25Snapshot = z.infer<typeof Bm25SnapshotSchema>;

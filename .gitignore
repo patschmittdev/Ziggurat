@@ -15,3 +15,6 @@ debug-output.txt
 
 # Browser automation scratch output
 .playwright-mcp/
+
+# Local model evaluation artifacts
+.model-runs/

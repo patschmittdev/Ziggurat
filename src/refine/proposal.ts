@@ -16,6 +16,9 @@ import { buildBronzeReference, buildRefineMessages } from './context.js';
 import type { StructuredChatAdapter, ChatMessage } from './adapter.js';
 import type { z } from 'zod';
 import { assertRealPathWithinRoot } from '../fs/boundary.js';
+import { materializeDraft, readTargetSnapshot } from './materialize.js';
+import type { BronzeReference } from './context.js';
+import { RefinementError } from './errors.js';
 
 export type { StructuredChatAdapter, ChatMessage } from './adapter.js';
 
@@ -23,8 +26,8 @@ export interface RefinementInput {
   /** Absolute path to the vault root, used for evidence validation and staging. */
   root: string;
   topic: string;
-  target_path: string;
-  bronze_source_paths: string[];
+  target_path?: string | undefined;
+  bronze_source_paths?: readonly string[] | undefined;
   existing_content?: string;
 }
 
@@ -60,17 +63,17 @@ async function assertOperationMatchesTarget(
 
   if (proposal.operation === 'create') {
     if (current !== undefined) {
-      throw new Error(`Create proposal target already exists: ${proposal.target_path}`);
+      throw new RefinementError('target-changed', `Create proposal target already exists: ${proposal.target_path}`);
     }
     return;
   }
 
   if (current === undefined) {
-    throw new Error(`${proposal.operation} proposal target does not exist: ${proposal.target_path}`);
+    throw new RefinementError('target-changed', `${proposal.operation} proposal target does not exist: ${proposal.target_path}`);
   }
   const actual = sha256Text(normalizeText(current));
   if (actual !== proposal.base_content_sha256) {
-    throw new Error(
+    throw new RefinementError('target-changed',
       `Base content hash mismatch for ${proposal.target_path}: expected ${proposal.base_content_sha256}, got ${actual}`,
     );
   }
@@ -90,11 +93,17 @@ export async function stageProposal(
   const payload = RefinementProposalPayloadSchema.parse(unknownProposal);
 
   for (const citation of allEvidence(payload)) {
-    const error = await validateEvidenceCitation(root, citation);
-    if (error !== null) {
-      throw new Error(
-        `Evidence citation failed: ${error.source_path} (${error.failed_field}): ${error.message}`,
-      );
+    try {
+      const error = await validateEvidenceCitation(root, citation);
+      if (error !== null) {
+        throw new RefinementError(
+          'evidence-changed',
+          `Evidence citation failed: ${error.source_path} (${error.failed_field}): ${error.message}`,
+        );
+      }
+    } catch (error) {
+      if (error instanceof RefinementError) throw error;
+      throw new RefinementError('evidence-changed', 'Evidence citation failed: stored Bronze is no longer verifiable.');
     }
   }
   await assertOperationMatchesTarget(root, payload);
@@ -141,29 +150,48 @@ export async function stageProposal(
 }
 
 /**
- * Requests a Silver refinement from the adapter, then delegates to stageProposal
- * which parses, validates all evidence citations, and atomically stages on disk.
- *
- * The host reads Bronze and puts the selected bytes in the request. The adapter never
- * receives a path it can fetch, and the returned proposal is still validated against
- * the real files on disk, so a fabricated quote or digest fails staging.
+ * Both the CLI and library use this host-controlled draft-to-Silver boundary.
  */
-export async function requestRefinement(
+export async function executeRefinement(
   adapter: StructuredChatAdapter,
   input: RefinementInput,
-): Promise<RefinementProposal> {
+  options: { onReference?: (reference: BronzeReference) => void } = {},
+): Promise<StagedProposalResult & { reference: BronzeReference }> {
   const reference = await buildBronzeReference(input.root, {
     sourcePaths: input.bronze_source_paths,
   });
+  options.onReference?.(reference);
+  if (reference.sources.length === 0) {
+    throw new RefinementError(
+      'no-evidence',
+      'No Bronze evidence is available for this request. Check source selection, privacy policy, integrity, and reference limits.',
+    );
+  }
+  const target = input.target_path === undefined
+    ? undefined
+    : await readTargetSnapshot(input.root, input.target_path);
+  if (input.existing_content !== undefined
+    && (target?.content === undefined
+      || normalizeText(input.existing_content) !== normalizeText(target.content))) {
+    throw new RefinementError('target-context', 'Supplied existing content does not match the host-read target.');
+  }
   const messages: ChatMessage[] = buildRefineMessages(
     {
       topic: input.topic,
       target_path: input.target_path,
-      existing_content: input.existing_content,
+      existing_content: target?.content,
     },
     reference,
   );
 
   const raw = await adapter.completeJson(messages);
-  return (await stageProposal(input.root, raw)).proposal;
+  const payload = materializeDraft(raw, reference, target);
+  return { ...await stageProposal(input.root, payload), reference };
+}
+
+export async function requestRefinement(
+  adapter: StructuredChatAdapter,
+  input: RefinementInput,
+): Promise<RefinementProposal> {
+  return (await executeRefinement(adapter, input)).proposal;
 }

@@ -18,8 +18,9 @@ memory can be governed. Secondary users are contributors who need operating docu
 
 Ziggurat is a human-gated memory firewall: a local TypeScript reference
 implementation that treats durable AI memory as a privileged write surface. A model
-may read authorized content and return a candidate with byte-validated citations. The
-refine host may persist that model-originated JSON only as Silver. Gold admission
+may read authorized content and return a strict version-1 refinement draft with source
+IDs and line ranges. The refine host derives canonical citations and version-2 Silver,
+then validates and persists only that Silver artifact. Gold admission
 requires a valid receipt from a configured Ed25519 key that operator policy assigns to
 a reviewer. Ziggurat verifies key control and exact-content authorization; it does not
 prove humanity, attention, review quality, semantic support, or factual truth.
@@ -60,9 +61,10 @@ The pipeline the documentation must explain:
 1. `ingest` captures untrusted `inbox/` Markdown as canonical UTF-8 Bronze evidence
    after CRLF-to-LF normalization. Its API uses atomic no-overwrite creation, and
    SHA-256 verification detects later body mutation.
-2. `refine` sends a bounded, labeled, host-selected Bronze reference block to a
-   loopback model. The host validates and persists one model-originated strict
-   schema-version-2 Silver proposal.
+2. `refine` sends a bounded, labeled, host-selected Bronze reference block and optional
+   host-read `--target` context to a loopback model. The model returns a strict
+   `RefinementDraft` v1. The host derives canonical citations, hashes, lineage, and target
+   base state, then validates and persists one strict schema-version-2 Silver proposal.
 3. `review` renders the complete candidate, exact citations, and contradictions for
    a human, marking untrusted text as non-instructional reference.
 4. In the recommended workflow, a reviewer independently checks the citations, authors
@@ -86,14 +88,25 @@ owns their explanation:
   `instruction_authority: none`; see
   [Gold's limits](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 - Distinct claims: provenance, persistence authorization, and instruction authority.
-- Refine output: one model-originated artifact type, strict v2 Silver JSON under
-  `.ziggurat/proposals/`; no writes to Bronze, knowledge pages, reviewed metadata,
-  trust anchors, receipts, or indexes.
+- Model output: strict `RefinementDraft` v1 with source IDs and line ranges, not complete
+  Silver or model-calculated hashes. Only supplied reference bytes may be cited.
+- Refine storage: one model-originated artifact type, host-materialized strict v2 Silver
+  JSON under `.ziggurat/proposals/`; no writes to Bronze, knowledge pages, reviewed
+  metadata, trust anchors, receipts, or indexes.
+- `--target` supplies host-read existing page context and is required for amend and
+  contradict. Explicit `--source` remains an operator-authorized privacy disclosure.
 - Every Silver citation is revalidated against stored Bronze text, hashes, and line
   ranges on disk; no semantic entailment or factual truth guarantee.
 - Model endpoint: HTTP loopback only; refine is the only shipped
   caller, with no redirects, a 30 second deadline, and 1 MiB request and response
   ceilings.
+- Supported adapter: llama.cpp non-streaming `POST /v1/chat/completions`, a Zod-derived
+  schema nested under `response_format.json_schema` with name
+  `ziggurat_refinement_draft` and `strict: true`, `max_tokens: 2048`, `temperature: 0`, and one finished
+  assistant text response. No repair, fallback, retries, or tool calls. Optional
+  `adapters.model_name` defaults to `ziggurat-refine`.
+- Draft v1 is not a storage migration: stored Silver and indexes remain v2, external
+  authorization receipts remain v1, and shipped MCP remains Gold-only and read-only.
 - Retrieval bounds: 1,024 query UTF-16 code units, 20 results per search, and 200
   retained citations per session; evicted IDs become invalid.
 - Version 0.1: pre-release, single-operator, source-distributed;
@@ -110,7 +123,8 @@ Documentation-site constraints:
 - At this commit the repository is private, and the Pages workflow remains inert. A
   later public release may deploy only after visibility is explicitly public and the
   publication checklist passes.
-- `SECURITY.md`, `ARCHITECTURE.md`, and `docs/authorization-protocol.md` remain
+- `SECURITY.md`, `ARCHITECTURE.md`, `docs/authorization-protocol.md`, and
+  `docs/local-model-protocol.md` remain
   canonical repository specifications at their existing paths. Site pages explain and
   link to them rather than copying their full text.
 - The eventual public target is `https://patschmittdev.github.io/Ziggurat/` with base
@@ -135,7 +149,8 @@ DESIGN.md is a design-token specification for the site, not evaluator reading.
 Real material that exists in this repository and may be shown:
 
 - `README.md`, `ARCHITECTURE.md`, `SECURITY.md`, `docs/authorization-protocol.md`,
-  `docs/release-checklist.md`, `CONTRIBUTING.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`.
+  `docs/local-model-protocol.md`, `docs/release-checklist.md`, `CONTRIBUTING.md`,
+  `SUPPORT.md`, `CODE_OF_CONDUCT.md`.
 - `fixtures/garden/inbox/poisoned-memory-rule.md`, a plausible memo instructing an AI
   to skip review and remember a vendor as approved.
 - `test/memory-boundary.test.ts`, which demonstrates the complete defense end to end.
@@ -150,6 +165,15 @@ Real material that exists in this repository and may be shown:
 Absences that must not be fabricated: no documented users or adoption figures, no known
 deployment, no third-party audit, no benchmark, no testimonial, no press, and no release
 tag.
+
+The opt-in `npm run eval:model` gate targets 30 cases across create, amend, and
+contradict, three runs each: 90 attempts without retries. Acceptance requires at least
+81 staged proposals, 72 human-scored usable proposals, and at least one usable example
+of each operation. A pinned setup candidate or machine staging result is not a passed
+quality gate. Missing actual human scores leave
+the gate pending; do not present intended versions, thresholds, or fixtures as measured
+model performance. Setup and protocol pilot probes are excluded from the frozen 90
+attempts and cannot replace failed evaluation attempts.
 
 ## Product Principles
 

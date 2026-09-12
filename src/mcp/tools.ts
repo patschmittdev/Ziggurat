@@ -2,7 +2,8 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { ContextAccess } from './access.js';
 import { ACCESS_LIMITS } from './access.js';
-import { safeJsonStringify } from '../presentation/inert.js';
+import { inertSingleLineText, safeJsonStringify } from '../presentation/inert.js';
+import { IndexVerificationError } from '../retrieval/verify.js';
 
 /** Longest excerpt returned by search_context, so one search cannot return the corpus. */
 const SEARCH_EXCERPT_CHARS = 500;
@@ -17,6 +18,15 @@ const SearchInputSchema = z.object({
 const ReadInputSchema = z.object({
   citation_id: z.string().uuid().describe('Citation ID returned by a prior search_context call'),
 }).strict();
+
+function contextErrorText(error: unknown): string {
+  if (error instanceof IndexVerificationError) {
+    return safeJsonStringify({
+      error: { code: error.code, message: error.message, reason_codes: error.reason_codes },
+    });
+  }
+  return inertSingleLineText(error instanceof Error ? error.message : String(error));
+}
 
 /**
  * Registers the two read-only citation-scoped tools on a McpServer instance.
@@ -46,7 +56,7 @@ export function registerContextTools(server: McpServer, access: ContextAccess): 
       } catch (err) {
         return {
           isError: true,
-          content: [{ type: 'text', text: String(err instanceof Error ? err.message : err) }],
+          content: [{ type: 'text', text: contextErrorText(err) }],
         };
       }
       return {
@@ -90,7 +100,7 @@ export function registerContextTools(server: McpServer, access: ContextAccess): 
       } catch (err) {
         return {
           isError: true,
-          content: [{ type: 'text', text: String(err instanceof Error ? err.message : err) }],
+          content: [{ type: 'text', text: contextErrorText(err) }],
         };
       }
       return {

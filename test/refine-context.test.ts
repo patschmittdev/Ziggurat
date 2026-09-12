@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { sha256Text } from '../src/bronze/canonical.js';
-import type { RefinementProposalPayload } from '../src/contracts/index.js';
+import type { RefinementDraft } from '../src/contracts/refinement-draft.js';
 import {
   REFERENCE_LIMITS,
   REFINE_SYSTEM_PROMPT,
@@ -15,6 +15,7 @@ import {
 } from '../src/refine/context.js';
 import { validateEvidenceCitation } from '../src/refine/evidence.js';
 import { requestRefinement } from '../src/refine/proposal.js';
+import { RefinementError } from '../src/refine/errors.js';
 import type { ChatMessage, StructuredChatAdapter } from '../src/refine/adapter.js';
 
 interface BronzeOptions {
@@ -75,6 +76,30 @@ test('reference: labels the payload as untrusted, non-instructional evidence', a
     assert.equal(reference.notice, UNTRUSTED_REFERENCE_NOTICE);
     assert.equal(reference.selection, 'operator-selected');
     assert.equal(reference.sources.length, 1);
+    assert.equal(reference.sources[0]?.source_id, 'source-1');
+  });
+});
+
+test('reference: assigns unique request-local IDs after selection, omissions, and deduplication', async () => {
+  await withVault(async root => {
+    await writeBronze(root, 'bronze/article/zulu.md', BODY);
+    await writeBronze(root, 'bronze/article/alpha.md', BODY);
+    await writeBronze(root, 'bronze/article/broken.md', BODY, { sha256: 'a'.repeat(64) });
+    const reference = await buildBronzeReference(root, {
+      sourcePaths: [
+        'bronze/article/zulu.md',
+        'bronze/article/broken.md',
+        'bronze/article/alpha.md',
+        'bronze/article/absent.md',
+        'bronze/article/zulu.md',
+      ],
+    });
+    assert.deepEqual(reference.sources.map(source => [source.source_id, source.source_path]), [
+      ['source-1', 'bronze/article/alpha.md'],
+      ['source-2', 'bronze/article/zulu.md'],
+    ]);
+    const next = await buildBronzeReference(root, { sourcePaths: ['bronze/article/zulu.md'] });
+    assert.equal(next.sources[0]?.source_id, 'source-1');
   });
 });
 
@@ -87,7 +112,7 @@ test('reference: line numbering matches the evidence validator exactly', async (
     assert.ok(source !== undefined);
     assert.equal(source.line_count, 3);
 
-    // Reconstruct a quote the way the system prompt instructs a model to.
+    // The host reconstructs exactly the quote validated during staging.
     const quote = source.lines.slice(1, 3).join('\n');
     const failure = await validateEvidenceCitation(root, {
       source_path: source.source_path,
@@ -256,7 +281,7 @@ test('refine messages: state the authority boundary and carry no filesystem hand
   });
 });
 
-test('refine: a model can produce a valid citation from the reference alone', async () => {
+test('refine: a model selects a range and the host produces a valid citation', async () => {
   await withVault(async root => {
     const path = 'bronze/article/rates.md';
     await writeBronze(root, path, BODY);
@@ -264,22 +289,18 @@ test('refine: a model can produce a valid citation from the reference alone', as
     const adapter = new ScriptedAdapter(messages => {
       const payload = JSON.parse(messages[1]?.content ?? '{}') as {
         bronze_sources: {
-          sources: Array<{ source_path: string; body_sha256: string; lines: string[] }>;
+          sources: Array<{ source_id: string }>;
         };
       };
       const source = payload.bronze_sources.sources[0];
       if (source === undefined) throw new Error('no reference source supplied');
-      const quote = source.lines.slice(1, 2).join('\n');
-      const proposal: RefinementProposalPayload = {
-        schema_version: 2,
+      const proposal: RefinementDraft = {
+        schema_version: 1,
         operation: 'create',
         target_path: 'knowledge/water-rates.md',
         candidate: {
-          schema_version: 1,
           title: 'Water rates',
           type: 'concept',
-          sources: [source.source_path],
-          confidence: 'medium',
           retrieval_eligible: false,
           pii: 'unknown',
           sensitivity: 'restricted',
@@ -288,12 +309,9 @@ test('refine: a model can produce a valid citation from the reference alone', as
           body: '# Water rates\n',
         },
         evidence: [{
-          source_path: source.source_path,
-          body_sha256: source.body_sha256,
+          source_id: source.source_id,
           line_start: 2,
           line_end: 2,
-          quote,
-          quote_sha256: sha256Text(quote),
         }],
         confidence: 'medium',
         contradictions: [],
@@ -312,25 +330,24 @@ test('refine: a model can produce a valid citation from the reference alone', as
     });
     assert.equal(proposal.state, 'staged');
     assert.equal(proposal.evidence[0]?.line_start, 2);
+    assert.equal(proposal.evidence[0]?.quote, 'The published rate is 4.20 per unit.');
+    assert.equal(proposal.evidence[0]?.body_sha256, sha256Text(BODY));
+    assert.equal(proposal.evidence[0]?.quote_sha256, sha256Text('The published rate is 4.20 per unit.'));
+    assert.deepEqual(proposal.candidate.sources, [path]);
   });
 });
 
-test('refine: a fabricated quote still fails staging', async () => {
+test('refine: a fabricated model quote is rejected instead of stripped or repaired', async () => {
   await withVault(async root => {
     const path = 'bronze/article/rates.md';
     await writeBronze(root, path, BODY);
-    const digest = sha256Text(BODY);
-
     const adapter = new ScriptedAdapter(() => ({
-      schema_version: 2,
+      schema_version: 1,
       operation: 'create',
       target_path: 'knowledge/water-rates.md',
       candidate: {
-        schema_version: 1,
         title: 'Water rates',
         type: 'concept',
-        sources: [path],
-        confidence: 'medium',
         retrieval_eligible: false,
         pii: 'unknown',
         sensitivity: 'restricted',
@@ -339,12 +356,10 @@ test('refine: a fabricated quote still fails staging', async () => {
         body: '# Water rates\n',
       },
       evidence: [{
-        source_path: path,
-        body_sha256: digest,
+        source_id: 'source-1',
         line_start: 2,
         line_end: 2,
         quote: 'The published rate is 99.99 per unit.',
-        quote_sha256: sha256Text('The published rate is 99.99 per unit.'),
       }],
       confidence: 'medium',
       contradictions: [],
@@ -360,7 +375,7 @@ test('refine: a fabricated quote still fails staging', async () => {
         target_path: 'knowledge/water-rates.md',
         bronze_source_paths: [path],
       }),
-      /Evidence citation failed/u,
+      (error: unknown) => error instanceof RefinementError && error.code === 'draft-schema',
     );
   });
 });

@@ -1,4 +1,5 @@
 import { parseArgs } from 'node:util';
+import type { ReviewOrder } from '../review/queue.js';
 
 export type CliCommand = 'init' | 'ingest' | 'refine' | 'review' | 'build' | 'query' | 'mcp' | 'check' | 'eval';
 
@@ -7,6 +8,9 @@ export interface ParsedArgs {
   root: string;
   file?: string | undefined;
   query?: string | undefined;
+  target?: string | undefined;
+  order?: ReviewOrder | undefined;
+  cursor?: string | undefined;
   /** Repeatable --source selections, currently used only by refine. */
   sources?: string[] | undefined;
   /**
@@ -34,6 +38,9 @@ export function parseCliArgs(args: string[]): ParsedArgs {
       file: { type: 'string' },
       query: { type: 'string', short: 'q' },
       source: { type: 'string', multiple: true },
+      target: { type: 'string' },
+      order: { type: 'string' },
+      cursor: { type: 'string' },
       json: { type: 'boolean' },
       'audit-clean-room': { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
@@ -44,6 +51,14 @@ export function parseCliArgs(args: string[]): ParsedArgs {
 
   const command = positionals[0];
   const auditCleanRoom = values['audit-clean-room'] ?? false;
+  for (const option of ['order', 'cursor'] as const) {
+    if (values[option] !== undefined && command !== 'review') {
+      throw new Error(`--${option} applies only to the review command.`);
+    }
+  }
+  if (values.order !== undefined && values.order !== 'priority' && values.order !== 'oldest') {
+    throw new Error('--order must be priority or oldest.');
+  }
   if (!command && values.help === true) {
     return {
       command: null,
@@ -51,6 +66,7 @@ export function parseCliArgs(args: string[]): ParsedArgs {
       file: values.file,
       query: values.query,
       sources: values.source,
+      target: values.target,
       auditCleanRoom,
       json: values.json ?? false,
       help: true,
@@ -77,6 +93,9 @@ export function parseCliArgs(args: string[]): ParsedArgs {
       + 'Run: ziggurat check --root <repo> --audit-clean-room',
     );
   }
+  if (values.target !== undefined && command !== 'refine') {
+    throw new Error('--target applies only to the refine command.');
+  }
 
   const root = values.root ?? process.cwd();
 
@@ -86,6 +105,9 @@ export function parseCliArgs(args: string[]): ParsedArgs {
     file: values.file,
     query: values.query,
     sources: values.source,
+    target: values.target,
+    order: values.order as ReviewOrder | undefined,
+    cursor: values.cursor,
     auditCleanRoom,
     json: values.json ?? false,
     help: values.help ?? false,

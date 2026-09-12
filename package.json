@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT",
   "repository": "github:patschmittdev/Ziggurat",
-  "homepage": "https://github.com/patschmittdev/Ziggurat#readme",
+  "homepage": "https://patschmittdev.github.io/Ziggurat/",
   "bugs": {
     "url": "https://github.com/patschmittdev/Ziggurat/issues"
   },
@@ -17,7 +17,9 @@
     "retrieval"
   ],
   "type": "module",
-  "bin": { "ziggurat": "./dist/src/cli/main.js" },
+  "bin": {
+    "ziggurat": "./dist/src/cli/main.js"
+  },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.json",
@@ -25,12 +27,19 @@
     "check": "npm run test && node --test scripts/check-docs-links.test.mjs && npm run check:links && npm run check:style",
     "check:links": "node scripts/check-docs-links.mjs",
     "check:style": "node scripts/check-style.mjs",
+    "eval:model": "npm run build && node dist/test/manual/refine-model.js",
+    "eval:envelope": "npm run build && node dist/test/manual/operating-envelope.js",
+    "eval:retrieval": "npm run build && node dist/test/manual/retrieval-evaluation.js",
+    "test:interop": "npm run build && node --test dist/test/manual/authorization-interop.test.js",
+    "test:disk-full": "npm run build && node dist/test/manual/disk-full.js",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm run build",
     "site:check": "cd site && npm run check",
     "prepublishOnly": "npm run check"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
     "yaml": "^2.8.1",

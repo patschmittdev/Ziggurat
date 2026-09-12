@@ -18,9 +18,12 @@ owns the normative threat model and residual risks.
 - `ingest` refuses unsafe source paths before any read, copy, or deletion; see the
   [ingest path rules](../guides/ingest-and-refine.md#ingest-capture-evidence).
 - `refine` can write only strict version-2 artifacts under `.ziggurat/proposals/`.
+- The model returns a strict version-1 draft. Only the host derives exact citation
+  bytes and hashes, materializes stored Silver v2, and invokes live staging validation.
 - The refine model receives canonical Bronze text the host selected, in a bounded,
-  labelled reference block. The shipped interface gives it no path it can fetch and no
-  filesystem capability.
+  labelled reference block, plus optional host-read target context. Only supplied source
+  IDs and line ranges may be cited. The shipped interface gives it no path it can fetch
+  and no filesystem capability.
 - Silver candidates cannot contain status, reviewer, receipt, or admission metadata.
 - Every Silver citation must match stored Bronze text, hashes, and line ranges. This is
   citation integrity, not semantic or factual verification.

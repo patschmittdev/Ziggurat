@@ -86,7 +86,7 @@ export class ContextAccess {
   constructor(
     private readonly root: string,
     private readonly profile: AccessProfile,
-    private readonly index: GoldIndex | ProfileIndex,
+    _initialIndex: GoldIndex | ProfileIndex,
     limits?: Partial<AccessLimits>,
   ) {
     this.limits = resolveLimits(limits);

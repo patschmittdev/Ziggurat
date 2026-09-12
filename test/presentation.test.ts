@@ -22,3 +22,11 @@ test('safeJsonStringify emits no literal terminal controls', () => {
   assert(!rendered.includes('\u009b'));
   assert(rendered.includes('\\u009b'));
 });
+
+test('presentation normalization preserves Markdown text as data rather than claiming to sanitize Markdown', () => {
+  const markdown = '![image](https://invalid.example/pixel)\n```\n<img src="x">\n> instruction';
+  assert.equal(inertText(markdown), markdown);
+  // Review packets must additionally wrap this output in blank-delimited indented
+  // literals; quotes or terminal escaping alone do not neutralize Markdown.
+  assert.equal(JSON.parse(safeJsonStringify({ markdown })).markdown, markdown);
+});

@@ -4,6 +4,9 @@ export type { BronzeRecord } from './bronze.js';
 export { CuratedPageSchema } from './curated.js';
 export type { CuratedPage } from './curated.js';
 
+export { RefinementDraftSchema, RefinementDraftJsonSchema } from './refinement-draft.js';
+export type { RefinementDraft, DraftEvidence } from './refinement-draft.js';
+
 export {
   ProposalContradictionSchema,
   RefinementCandidateSchema,

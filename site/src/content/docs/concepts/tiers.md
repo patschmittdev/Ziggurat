@@ -24,17 +24,24 @@ restricted, PII-unknown, and hash-unverified, so it stays out of every index.
 
 ## Silver: the only model-originated layer
 
-`ziggurat refine` accepts model-originated structured JSON from a loopback endpoint. The
-host validates it, adds local audit metadata, and atomically persists it under
-`.ziggurat/proposals/`; the model does not write the file.
+`ziggurat refine` accepts strict `RefinementDraft` v1 JSON from a loopback endpoint.
+The host materializes strict stored Silver v2, validates it against live files, adds local
+audit metadata, and atomically persists it under `.ziggurat/proposals/`; the model does
+not write the file.
 
 The host, not the model, reads Bronze. Each request carries a bounded reference block
-containing the selected records' verified `body_sha256` and their canonical bodies as
-1-based lines, labelled `content_role: reference` and `instruction_authority: none`. At most 12
+containing verified records' canonical bodies as 1-based lines with source IDs, labelled
+`content_role: reference` and `instruction_authority: none`. At most 12
 records, 32 KiB per record, and 256 KiB in total are included. Oversize records are
 omitted rather than truncated, because a truncated body would produce citations that fail
 validation for reasons no operator could diagnose. Every omission is reported with a
 reason.
+
+The draft names only supplied source IDs and line ranges. The host derives exact
+quotes, hashes, candidate sources/confidence/schema version, and, for amend or
+contradict, the base-content hash from the existing page read through `--target`.
+The model cannot cite omitted sources, invent canonical hashes, or gain file access
+by returning a path.
 
 A canonical Silver artifact contains:
 
@@ -63,8 +70,10 @@ A page enters the Gold index only when every eligibility check passes together:
 - a valid detached Ed25519 receipt from a configured key
 
 The deterministic receipt path for `knowledge/topic.md` is
-`authorizations/topic.md.authorization.json`. Version-1 proposals and indexes are
-unsupported and must be restaged or rebuilt.
+`authorizations/topic.md.authorization.json`. Stored version-1 Silver proposals and
+indexes are unsupported and must be restaged or rebuilt. This does not refer to
+model-facing `RefinementDraft` v1 or external authorization receipt v1; neither changes
+the stored v2 formats.
 
 :::caution[Gold is not a truth label]
 Every retrieved chunk carries `content_role: reference` and
@@ -76,7 +85,7 @@ Every retrieved chunk carries `content_role: reference` and
 | Transition | Performed by | Requires |
 |---|---|---|
 | `inbox/` to Bronze | `ingest` | A real regular file physically under `inbox/` |
-| Bronze to Silver | Refine host | Model-originated JSON whose citations revalidate against stored Bronze text |
+| Bronze to Silver | Refine host | Strict model draft, host materialization, and live validation of canonical citations against stored Bronze text |
 | Silver review to a curated page | Recommended operator workflow | Independent citation review and page authoring; this is not a machine-proven admission prerequisite |
 | Curated page to Gold | `build` | A valid configured-key receipt plus every eligibility check |
 

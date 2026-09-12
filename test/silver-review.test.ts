@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
+import { stringify } from 'yaml';
 import { sha256Text } from '../src/bronze/canonical.js';
 import { runReview } from '../src/cli/commands/review.js';
 import type { CliIO } from '../src/cli/main.js';
@@ -57,7 +57,7 @@ function makeProposal(overrides: Partial<RefinementProposal> = {}): RefinementPr
 }
 
 async function makeVault(files: Record<string, string>): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'ziggurat-silver-review-'));
+  const root = await mkdtemp(join(process.cwd(), '.test-silver-review-'));
   const config = {
     'config/ziggurat.yaml': 'schema_version: 1\nlifecycle:\n  review_queue_limit: 10\n',
     'config/domain.yaml': 'domain:\n  page_types: [concept]\n  tags: [security]\n',
@@ -182,6 +182,83 @@ test('review surfaces a stale amend base hash as a mismatch', async () => {
     const { io, output } = captureIo();
     await runReview(root, false, io);
     assert.match(output.out, /Base state:\*\* mismatch/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('Markdown review keeps malicious candidate, target metadata, exact evidence and questions in literal blocks', async () => {
+  const attack = [
+    'UNTRUSTED_MARKER "quotes" `backticks`',
+    '',
+    '```',
+    '# UNTRUSTED_MARKER heading',
+    '> UNTRUSTED_MARKER blockquote',
+    '- [x] UNTRUSTED_MARKER approval',
+    '![UNTRUSTED_MARKER image](https://invalid.example/tracker)',
+    '[UNTRUSTED_MARKER link](https://invalid.example/action)',
+    '<img src="https://invalid.example/pixel" alt="UNTRUSTED_MARKER">',
+    '~~~html',
+    '</code><script>UNTRUSTED_MARKER</script>',
+    '\u001b[2JUNTRUSTED_MARKER\u202e',
+  ].join('\n');
+  const body = `${attack}\n`;
+  const evidence = {
+    ...EVIDENCE,
+    body_sha256: sha256Text(body),
+    line_start: 1,
+    line_end: attack.split('\n').length,
+    quote: attack,
+    quote_sha256: sha256Text(attack),
+  };
+  const candidate = { ...makeProposal().candidate, title: attack, body: attack, visibility: attack };
+  const proposal = makeProposal({
+    operation: 'amend',
+    base_content_sha256: 'b'.repeat(64),
+    candidate,
+    evidence: [evidence],
+    contradictions: [{ summary: attack, evidence: [evidence] }],
+    unresolved_questions: [attack],
+    affected_paths: ['knowledge/UNTRUSTED_MARKER-`link`.md'],
+    related_paths: ['knowledge/UNTRUSTED_MARKER-![image](url).md'],
+  });
+  const { body: _, ...currentMetadata } = candidate;
+  const root = await makeVault({
+    [`.ziggurat/proposals/${PROPOSAL_ID}.json`]: JSON.stringify(proposal),
+    [SOURCE_PATH]: `---\n${stringify({
+      schema_version: 1,
+      source_id: 'source',
+      source_kind: 'article',
+      captured_at: '2026-08-01T00:00:00Z',
+      sha256: sha256Text(body),
+      pii: 'false',
+      sensitivity: 'public',
+    })}---\n${body}`,
+    'knowledge/memory-rule.md': `---\n${stringify({
+      ...currentMetadata,
+      status: 'reviewed',
+      reviewed_by: attack,
+      reviewed_at: '2026-08-01T00:00:00Z',
+      last_verified: '2026-08-01T00:00:00Z',
+    })}---\nOld ${attack}\n`,
+  });
+  try {
+    const { io, output } = captureIo();
+    assert.equal(await runReview(root, false, io), 0);
+    assert(!output.out.includes('\u001b'));
+    assert(!output.out.includes('\u202e'));
+    assert(output.out.includes('\\u001b'));
+    assert(output.out.includes('\\u202e'));
+    const lines = output.out.split('\n');
+    const maliciousLines = lines.filter(line => line.includes('UNTRUSTED_MARKER'));
+    assert(maliciousLines.length > 20, 'candidate, current target, evidence, contradiction, metadata, and questions all appear');
+    assert(maliciousLines.every(line => line.startsWith('    ')), maliciousLines.join('\n'));
+    assert(!lines.some(line => /^ {0,3}(?:```|~~~|<img|<script|!\[|\[UNTRUSTED_MARKER)/u.test(line)));
+    for (let index = 0; index < lines.length; index++) {
+      if (lines[index]!.startsWith('    ') && !lines[index - 1]?.startsWith('    ')) {
+        assert.equal(lines[index - 1], '', 'each indented literal must have a preceding blank boundary');
+      }
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -14,12 +14,21 @@ import type {
 } from '../src/contracts/index.js';
 import { createContextAccess } from '../src/mcp/access.js';
 import { loadGoldIndex } from '../src/retrieval/gold-index.js';
-import { loadProfileIndex } from '../src/retrieval/profile-index.js';
+import {
+  collectEvidenceChunks,
+  collectReviewChunks,
+  loadProfileIndex,
+} from '../src/retrieval/profile-index.js';
+import { chunkDerivedFingerprint } from '../src/retrieval/verify.js';
+import { collectBronzeFiles, collectCuratedPages } from '../src/corpus/collect.js';
+import { collectStagedProposals } from '../src/refine/store.js';
+import { parseZigguratConfig } from '../src/contracts/config.js';
 import { trustPolicyFingerprint } from '../src/retrieval/integrity.js';
 import {
   authorizeTestPage,
   createTestReviewer,
 } from './helpers/authorization.js';
+import { createOperatingVault } from './helpers/operating-vault.js';
 
 const REVIEWER = createTestReviewer();
 const BRONZE_BODY = '# Source\n\nApproved factual observation.\n';
@@ -148,6 +157,75 @@ const SILENT_IO: CliIO = {
   stdout: () => undefined,
   stderr: () => undefined,
 };
+
+test('operating fixture profile fingerprints survive schema and disk round trips', async () => {
+  const root = await mkdtemp(join(process.cwd(), '.phase3-profile-roundtrip-'));
+  try {
+    await createOperatingVault(root, 2);
+    await runBuild(root, true, SILENT_IO);
+    const [curated, bronze, proposals, config] = await Promise.all([
+      collectCuratedPages(root), collectBronzeFiles(root),
+      collectStagedProposals(root), parseZigguratConfig(root),
+    ]);
+    for (const profile of ['review', 'evidence'] as const) {
+      const index = await loadProfileIndex(root, profile);
+      const raw = JSON.parse(await readFile(join(root, '.ziggurat', `${profile}-index.json`), 'utf8')) as {
+        chunks: unknown[];
+      };
+      assert.equal(index.chunks.filter(chunk => chunk.tier === 'gold').length, 2);
+      assert.equal(index.chunks.filter(chunk => chunk.tier === 'silver').length, profile === 'review' ? 2 : 0);
+      assert.equal(index.chunks.filter(chunk => chunk.tier === 'bronze').length, profile === 'evidence' ? 10 : 0);
+      assert.equal(chunkDerivedFingerprint(index), index.corpus_fingerprint);
+      assert.equal(JSON.stringify(raw.chunks), JSON.stringify(index.chunks),
+        `${profile}: schema normalization must not change fingerprinted property order`);
+      const input = { curated, bronze, proposals, config, asOf: new Date(index.built_at) };
+      const live = profile === 'review'
+        ? await collectReviewChunks(root, input)
+        : await collectEvidenceChunks(root, input);
+      assert.equal(JSON.stringify(live.chunks), JSON.stringify(index.chunks));
+      assert.equal(chunkDerivedFingerprint({ ...index, chunks: live.chunks }), index.corpus_fingerprint);
+      const access = await createContextAccess(root, profile);
+      const hit = (await access.search('measured envelope'))[0];
+      assert(hit !== undefined);
+      assert.equal((await access.read(hit.citation_id)).instruction_authority, 'none');
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('build JSON exposes stable per-page Gold decisions without page content', async () => {
+  const { root } = await writeVault();
+  try {
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    assert.equal(await runBuild(root, true, {
+      stdout: text => stdout.push(text), stderr: text => stderr.push(text),
+    }), 0);
+    const result = JSON.parse(stdout.join('')) as {
+      gold_decisions: Array<{
+        path: string; eligible: boolean; reasons: string[];
+        reason_details: Array<{ code: string; field?: string; path?: string; message: string }>;
+      }>;
+    };
+    const accepted = result.gold_decisions.find(decision => decision.path === TARGET_PATH);
+    assert.equal(accepted?.eligible, true);
+    assert.deepEqual(accepted.reason_details, []);
+    const denied = result.gold_decisions.find(decision => decision.path === 'knowledge/unsigned-draft.md');
+    assert.equal(denied?.eligible, false);
+    assert(denied.reason_details.some(reason => reason.code === 'gold.status' && reason.field === 'status'));
+    assert(denied.reason_details.some(reason => reason.code === 'authorization.receipt-unreadable'));
+    assert(stderr.join('').includes('[gold.status]'));
+    assert(!stdout.join('').includes(GOLD_BODY));
+    assert(!stdout.join('').includes(BRONZE_BODY));
+    const indexes = await Promise.all([
+      loadGoldIndex(root), loadProfileIndex(root, 'review'), loadProfileIndex(root, 'evidence'),
+    ]);
+    assert.equal(new Set(indexes.map(index => index.built_at)).size, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 test('trust policy fingerprint ordering is locale independent', () => {
   const other = createTestReviewer('z-reviewer', 'z-key');

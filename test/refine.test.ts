@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import test from 'node:test';
 import { sha256Text } from '../src/bronze/canonical.js';
 import type { EvidenceCitation } from '../src/contracts/index.js';
@@ -13,6 +11,8 @@ import { LoopbackChatAdapter } from '../src/refine/adapter.js';
 import { stageProposal, requestRefinement } from '../src/refine/proposal.js';
 import type { RefinementInput } from '../src/refine/proposal.js';
 import type { RefinementProposalPayload } from '../src/contracts/index.js';
+import type { RefinementDraft } from '../src/contracts/refinement-draft.js';
+import { RefinementError } from '../src/refine/errors.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -65,6 +65,30 @@ class FakeAdapter implements StructuredChatAdapter {
   async completeJson(_messages: readonly ChatMessage[]): Promise<unknown> {
     return this.value;
   }
+}
+
+function makeValidDraft(): RefinementDraft {
+  return {
+    schema_version: 1,
+    operation: 'create',
+    target_path: 'knowledge/test.md',
+    candidate: {
+      title: 'Test candidate',
+      type: 'concept',
+      retrieval_eligible: false,
+      pii: 'unknown',
+      sensitivity: 'restricted',
+      visibility: 'internal',
+      egress: 'local-only',
+      body: '# Test candidate\n',
+    },
+    evidence: [{ source_id: 'source-1', line_start: 1, line_end: 1 }],
+    confidence: 'medium',
+    contradictions: [],
+    affected_paths: [],
+    related_paths: [],
+    unresolved_questions: [],
+  };
 }
 
 function makeValidProposal(
@@ -353,14 +377,14 @@ test('stageProposal: does not execute contradict operation side-effects', async 
 // ---------------------------------------------------------------------------
 
 test('requestRefinement: throws when adapter returns malformed JSON', async () => {
-  const { root } = await makeVaultWithBronze(BODY);
+  const { root, sourcePath } = await makeVaultWithBronze(BODY);
   try {
     const adapter = new FakeAdapter({ totally: 'wrong', shape: true });
     const input: RefinementInput = {
       root,
       topic: 'test topic',
       target_path: 'knowledge/test.md',
-      bronze_source_paths: [],
+      bronze_source_paths: [sourcePath],
     };
     await assert.rejects(() => requestRefinement(adapter, input));
   } finally {
@@ -368,19 +392,17 @@ test('requestRefinement: throws when adapter returns malformed JSON', async () =
   }
 });
 
-test('requestRefinement: throws when adapter returns valid schema but bad evidence hash', async () => {
+test('requestRefinement: rejects model-supplied evidence hashes instead of repairing them', async () => {
   const { root, sourcePath } = await makeVaultWithBronze(BODY);
   try {
     const proposal = {
-      ...makeValidProposal(sourcePath, 'a'.repeat(64), '# Test Source'),
+      ...makeValidDraft(),
       evidence: [
         {
-          source_path: sourcePath,
+          source_id: 'source-1',
           body_sha256: 'a'.repeat(64), // wrong hash
           line_start: 1,
           line_end: 1,
-          quote: '# Test Source',
-          quote_sha256: sha256Text('# Test Source'),
         },
       ],
     };
@@ -391,7 +413,10 @@ test('requestRefinement: throws when adapter returns valid schema but bad eviden
       target_path: 'knowledge/test.md',
       bronze_source_paths: [sourcePath],
     };
-    await assert.rejects(() => requestRefinement(adapter, input));
+    await assert.rejects(
+      () => requestRefinement(adapter, input),
+      (error: unknown) => error instanceof RefinementError && error.code === 'draft-schema',
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -400,7 +425,7 @@ test('requestRefinement: throws when adapter returns valid schema but bad eviden
 test('requestRefinement: stages proposal and returns it when adapter is valid', async () => {
   const { root, sourcePath, bodySha } = await makeVaultWithBronze(BODY);
   try {
-    const proposal = makeValidProposal(sourcePath, bodySha, '# Test Source');
+    const proposal = makeValidDraft();
     const adapter = new FakeAdapter(proposal);
     const input: RefinementInput = {
       root,
@@ -411,6 +436,10 @@ test('requestRefinement: stages proposal and returns it when adapter is valid', 
     const result = await requestRefinement(adapter, input);
     assert.equal(result.operation, 'create');
     assert.equal(result.target_path, 'knowledge/test.md');
+    assert.equal(result.schema_version, 2);
+    assert.deepEqual(result.candidate.sources, [sourcePath]);
+    assert.equal(result.candidate.confidence, proposal.confidence);
+    assert.deepEqual(result.evidence, [makeCitation(sourcePath, bodySha, 1, 1, '# Test Source')]);
     // Staged file must exist.
     const proposalsDir = join(root, '.ziggurat', 'proposals');
     const entries = await readdir(proposalsDir);
@@ -775,142 +804,4 @@ test('stageProposal: no .tmp files remain after evidence validation failure', as
   } finally {
     await rm(root, { recursive: true, force: true });
   }
-});
-
-// ---------------------------------------------------------------------------
-// LoopbackChatAdapter: HTTP request structure (in-process server)
-// ---------------------------------------------------------------------------
-
-async function withHttpCapture(
-  responseBody: unknown,
-  fn: (port: number) => Promise<void>,
-): Promise<unknown> {
-  let capturedBody: unknown;
-  const server = createServer((req, res) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (c: Buffer) => chunks.push(c));
-    req.on('end', () => {
-      capturedBody = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(responseBody));
-    });
-  });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address() as AddressInfo;
-  try {
-    await fn(port);
-  } finally {
-    await new Promise<void>((resolve, reject) =>
-      server.close((err) => (err != null ? reject(err) : resolve())),
-    );
-  }
-  if (capturedBody === undefined) throw new Error('No request body captured');
-  return capturedBody;
-}
-
-test('LoopbackChatAdapter: completeJson sends response_format type json_schema', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-  const rf = (body as Record<string, unknown>)['response_format'] as Record<string, unknown>;
-  assert.equal(rf['type'], 'json_schema');
-});
-
-test('LoopbackChatAdapter: completeJson sends json_schema strict true', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
-  assert.equal(js['strict'], true);
-});
-
-test('LoopbackChatAdapter: completeJson sends json_schema name ziggurat_refinement_proposal', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
-  assert.equal(js['name'], 'ziggurat_refinement_proposal');
-});
-
-test('LoopbackChatAdapter: completeJson schema includes operation enum create/amend/contradict', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
-  const schema = js['schema'] as Record<string, unknown>;
-  const props = schema['properties'] as Record<string, Record<string, unknown>>;
-  const opEnum = (props['operation'] as Record<string, unknown>)['enum'] as string[];
-  assert.deepEqual([...opEnum].sort(), ['amend', 'contradict', 'create']);
-});
-
-test('LoopbackChatAdapter: completeJson schema lists all required top-level fields', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
-  const schema = js['schema'] as Record<string, unknown>;
-  const required = schema['required'] as string[];
-  const expected = [
-    'schema_version',
-    'operation',
-    'target_path',
-    'candidate',
-    'evidence',
-    'contradictions',
-    'confidence',
-    'affected_paths',
-    'related_paths',
-    'unresolved_questions',
-  ];
-  for (const field of expected) {
-    assert.ok(required.includes(field), `schema.required must include "${field}"`);
-  }
-});
-
-test('LoopbackChatAdapter: completeJson evidence item schema lists all required fields', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-
-  const js = ((body as Record<string, unknown>)['response_format'] as Record<string, unknown>)['json_schema'] as Record<string, unknown>;
-  const schema = js['schema'] as Record<string, unknown>;
-  const props = schema['properties'] as Record<string, unknown>;
-  const evidence = props['evidence'] as Record<string, unknown>;
-  const items = evidence['items'] as Record<string, unknown>;
-  const itemRequired = items['required'] as string[];
-  const expected = ['source_path', 'body_sha256', 'line_start', 'line_end', 'quote', 'quote_sha256'];
-  for (const field of expected) {
-    assert.ok(itemRequired.includes(field), `evidence items.required must include "${field}"`);
-  }
-});
-
-test('LoopbackChatAdapter: JSON schema mirrors target, evidence, and operation constraints', async () => {
-  const body = await withHttpCapture({}, async (port) => {
-    const adapter = new LoopbackChatAdapter(`http://127.0.0.1:${port}/v1/chat/completions`);
-    await adapter.completeJson([{ role: 'user', content: 'test' }]);
-  });
-  const jsonSchema = (
-    (body as Record<string, unknown>)['response_format'] as Record<string, unknown>
-  )['json_schema'] as Record<string, unknown>;
-  const schema = jsonSchema['schema'] as Record<string, unknown>;
-  const properties = schema['properties'] as Record<string, Record<string, unknown>>;
-  const targetPattern = new RegExp(properties['target_path']!['pattern'] as string, 'u');
-  assert(targetPattern.test('knowledge/policy.md'));
-  assert(!targetPattern.test('knowledge/Policy.md'));
-  assert(!targetPattern.test('knowledge/con.md'));
-  assert(!targetPattern.test('knowledge/nested/policy.md'));
-
-  const evidence = properties['evidence']!;
-  const evidenceItems = evidence['items'] as Record<string, unknown>;
-  const evidenceProperties = evidenceItems['properties'] as Record<string, Record<string, unknown>>;
-  const sourcePattern = new RegExp(evidenceProperties['source_path']!['pattern'] as string, 'u');
-  assert(sourcePattern.test('bronze/article/source.md'));
-  assert(!sourcePattern.test('bronze/../secret.md'));
-  assert(Array.isArray(schema['allOf']));
 });

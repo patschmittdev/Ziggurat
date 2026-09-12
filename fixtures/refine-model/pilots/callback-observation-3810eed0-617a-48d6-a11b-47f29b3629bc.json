@@ -1,0 +1,63 @@
+{
+  "pilot_only": true,
+  "excluded_from_fixed_90": true,
+  "observed_at": "2026-09-12T00:19:20.490Z",
+  "endpoint": "http://127.0.0.1:18080/v1/chat/completions",
+  "settings": {
+    "model": "ziggurat-refine",
+    "seed": 123,
+    "maxTokens": 512
+  },
+  "latency_ms": 1888.4857,
+  "messages": [
+    {
+      "role": "system",
+      "content": "PILOT ONLY, excluded from the fixed 90-attempt evaluation. Return one strict schema_version 1 refinement draft. Use operation create, target_path knowledge/callback-pilot.md, candidate title Callback pilot, type concept, retrieval_eligible true, pii false as string, sensitivity public, visibility public, egress local-only, body stating only the given fact; evidence source_id source-1 lines1-1; confidence high; empty contradictions, affected_paths, related_paths, unresolved_questions arrays. Do not compute hashes, quotes or authorization metadata."
+    },
+    {
+      "role": "user",
+      "content": "{\"source_id\":\"source-1\",\"lines\":[\"The synthetic callback pilot uses SHA-256 checksums.\"]}"
+    }
+  ],
+  "response": {
+    "received": true,
+    "status": 200,
+    "body": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"schema_version\\\": 1,\\n  \\\"operation\\\": \\\"create\\\",\\n  \\\"target_path\\\": \\\"knowledge/callback-pilot.md\\\",\\n  \\\"candidate\\\": {\\n    \\\"title\\\": \\\"Callback pilot\\\",\\n    \\\"type\\\": \\\"concept\\\",\\n    \\\"retrieval_eligible\\\": true,\\n    \\\"pii\\\": \\\"false\\\",\\n    \\\"sensitivity\\\": \\\"public\\\",\\n    \\\"visibility\\\": \\\"public\\\",\\n    \\\"egress\\\": \\\"local-only\\\",\\n    \\\"body\\\": \\\"The synthetic callback pilot uses SHA-256 checksums.\\\"\\n  },\\n  \\\"evidence\\\": [\\n    {\\n      \\\"source_id\\\": \\\"source-1\\\",\\n      \\\"line_start\\\": 1,\\n      \\\"line_end\\\": 1\\n    }\\n  ],\\n  \\\"contradictions\\\": [],\\n  \\\"confidence\\\": \\\"high\\\",\\n  \\\"affected_paths\\\": [],\\n  \\\"related_paths\\\": [],\\n  \\\"unresolved_questions\\\": []\\n}\"}}],\"created\":1789172360,\"model\":\"ziggurat-refine\",\"system_fingerprint\":\"b10809-5266f24da\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":187,\"prompt_tokens\":148,\"total_tokens\":335,\"prompt_tokens_details\":{\"cached_tokens\":3}},\"id\":\"chatcmpl-lM8EmxV0fBUQ3oIeFiTVTFD7WpJRV2wt\",\"timings\":{\"cache_n\":3,\"prompt_n\":145,\"prompt_ms\":211.389,\"prompt_per_token_ms\":1.4578551724137931,\"prompt_per_second\":685.9391926732233,\"predicted_n\":187,\"predicted_ms\":1632.92,\"predicted_per_token_ms\":8.779139784946237,\"predicted_per_second\":113.90637630747374}}",
+    "unavailable_reason": null,
+    "token_usage": {
+      "prompt_tokens": 148,
+      "completion_tokens": 187,
+      "total_tokens": 335
+    },
+    "token_usage_reason": null,
+    "content_role": "untrusted-reference",
+    "instruction_authority": "none"
+  },
+  "draft": {
+    "schema_version": 1,
+    "operation": "create",
+    "target_path": "knowledge/callback-pilot.md",
+    "candidate": {
+      "title": "Callback pilot",
+      "type": "concept",
+      "retrieval_eligible": true,
+      "pii": "false",
+      "sensitivity": "public",
+      "visibility": "public",
+      "egress": "local-only",
+      "body": "The synthetic callback pilot uses SHA-256 checksums."
+    },
+    "evidence": [
+      {
+        "source_id": "source-1",
+        "line_start": 1,
+        "line_end": 1
+      }
+    ],
+    "contradictions": [],
+    "confidence": "high",
+    "affected_paths": [],
+    "related_paths": [],
+    "unresolved_questions": []
+  }
+}

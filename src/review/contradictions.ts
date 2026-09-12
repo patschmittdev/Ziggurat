@@ -3,6 +3,7 @@ import {
   ProposalStoreError,
 } from '../refine/store.js';
 import type { StagedProposalRecord } from '../refine/store.js';
+import type { VerifiedBronzeReader } from '../refine/evidence.js';
 
 export { ProposalStoreError } from '../refine/store.js';
 
@@ -59,10 +60,13 @@ export async function collectUnresolvedContradictions(
   root: string,
   targetPath: string,
   resolvedProposalIds: readonly string[] = [],
+  bronzeReader?: VerifiedBronzeReader,
 ): Promise<UnresolvedContradiction[]> {
   try {
     return unresolvedContradictionsFromIndex(
-      buildContradictionIndex(await collectStagedProposals(root)),
+      buildContradictionIndex(await collectStagedProposals(
+        root, bronzeReader === undefined ? {} : { bronzeReader },
+      )),
       targetPath,
       resolvedProposalIds,
     );

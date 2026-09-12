@@ -4,8 +4,9 @@
 
 Ziggurat is a human-gated memory firewall: a local TypeScript reference implementation
 that treats durable AI memory as a privileged write surface. An AI can read authorized
-content and return a candidate with byte-validated citations. The refine host can persist
-that model-originated JSON only as Silver. Gold admission requires a valid receipt from a
+content and return a structured draft with source IDs and line ranges. The refine host
+derives exact citations and canonical version-2 Silver, then validates and stages only
+that Silver artifact. Gold admission requires a valid receipt from a
 configured Ed25519 key; operator policy assigns that key to a reviewer. That receipt's
 signature proves key control and exact-content authorization, not humanity, attention,
 or review.
@@ -20,7 +21,10 @@ Gold layer with a key that no shipped code path holds.
 
 Another reason: I was tired of seeing blatant AI output that no human had reviewed.
 Ziggurat is meant to make the person slow down and read each proposal instead of
-rubber-stamping a queue. The review queue is capped for the same reason.
+rubber-stamping a queue. Review output is paginated to keep packets readable;
+the page limit does not cap the backlog or guarantee that older proposals receive
+attention. The oldest-first view makes that backlog navigable without hiding
+contradictions from admission checks.
 
 ## The problem: memory poisoning is a durable write attack
 
@@ -44,11 +48,14 @@ reference data.
   apply, approve, or promote command; see the
   [human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 - **The refine host persists one model-originated artifact type.** It can stage only
-  strict schema-version-2 Silver JSON. It cannot write Bronze, knowledge pages, reviewed
-  metadata, trust anchors, receipts, or indexes.
-- **Every citation is checked against stored Bronze text.** A fabricated quote, digest,
-  or line range fails staging. Citation integrity does not establish semantic support or
-  factual truth; those judgments remain reviewer responsibilities.
+  strict schema-version-2 Silver JSON, materialized from a strict version-1
+  `RefinementDraft`. The model never supplies hashes or canonical citation bytes.
+  The pathway cannot write Bronze, knowledge pages, reviewed metadata, trust anchors,
+  receipts, or indexes.
+- **Every citation is checked against stored Bronze text.** The host resolves only
+  supplied source IDs and line ranges, derives quotes and digests, and revalidates the
+  materialized proposal against live files. Citation integrity does not establish
+  semantic support or factual truth; those judgments remain reviewer responsibilities.
 - **Approval is not instruction authority.** Every retrieved chunk carries
   `content_role: reference` and `instruction_authority: none`; see
   [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
@@ -58,7 +65,9 @@ flowchart LR
     U[Untrusted source] --> I[ingest]
     I --> B[Bronze evidence]
     B --> R[refine model]
-    R --> S[Silver proposal]
+    R --> D[RefinementDraft v1]
+    D --> M[Host materialization and validation]
+    M --> S[Silver proposal v2]
     S -. recommended review .-> H{Operator-assigned reviewer\nwith external Ed25519 key}
     H -->|independently authored page + signed receipt| G[Gold reference]
     G --> C[Gold MCP\nread only]
@@ -136,7 +145,7 @@ steps. The full end-to-end boundary is exercised by `test/memory-boundary.test.t
 | Tier | Written by | Meaning |
 |---|---|---|
 | **Bronze** | `ingest`, and nothing else | Canonical UTF-8 text after CRLF-to-LF normalization. Ingest uses atomic no-overwrite creation; later body mutation is detectable by SHA-256 verification. |
-| **Silver** | Refine host | Model-originated strict version-2 JSON under `.ziggurat/proposals/`. Every citation is revalidated against stored Bronze text, hashes, and line ranges. |
+| **Silver** | Refine host | Strict version-2 JSON materialized from a model's version-1 draft under `.ziggurat/proposals/`. Every citation is revalidated against stored Bronze text, hashes, and line ranges. |
 | **Gold** | `build` | Eligible knowledge chunks admitted only with a valid detached Ed25519 receipt and every other eligibility check. |
 
 The three generated indexes remain physically separate. `gold-index.json` holds authorized
@@ -153,7 +162,7 @@ link.
 |---|---|
 | `ziggurat init --root <vault>` | Create vault directories and an empty trust policy |
 | `ziggurat ingest --root <vault> --file <inbox-file>` | Capture no-overwrite, body-hash-verified Bronze evidence |
-| `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]...` | Stage a strict Silver proposal through a loopback model |
+| `ziggurat refine --root <vault> --query <request> [--source <bronze-path>]... [--target knowledge/item.md]` | Materialize and stage strict Silver from a loopback model draft |
 | `ziggurat review --root <vault>` | Render human review packets from staged proposals |
 | `ziggurat build --root <vault>` | Rebuild all three isolated indexes |
 | `ziggurat query --root <vault> --query <text>` | Query authorized Gold |
@@ -163,6 +172,22 @@ link.
 
 Configure only loopback model endpoints in `config/adapters.yaml`. The VS Code binding in
 `.vscode/mcp.json` starts the Gold MCP server without a selectable profile.
+
+The supported refinement protocol is one non-streaming llama.cpp
+`POST /v1/chat/completions` request with a Zod-derived JSON Schema response format.
+`--target` supplies host-read existing page context and is required for `amend` and
+`contradict`. Explicit `--source` remains an operator-authorized privacy disclosure,
+not a way to bypass evidence validation. See the canonical
+[local model protocol and setup guide](docs/local-model-protocol.md) for the draft/host
+contract, pinned setup candidate, and opt-in `npm run eval:model` acceptance gate.
+Server checksums, version, planned flags, health, alias, and a nested-schema pilot are
+verified. A real end-to-end pilot also captured Bronze, called the model, staged
+host-materialized Silver, and rendered review. The first completed 90-attempt batch
+failed the staging threshold; human usability remains unscored. A separate revised
+batch completed with 90/90 staged, without individual retries or repairs. The full
+acceptance gate remains pending human scores. See the
+[measured workflow evaluation](docs/model-workflow-evaluation.md) for results and the
+revision caveat. Pilot probes do not count toward either batch.
 
 ## Core guarantees
 
@@ -202,7 +227,7 @@ npm run dev           # local development server
 npm run check         # type check, production build, built-output validation
 ```
 
-The site is not deployed while this repository is private.
+The published site is at <https://patschmittdev.github.io/Ziggurat/>.
 
 **Local-only gate (CI/Actions paused):** From `site/`, run `npx playwright install chromium` once, then `npm run visual` for visual and accessibility checks; screenshots land in `site/.artifacts/`. This gate is NOT part of `npm run check`.
 
@@ -211,6 +236,12 @@ Canonical repository specifications:
 - [Architecture](ARCHITECTURE.md) - assets, actors, trust boundaries, enforcement points
 - [Security and vulnerability reporting](SECURITY.md) - threat model and residual risks
 - [Authorization protocol](docs/authorization-protocol.md) - byte-level signing contract
+- [External signing interoperability](docs/external-signing-interop.md) - independently tested byte/signature handoff without a shipped signer
+- [CLI review workflow](docs/review-workflow.md) - safe diffs, stale warnings, and backlog navigation
+- [Policy enforcement](docs/policy-enforcement.md) - authoritative decisions and structured rejection reasons
+- [Retrieval evaluation](docs/retrieval-evaluation.md) - measured lexical relevance and known limitations
+- [Operating envelope](docs/operating-envelope.md) - measured capacity, revocation, and local recovery
+- [Local model protocol](docs/local-model-protocol.md) - draft contract, llama.cpp setup, and model evaluation
 - [Release checklist](docs/release-checklist.md) - publication gates for maintainers
 - [Contributing](CONTRIBUTING.md) - development workflow and boundary rules
 - [Support](SUPPORT.md) - where to ask questions

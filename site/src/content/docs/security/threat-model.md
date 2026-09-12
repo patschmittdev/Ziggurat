@@ -45,8 +45,13 @@ filesystem or tool capability. The refine pathway owns only a root-constrained S
 writer.
 
 The host places selected Bronze bytes into the request as an explicit, bounded, labelled
-reference block, and revalidates the returned proposal against the real files. The model
-receives data, never a path, handle, or fetch capability.
+reference block, with optional host-read target context. The model returns a strict
+version-1 draft naming supplied source IDs and line ranges. The host derives canonical
+citations and hashes, materializes Silver v2, and revalidates it against live files.
+Paths in context are data, never handles or fetch capabilities.
+
+The advisory Curator agent has separately declared read-only file tools. Those tools
+are not part of the loopback interface and do not confer write or signing authority.
 
 `ingest` reads and deletes its source, so an escaping source path would be a combined arbitrary-read and arbitrary-delete primitive.
 

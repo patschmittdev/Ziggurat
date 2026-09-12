@@ -9,12 +9,15 @@ import type {
   SearchResult,
 } from '../contracts/gold-index.js';
 import { ProfileIndexSchema } from '../contracts/gold-index.js';
-import type { CuratedInput, BronzeInput } from '../corpus/collect.js';
+import type { CuratedInput, BronzeInput, CorpusRejection } from '../corpus/collect.js';
 import { piiBlocksModelAccess } from '../policy/privacy.js';
+import { bronzeBlockedFromModelAccess } from '../policy/model-source.js';
 import type { StagedProposalRecord } from '../refine/store.js';
 import { buildBm25, bm25Search } from './bm25.js';
 import { makeProfileChunk } from './chunks.js';
 import { collectEligibleGoldChunks } from './gold-index.js';
+import type { EligibleGoldCollection } from './gold-index.js';
+import type { VerifiedBronzeReader } from '../refine/evidence.js';
 import {
   indexCorpusFingerprint,
   trustPolicyFingerprint,
@@ -24,11 +27,8 @@ import { compareCodeUnits } from '../order.js';
 
 export type { CuratedInput, BronzeInput } from '../corpus/collect.js';
 
-export function bronzeBlockedFromModelAccess(record: BronzeInput): boolean {
-  return piiBlocksModelAccess(record.pii as never)
-    || record.sensitivity === 'restricted'
-    || !record.hashVerified;
-}
+// Compatibility for the default refine context caller; the rule lives in policy.
+export { bronzeBlockedFromModelAccess } from '../policy/model-source.js';
 
 export interface BuildProfileIndexInput {
   curated: CuratedInput[];
@@ -36,6 +36,10 @@ export interface BuildProfileIndexInput {
   proposals?: StagedProposalRecord[];
   config?: ZigguratConfig;
   asOf?: Date;
+  bronzeRejections?: CorpusRejection[];
+  bronzeReader?: VerifiedBronzeReader;
+  /** Same-operation Gold decision only; this is never a cross-request cache. */
+  gold?: EligibleGoldCollection;
 }
 
 function goldProfileChunk(
@@ -64,7 +68,8 @@ export async function collectReviewChunks(
   root: string,
   input: BuildProfileIndexInput,
 ): Promise<{ chunks: ProfileChunk[]; config: ZigguratConfig }> {
-  const config = input.config ?? await parseZigguratConfig(root);
+  const config = input.gold?.config ?? input.config ?? await parseZigguratConfig(root);
+  const asOf = input.gold?.asOf ?? input.asOf ?? new Date();
   const chunks: ProfileChunk[] = [];
   const bronzeByPath = new Map(input.bronze.map(record => [record.path, record]));
   for (const record of input.proposals ?? []) {
@@ -90,10 +95,13 @@ export async function collectReviewChunks(
       },
     ));
   }
-  const gold = await collectEligibleGoldChunks(root, input.curated, {
+  const gold = input.gold ?? await collectEligibleGoldChunks(root, input.curated, {
     config,
+    asOf,
+    bronze: input.bronze,
+    ...(input.bronzeRejections === undefined ? {} : { bronzeRejections: input.bronzeRejections }),
+    ...(input.bronzeReader === undefined ? {} : { bronzeReader: input.bronzeReader }),
     ...(input.proposals === undefined ? {} : { proposals: input.proposals }),
-    ...(input.asOf === undefined ? {} : { asOf: input.asOf }),
   });
   chunks.push(...gold.chunks.map(chunk => goldProfileChunk('review', chunk)));
   chunks.sort((left, right) => compareCodeUnits(left.path, right.path));
@@ -104,7 +112,8 @@ export async function collectEvidenceChunks(
   root: string,
   input: BuildProfileIndexInput,
 ): Promise<{ chunks: ProfileChunk[]; config: ZigguratConfig }> {
-  const config = input.config ?? await parseZigguratConfig(root);
+  const config = input.gold?.config ?? input.config ?? await parseZigguratConfig(root);
+  const asOf = input.gold?.asOf ?? input.asOf ?? new Date();
   const chunks: ProfileChunk[] = [];
   for (const record of input.bronze) {
     if (bronzeBlockedFromModelAccess(record)) continue;
@@ -118,10 +127,13 @@ export async function collectEvidenceChunks(
       { kind: 'bronze', body_sha256: record.sha256 },
     ));
   }
-  const gold = await collectEligibleGoldChunks(root, input.curated, {
+  const gold = input.gold ?? await collectEligibleGoldChunks(root, input.curated, {
     config,
+    asOf,
+    bronze: input.bronze,
+    ...(input.bronzeRejections === undefined ? {} : { bronzeRejections: input.bronzeRejections }),
+    ...(input.bronzeReader === undefined ? {} : { bronzeReader: input.bronzeReader }),
     ...(input.proposals === undefined ? {} : { proposals: input.proposals }),
-    ...(input.asOf === undefined ? {} : { asOf: input.asOf }),
   });
   chunks.push(...gold.chunks.map(chunk => goldProfileChunk('evidence', chunk)));
   chunks.sort((left, right) => compareCodeUnits(left.path, right.path));
@@ -132,16 +144,18 @@ export async function buildReviewIndex(
   root: string,
   input: BuildProfileIndexInput,
 ): Promise<ProfileIndex> {
-  const { chunks, config } = await collectReviewChunks(root, input);
-  return buildAndWriteProfileIndex(root, 'review', chunks, config, 'review-index.json');
+  const asOf = input.gold?.asOf ?? input.asOf ?? new Date();
+  const { chunks, config } = await collectReviewChunks(root, { ...input, asOf });
+  return buildAndWriteProfileIndex(root, 'review', chunks, config, 'review-index.json', asOf);
 }
 
 export async function buildEvidenceIndex(
   root: string,
   input: BuildProfileIndexInput,
 ): Promise<ProfileIndex> {
-  const { chunks, config } = await collectEvidenceChunks(root, input);
-  return buildAndWriteProfileIndex(root, 'evidence', chunks, config, 'evidence-index.json');
+  const asOf = input.gold?.asOf ?? input.asOf ?? new Date();
+  const { chunks, config } = await collectEvidenceChunks(root, { ...input, asOf });
+  return buildAndWriteProfileIndex(root, 'evidence', chunks, config, 'evidence-index.json', asOf);
 }
 
 async function buildAndWriteProfileIndex(
@@ -150,13 +164,14 @@ async function buildAndWriteProfileIndex(
   chunks: ProfileChunk[],
   config: ZigguratConfig,
   filename: string,
+  asOf: Date,
 ): Promise<ProfileIndex> {
   const policy_fingerprint = trustPolicyFingerprint(config);
   const index: ProfileIndex = {
     version: 2,
     profile,
     retrieval_mode: 'bm25',
-    built_at: new Date().toISOString(),
+    built_at: asOf.toISOString(),
     corpus_fingerprint: indexCorpusFingerprint(profile, chunks, policy_fingerprint),
     policy_fingerprint,
     chunks,
