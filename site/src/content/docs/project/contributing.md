@@ -70,7 +70,9 @@ asset reference in the built output and fails on any root-relative URL that esca
 - Authored Markdown links must include the base path, as in
   `/Ziggurat/concepts/tiers/`. Starlight prefixes its own navigation but not hand-written
   links, and the validator enforces this.
-- Never claim users, deployments, audits, benchmarks, or production maturity.
+- Never invent users, deployments, audits, benchmarks, or production maturity.
+  Cite measured development reports with their workload, failures, and limitations;
+  do not present them as human acceptance or production evidence.
 - Never describe Gold as truth, safety, or instruction authority.
 
 ## Related

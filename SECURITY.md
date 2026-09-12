@@ -2,10 +2,18 @@
 
 ## Reporting a vulnerability
 
-Do not open a public issue for suspected vulnerabilities. Use GitHub's private
-vulnerability reporting for this repository: **Security**, **Advisories**,
-**Report a vulnerability**, or the direct form at
+Do not open a public issue for suspected vulnerabilities.
+
+As of 2026-09-12, this repository is private and GitHub's private vulnerability
+reporting endpoint is unavailable. There is no verified public reporting channel
+yet. Existing collaborators should use their established private maintainer contact;
+do not post vulnerability details in issues or discussions.
+
+Public launch is blocked until private vulnerability reporting is enabled and the
+report form is verified from a non-maintainer account. Once verified, the intended
+route is **Security**, **Advisories**, **Report a vulnerability**, at
 <https://github.com/patschmittdev/Ziggurat/security/advisories/new>.
+See the [release checklist](docs/release-checklist.md) for the gate status.
 
 Include the affected commit or version, threat scenario, reproduction using
 fictional data, security impact, and any suggested mitigation. Do not submit private

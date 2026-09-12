@@ -135,7 +135,7 @@ Documentation-site constraints:
 - Documentation dependencies live in a standalone project under `site/` so the core
   runtime package is unaffected.
 
-Undecided and deliberately not invented: adoption numbers, users, benchmarks,
+Undecided and deliberately not invented: adoption numbers, users,
 funding, roadmap dates, and any production-maturity claim.
 
 ## Design and brand
@@ -157,14 +157,17 @@ Real material that exists in this repository and may be shown:
 - `scripts/run-garden-walkthrough.mjs`, which prepares and ingests the fixture vault,
   then prints the remaining manual steps.
 - `fixtures/authorization/receipt-vectors.json`, published interoperability vectors.
+- `docs/model-workflow-evaluation.md`, `docs/retrieval-evaluation.md`,
+  `docs/operating-envelope.md`, and `docs/external-signing-interop.md`, which record
+  bounded development measurements, failures, and unverified acceptance criteria.
 - Microsoft's
   [AI Memory / Context Poisoning](https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/ai-memory-context-poisoning)
   catalog entry, which is the external threat description this work implements
   controls for.
 
 Absences that must not be fabricated: no documented users or adoption figures, no known
-deployment, no third-party audit, no benchmark, no testimonial, no press, and no release
-tag.
+deployment, no third-party audit, no production benchmark, no testimonial, no press,
+and no release tag. Development measurements are not production or adoption evidence.
 
 The opt-in `npm run eval:model` gate targets 30 cases across create, amend, and
 contradict, three runs each: 90 attempts without retries. Acceptance requires at least

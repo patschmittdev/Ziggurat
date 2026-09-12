@@ -154,9 +154,40 @@ its own fill file, and verifies a new publication succeeds. Filling is independe
 capped at 64 MiB even if the volume changes after preflight. An ordinary host disk
 is refused before filling it.
 
-The current Windows session is not elevated. Provisioning a bounded 48 MiB
-disposable VHD was attempted and refused by Windows authorization policy; no VHD
-was created. Actual small-volume provisioning and the ENOSPC run are therefore
-**unverified here**. The host-volume refusal guard is
-automated, but it is not represented as a successful disk-full test. Permission
-errors and serialization failures are separate cases, not substitutes for ENOSPC.
+### Verified Linux container run
+
+With Docker running Linux containers, use the same real-file harness without
+provisioning or filling any host volume:
+
+```powershell
+npm run test:disk-full:container
+```
+
+The wrapper pins the Node.js 24.16.0 Debian bookworm-slim image by digest:
+`sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203`.
+Docker may download that public image on first use. The test container has no
+network, a read-only root, no added capabilities, a non-root user, a 256 MiB
+memory cap, and a separate 48 MiB tmpfs. Only compiled code, installed
+dependencies, and package metadata are mounted, all read-only. The marker is
+created inside that new tmpfs; the host checkout is never a fill target.
+Docker removes the container and its tmpfs after exit. Missing Docker or a
+test failure fails the command rather than returning a passing skip.
+
+On 2026-09-12 the run passed with Docker Engine 29.5.2, Linux kernel
+`6.6.114.1-microsoft-standard-WSL2`, Node.js 24.16.0, and an initially empty
+tmpfs reporting 12,288 blocks of 4,096 bytes:
+
+```json
+{"actual_errno":"ENOSPC","previous_index_preserved":true,"recovery":"passed"}
+```
+
+Both the filler and attempted replacement returned real `ENOSPC`. The previous
+index remained readable and unchanged; removing the filler allowed a replacement
+to publish successfully. No filesystem mocking, host-volume filling, or elevated
+Windows VHD provisioning was used. The Ubuntu/Node 24 CI job now includes this
+command; local success is not evidence that an unmerged workflow ran remotely.
+
+This verifies Linux tmpfs behavior, not native Windows/NTFS disk-full recovery,
+physical disk failure, or atomic publication of all three indexes together.
+The earlier attempt to provision a 48 MiB Windows VHD was refused by authorization
+policy and created no VHD. Native Windows ENOSPC remains unverified.

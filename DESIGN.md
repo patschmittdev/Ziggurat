@@ -344,7 +344,8 @@ The favicon is a plain single-colour SVG with no fill attributes and no
 - Build a grid of equal cards with an icon, a heading, and three lines of text.
 - Put an eyebrow label above a heading.
 - Reproduce the poisoned fixture's instruction text. Describe it instead.
-- Claim users, deployments, audits, benchmarks, or production maturity.
+- Invent users, deployments, audits, benchmarks, or production maturity. Cite bounded
+  development measurements with their failures and limitations.
 
 ## Brand Commitments
 

@@ -26,6 +26,7 @@ Project maintainers may edit or remove contributions and may temporarily or
 permanently restrict participation when behavior violates this standard. Enforcement
 decisions should protect affected participants and avoid publishing private details.
 
-Report conduct concerns to the maintainers through GitHub. If a report contains
-sensitive information, use the repository's private vulnerability reporting channel
-described in [SECURITY.md](SECURITY.md).
+Report conduct concerns to the maintainers through GitHub. For sensitive conduct
+reports, ask a maintainer to arrange a private channel before sharing details.
+For suspected vulnerabilities, follow [SECURITY.md](SECURITY.md), which records
+current private reporting availability.

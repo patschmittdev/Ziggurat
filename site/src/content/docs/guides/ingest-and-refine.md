@@ -152,6 +152,9 @@ human scores leave the quality gate pending.
 Setup and protocol pilot probes are excluded from the frozen 90 attempts.
 See the [local model guide](https://github.com/patschmittdev/Ziggurat/blob/main/docs/local-model-protocol.md)
 for setup and invocation details; intended pins and thresholds are not measured results.
+The [measured workflow report](https://github.com/patschmittdev/Ziggurat/blob/main/docs/model-workflow-evaluation.md)
+separately records 79/90 staged in the initial batch and 90/90 after an input-presentation
+revision on the same fixtures. Human acceptance remains pending for both batches.
 
 ## Review the result
 

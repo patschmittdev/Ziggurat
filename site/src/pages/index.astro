@@ -163,7 +163,7 @@ const notGuaranteed = [
               <ul class="boundary__list" aria-labelledby="boundary-below">
                 <li>read authorized Gold as labelled reference data</li>
                 <li>receive a bounded, host-selected block of Bronze bytes</li>
-                <li>return one strict schema-version-2 Silver proposal</li>
+                <li>return one strict schema-version-1 refinement draft; the host materializes stored Silver v2</li>
               </ul>
             </div>
             <figcaption class="figure__caption">
@@ -467,8 +467,11 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
           </p>
           <p>
             Continuous integration is configured to run the full suite on Linux, macOS, and Windows
-            against Node.js 22 and 24. There are no users, deployments, third-party audits, or
-            benchmarks to report, and none are claimed.
+            against Node.js 22 and 24. Bounded model, retrieval, signing-interoperability,
+            and operating-envelope measurements are documented in
+            <a href={url('project/status/')}>project status</a>, alongside failures and
+            remaining gaps. Human usability is unmeasured; no adoption, deployment,
+            third-party audit, or production maturity is claimed.
           </p>
           <dl>
             <dt>What it is</dt>

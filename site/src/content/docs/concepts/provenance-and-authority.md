@@ -58,8 +58,10 @@ instructions steps outside the boundary Ziggurat maintains.
 | Authorization with truth | A signature read as a correctness guarantee |
 | Authorization with instruction authority | A reviewed page that can direct an agent |
 
-Ziggurat implements the first two claims and refuses the third. The refusal is not a
-default that a configuration flag can relax.
+Ziggurat establishes the first two claims and never asserts the third: no shipped
+path emits a value other than `instruction_authority: none`, and no configuration
+flag can relax it. That is a labelling guarantee, not enforcement on the client.
+Whether a downstream agent honours the label is outside Ziggurat's boundary.
 
 ## Related
 

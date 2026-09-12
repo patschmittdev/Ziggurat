@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT",
   "repository": "github:patschmittdev/Ziggurat",
-  "homepage": "https://patschmittdev.github.io/Ziggurat/",
+  "homepage": "https://github.com/patschmittdev/Ziggurat#readme",
   "bugs": {
     "url": "https://github.com/patschmittdev/Ziggurat/issues"
   },
@@ -24,7 +24,7 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "tsc -p tsconfig.json",
     "test": "npm run clean && npm run build && node --test \"dist/test/*.test.js\"",
-    "check": "npm run test && node --test scripts/check-docs-links.test.mjs && npm run check:links && npm run check:style",
+    "check": "npm run test && node --test scripts/check-docs-links.test.mjs scripts/test-disk-full-container.test.mjs && npm run check:links && npm run check:style",
     "check:links": "node scripts/check-docs-links.mjs",
     "check:style": "node scripts/check-style.mjs",
     "eval:model": "npm run build && node dist/test/manual/refine-model.js",
@@ -32,6 +32,7 @@
     "eval:retrieval": "npm run build && node dist/test/manual/retrieval-evaluation.js",
     "test:interop": "npm run build && node --test dist/test/manual/authorization-interop.test.js",
     "test:disk-full": "npm run build && node dist/test/manual/disk-full.js",
+    "test:disk-full:container": "npm run build && node scripts/test-disk-full-container.mjs",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm run build",
     "site:check": "cd site && npm run check",

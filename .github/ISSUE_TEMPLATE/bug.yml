@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Do not include credentials, private keys, private vault content, or vulnerability details.
-        Use the Security tab to report vulnerabilities privately.
+        Check [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#reporting-a-vulnerability) for current private reporting availability before reporting a vulnerability.
   - type: input
     id: version
     attributes:

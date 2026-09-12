@@ -29,6 +29,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: node dist/src/cli/main.js check --root . --audit-clean-room
+      - name: Verify real disk-full recovery
+        if: runner.os == 'Linux' && matrix.node == 24
+        run: npm run test:disk-full:container
 
   # The documentation site is a standalone project with its own lockfile, so it is
   # installed and validated separately and cannot affect the core runtime package.

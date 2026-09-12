@@ -19,12 +19,20 @@ was: how do you prevent the AI from erroneously promoting a Silver proposal to G
 The answer here is to remove the door. There is no promote command. A human curates the
 Gold layer with a key that no shipped code path holds.
 
-Another reason: I was tired of seeing blatant AI output that no human had reviewed.
-Ziggurat is meant to make the person slow down and read each proposal instead of
-rubber-stamping a queue. Review output is paginated to keep packets readable;
-the page limit does not cap the backlog or guarantee that older proposals receive
-attention. The oldest-first view makes that backlog navigable without hiding
-contradictions from admission checks.
+I was also experimenting with aggressive coding-agent velocity. Over long sessions,
+I found myself balancing trust in the guardrails I had established against pulling
+back when review fatigue started affecting output quality. It felt like a hawk-dove
+game: press ahead behind those guardrails, or become more cautious as my capacity
+for careful review faded. Related guardrail work is captured in
+[Trust Surface Ratchet](https://github.com/patschmittdev/trust-surface-ratchet),
+which grew out of my work on Castrum, a private, unpublished project.
+
+That experience motivated a narrower question here: can an agent propose durable
+memory without also having the authority to admit it? Ziggurat makes that admission
+an explicit, separately authorized step. It does not prove that a person reviewed
+carefully, solve review fatigue, or establish better coding output. Pagination and
+oldest-first navigation help inspect the backlog, but do not cap accumulation or
+guarantee attention to every proposal.
 
 ## The problem: memory poisoning is a durable write attack
 
@@ -35,9 +43,10 @@ Microsoft's
 threat description recommends governing memory writes, provenance, integrity, review,
 isolation, versioning, and rollback.
 
-Ziggurat implements those controls with a Medallion pipeline: append-only-through-ingest
+Ziggurat implements admission and retrieval-integrity controls with a Medallion pipeline: append-only-through-ingest
 **Bronze** evidence, canonical **Silver** proposals, and separately authorized **Gold**
-reference data.
+reference data. Versioning and rollback depend on operator-managed Git history;
+Ziggurat does not supply a Git workflow or sanitize hostile source text.
 
 ## What makes it different
 
@@ -57,7 +66,8 @@ reference data.
   materialized proposal against live files. Citation integrity does not establish
   semantic support or factual truth; those judgments remain reviewer responsibilities.
 - **Approval is not instruction authority.** Every retrieved chunk carries
-  `content_role: reference` and `instruction_authority: none`; see
+  `content_role: reference` and `instruction_authority: none`. These labels do not
+  enforce how a downstream agent uses the text; see
   [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ```mermaid
@@ -90,15 +100,18 @@ for the comparison and its limits.
 
 ### Why not signed git commits?
 
-A signed commit proves who committed a tree. It does not bind one page's canonical
-content to one admission decision by a key that operator policy names as a reviewer,
-and any tool with commit access, including an agent, can produce one. A detached receipt
-binds a single page digest, target path, reviewer, timestamp, and key; it is verified on
-every `build` and every retrieval; and the key it needs is one no shipped code path
-holds. If your agents never have write access to the vault and every merge is reviewed
-by a person, signed commits plus branch protection may be enough. Ziggurat is for the
-case where agents do write to the vault and persistence must still require a human-held
-key.
+A signed Git commit binds the commit, including its tree, to a signing key. It can
+support a human-review policy when signing authority is kept separate from agents.
+Commit access alone does not grant signing authority, although a hosting service
+can sign changes made through an agent's credentials.
+
+Ziggurat instead uses a page-specific receipt binding the canonical digest, target,
+reviewer, timestamp, and key, and revalidates it on every `build` and retrieval.
+A Git-based design can enforce similar policies if it verifies trusted reviewer
+signatures and live content. If your agents never have write access to the vault
+and every merge is reviewed by a person, signed commits plus branch protection may
+be enough. Ziggurat is for cases where separating page-level admission from
+agent-proposed memory justifies the additional external-signing workflow.
 
 ## Quickstart
 
@@ -146,7 +159,7 @@ steps. The full end-to-end boundary is exercised by `test/memory-boundary.test.t
 |---|---|---|
 | **Bronze** | `ingest`, and nothing else | Canonical UTF-8 text after CRLF-to-LF normalization. Ingest uses atomic no-overwrite creation; later body mutation is detectable by SHA-256 verification. |
 | **Silver** | Refine host | Strict version-2 JSON materialized from a model's version-1 draft under `.ziggurat/proposals/`. Every citation is revalidated against stored Bronze text, hashes, and line ranges. |
-| **Gold** | `build` | Eligible knowledge chunks admitted only with a valid detached Ed25519 receipt and every other eligibility check. |
+| **Gold** | `build` (index only; the reviewer authors the page) | Eligible knowledge chunks admitted only with a valid detached Ed25519 receipt and every other eligibility check. |
 
 The three generated indexes remain physically separate. `gold-index.json` holds authorized
 Gold only and is the sole answer context, while `review-index.json` and
@@ -213,6 +226,8 @@ service, an OS sandbox, or a substitute for external key custody.
 
 Continuous integration is configured to run the full suite on Linux, macOS, and Windows
 against Node.js 22 and 24, plus a documentation-site build.
+See the [dated release evidence](docs/release-checklist.md) for the tested `main`
+commit and remaining publication gates. A passing CI run is not launch approval.
 
 ## Documentation
 
@@ -227,9 +242,11 @@ npm run dev           # local development server
 npm run check         # type check, production build, built-output validation
 ```
 
-The published site is at <https://patschmittdev.github.io/Ziggurat/>.
+The documentation site is not published yet. Use the local commands above or browse
+the [documentation source](site/src/content/docs/). Pages deployment remains disabled
+while the repository is private; a live URL will be advertised only after verification.
 
-**Local-only gate (CI/Actions paused):** From `site/`, run `npx playwright install chromium` once, then `npm run visual` for visual and accessibility checks; screenshots land in `site/.artifacts/`. This gate is NOT part of `npm run check`.
+**Additional local-only gate:** From `site/`, run `npx playwright install chromium` once, then `npm run visual` for visual and accessibility checks; screenshots land in `site/.artifacts/`. CI is active, but this visual gate is not part of either package's `npm run check` or the CI workflow.
 
 Canonical repository specifications:
 
