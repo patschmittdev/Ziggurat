@@ -32,21 +32,21 @@
   <!-- Datum rail and plate frame -->
   <g class="fig-hair" stroke-width="1">
     <path d="M44 36V700" />
-    <path d="M432 36V700" />
+    <path d="M428 36V700" />
   </g>
-  <path class="fig-rule" stroke-width="1.5" d="M44 690H432" />
+  <path class="fig-rule" stroke-width="1.5" d="M44 690H428" />
 
-  <!-- Recessed authorization gap -->
-  <rect x="88" y="186" width="300" height="108" fill="var(--zg-ground)"></rect>
+  <!-- Recessed authorization gap, centered on the tiers' x=236 axis -->
+  <rect x="86" y="186" width="300" height="108" fill="var(--zg-ground)"></rect>
   <g class="fig-rule" stroke-width="1.5" stroke-dasharray="7 6">
-    <path d="M88 186H388" />
-    <path d="M88 294H388" />
+    <path d="M86 186H386" />
+    <path d="M86 294H386" />
   </g>
 
   <!-- Datum cursor: the single authored motion, added only by the controller -->
   <g class="datum-cursor" aria-hidden="true">
     <path d="M36 -6L48 0L36 6Z" class="fill-ink"></path>
-    <path d="M52 0H432" stroke="var(--zg-ink)" stroke-width="1" stroke-dasharray="3 4"></path>
+    <path d="M52 0H428" stroke="var(--zg-ink)" stroke-width="1" stroke-dasharray="3 4"></path>
   </g>
 
   <!-- Level 00: untrusted capture -->
@@ -96,23 +96,23 @@
   <g class="lvl" data-lvl="3">
     <text class="fig-label--datum" x="30" y="268" text-anchor="end">03</text>
     <path class="fig-rule" stroke-width="1.5" d="M36 263H52" />
-    <rect class="focus-ring" x="128" y="242" width="274" height="42"></rect>
-    <rect x="134" y="248" width="176" height="30" fill="none" stroke="var(--zg-refuse)" stroke-width="1.5" stroke-dasharray="5 4"></rect>
-    <text class="fig-label--small fill-refuse" x="142" y="268" >reviewed_by: alice</text>
-    <path d="M310 263H318" stroke="var(--zg-refuse)" stroke-width="1.5"></path>
-    <rect x="318" y="248" width="78" height="30" fill="none" stroke="var(--zg-refuse)" stroke-width="2"></rect>
-    <text class="fig-label--small fill-refuse" x="326" y="268" font-weight="700">REFUSED</text>
+    <rect class="focus-ring" x="99" y="242" width="274" height="42"></rect>
+    <rect x="105" y="248" width="160" height="30" fill="none" stroke="var(--zg-refuse)" stroke-width="1.5" stroke-dasharray="5 4"></rect>
+    <text class="fig-label--small fill-refuse" x="113" y="268" >reviewed_by: alice</text>
+    <path d="M265 263H273" stroke="var(--zg-refuse)" stroke-width="1.5"></path>
+    <rect x="273" y="248" width="94" height="30" fill="none" stroke="var(--zg-refuse)" stroke-width="2"></rect>
+    <text class="fig-label--small fill-refuse" x="320" y="268" text-anchor="middle" font-weight="700">REFUSED</text>
   </g>
 
   <!-- Level 04: the external signing capability -->
   <g class="lvl" data-lvl="4">
     <text class="fig-label--datum" x="30" y="219" text-anchor="end">04</text>
     <path class="fig-rule" stroke-width="1.5" d="M36 214H52" />
-    <rect class="focus-ring" x="228" y="192" width="180" height="44"></rect>
-    <path d="M470 214H266" stroke="var(--zg-gold)" stroke-width="3"></path>
-    <circle cx="254" cy="214" r="11" fill="none" stroke="var(--zg-gold)" stroke-width="3"></circle>
-    <text class="fig-label--small fill-gold" x="280" y="202" >external key</text>
-    <text class="fig-label--small fill-ink-3" x="280" y="236" >outside the vault</text>
+    <rect class="focus-ring" x="218" y="187" width="180" height="55"></rect>
+    <path d="M470 214H247" stroke="var(--zg-gold)" stroke-width="3"></path>
+    <circle cx="236" cy="214" r="11" fill="none" stroke="var(--zg-gold)" stroke-width="3"></circle>
+    <text class="fig-label--small fill-gold" x="262" y="206" >external key</text>
+    <text class="fig-label--small fill-ink-3" x="262" y="236" >outside the vault</text>
   </g>
 
   <!-- Level 05: Gold -->
