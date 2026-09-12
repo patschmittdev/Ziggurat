@@ -18,6 +18,7 @@ export const GoldChunkSchema = z.object({
   path: z.string().min(1),
   heading: z.string().min(1),
   body: z.string().min(1),
+  source_body_sha256: Sha256Schema.optional(),
   bronze_lineage: z.array(z.object({
     path: z.string().min(1),
     sha256: Sha256Schema,
@@ -53,6 +54,7 @@ const ProfileProvenanceSchema = z.discriminatedUnion('kind', [
       path: z.string().min(1),
       sha256: Sha256Schema,
     }).strict()),
+    source_body_sha256: Sha256Schema.optional(),
   }).strict(),
 ]);
 

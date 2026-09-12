@@ -60,6 +60,8 @@ function goldProfileChunk(
       reviewer_id: chunk.authorization.reviewer_id,
       key_id: chunk.authorization.key_id,
       bronze_lineage: chunk.bronze_lineage,
+      ...(chunk.source_body_sha256 === undefined
+        ? {} : { source_body_sha256: chunk.source_body_sha256 }),
     },
   );
 }

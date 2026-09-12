@@ -157,6 +157,39 @@ signed-index round trips. Profile chunk schema field order also matches its
 constructor, preserving the existing JSON-derived integrity fingerprint on
 reload instead of invalidating every nonempty advisory index.
 
+## Gold body line endings and index compatibility
+
+Gold chunk construction uses the existing authorization canonicalization: CRLF
+and lone CR in a curated body become LF before computing its chunk ID, BM25 data,
+and citation body hash. Review and evidence profiles inherit this same Gold body.
+No source file is rewritten, no JSON value is double-escaped, and receipt v1
+canonical bytes, digests, signing payloads, and signatures are unchanged.
+Bronze keeps its separate CRLF-only normalization: lone CR remains part of its
+body, body hash, and line-range citations.
+
+For curated bodies containing lone CR, cache provenance additionally records
+`source_body_sha256`, the hash of the body after CRLF-only corpus normalization.
+Gold stores it on the chunk; review/evidence store it in authorization provenance.
+This optional index-v2 field is not a signed receipt field or admission authority.
+It keeps live fingerprints sensitive to lone-CR representation changes even
+though served text and chunk IDs are canonical. Such a post-build mutation still
+refuses search and citation reads as stale until a legitimate rebuild; a
+canonical-equivalent receipt does not bypass that refusal.
+
+**After this update, rebuild all three indexes if any indexed Gold body contains
+lone CR**, using `node dist\src\cli\main.js build --root YOUR_VAULT`. Old snapshots
+for those pages fail live verification. Their Gold chunk IDs (including Gold in
+review/evidence), citation body hashes, and corpus fingerprints change; issue new
+citations after rebuilding. Existing LF/CRLF-only Gold chunks and fingerprints
+are unchanged by this fix. The index format remains v2 and does not require new
+receipts or restaging Silver. Older binaries reject the new optional provenance
+field when present, so rolling back also requires rebuilding affected indexes.
+
+The dedicated `test/gold-body-normalization.test.ts` regression uses disposable
+signing keys and real temporary vaults to cover LF, CRLF, lone CR, mixed endings,
+unchanged source bytes, all three profiles, live staleness/rebuild, and unchanged
+Bronze hashes and lossless citations.
+
 ## Authorization evidence and limits
 
 The opt-in runner uses test-only Ed25519 keys and real files. `runBuild` produces

@@ -1,4 +1,5 @@
-import { sha256Text } from '../bronze/canonical.js';
+import { normalizeText } from '../authorization/canonical.js';
+import { canonicalBronzeBody, sha256Text } from '../bronze/canonical.js';
 import type { CuratedPage } from '../contracts/index.js';
 import type {
   GoldChunk,
@@ -17,11 +18,15 @@ export function makeGoldChunk(
   bronzeLineage: Array<{ path: string; sha256: string }>,
   authorization: VerifiedAuthorization,
 ): GoldChunk {
+  const sourceBody = canonicalBronzeBody(pageBody);
+  const body = normalizeText(sourceBody);
   return {
-    id: chunkId('gold', path, pageBody),
+    id: chunkId('gold', path, body),
     path,
     heading: page.title,
-    body: pageBody,
+    body,
+    // Preserve lone-CR mutation detection without changing ordinary LF/CRLF chunks.
+    ...(sourceBody === body ? {} : { source_body_sha256: sha256Text(sourceBody) }),
     bronze_lineage: bronzeLineage,
     profile: 'gold',
     tier: 'gold',
