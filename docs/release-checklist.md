@@ -193,10 +193,16 @@ the remaining gates before any later tagged release or broader announcement:
 
 ### Required main protection policy
 
-The owner requires pull requests, one independent approving review, dismissal of
-stale approvals, up-to-date required checks, and no administrator bypass.
-Force pushes and deletion must be blocked. Required checks must come from GitHub
-Actions (app ID `15368`), not merely share their names.
+For the sole-maintainer workflow, the owner requires pull requests but no
+independent approving review (`required_approving_review_count: 0` and
+`require_last_push_approval: false`). This permanent policy was authorized on
+2026-09-12. GitHub does not enforce two-person review under this policy.
+Stale approvals are still dismissed when reviews are present.
+
+All seven required checks must pass on an up-to-date branch, with administrator
+enforcement retained. Force pushes and deletion remain blocked; linear history
+and conversation resolution remain required. Required checks must come from
+GitHub Actions (app ID `15368`), not merely share their names.
 
 Protection is managed in GitHub settings, independently of this source document.
 Verify the live policy with `gh api repos/patschmittdev/Ziggurat/branches/main/protection`
