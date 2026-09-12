@@ -4,8 +4,9 @@ This is the publication gate, not a claim that every gate has passed.
 **Publication status (2026-09-12): source and documentation are public.** The
 owner accepted the retained email disclosure and authorized publication after
 green CI. The owner explicitly deferred all tags and GitHub prereleases.
-Follow-up documentation and visual corrections are local until published;
-remaining operational verification is recorded below, not implied complete.
+The documentation and visual corrections shipped in `6169885` with green CI and
+Pages deployment. Remaining verification limits are recorded below, not implied
+complete or converted into production-readiness claims.
 
 The 2026-09-09 evidence at `164bc98` was historical evidence, not approval of a
 later candidate. It remains available in repository history and PR #10. The
@@ -54,16 +55,17 @@ dated results below supersede its blanket completion marks.
       Commit `e19fa2c0b4e0c0170be2be489868db9ba52aadd9` passed all seven jobs in
       [CI run 34696499687](https://github.com/patschmittdev/Ziggurat/actions/runs/34696499687),
       including the new clean-room and Linux ENOSPC steps.
-- [ ] Publish the subsequent full documentation review and visual corrections,
-      then require green CI on that exact `main` commit. The run above does not
-      cover the current local follow-up.
-- [ ] Audit the exact final publication tree and record its identity using
-      `node dist/src/cli/main.js check --root <publication-tree> --audit-clean-room`.
-      Audit source contents, not a directory containing local measurement logs.
-- [ ] Complete a suitable secret scan and manual private-data review of the final
-      tree and publication history. The clean-room audit is heuristic, skips
-      symlinks, and is not a generic secret scanner.
-- [ ] Repeat the affected content gates if the final publication snapshot changes.
+- [x] Publish the full documentation review and visual corrections as
+      `616988584e90b69cd37d2ad3474a321e72005d3f`.
+      [CI run 34700745097](https://github.com/patschmittdev/Ziggurat/actions/runs/34700745097)
+      passed all seven jobs on that exact `main` commit.
+- [x] Audit the shipped source tree
+      `34db3c719577506db15bdbf9113be9b9fbee214c` using the explicit clean-room
+      command. The isolated 216-file source snapshot passed with no findings.
+- [x] Scan that source snapshot and reachable `main` history with Gitleaks 8.30.1:
+      no findings; 37 commits scanned. This supplements the retained-PR history
+      scan below, not a guarantee of universal secret detection.
+- [ ] Before any later release, repeat affected gates on its exact target commit.
       The visual gate is not part of either package's `npm run check`.
 
 The initial checkout audit failed on existing ignored local logs and screenshots.
@@ -82,12 +84,12 @@ audited source-only contents.
       exist, with issue forms and a pull request template.
 - [x] Both packages retain `"private": true`; distribution is source-only.
 - [x] Repository description and topics describe the memory boundary without
-      implying production deployment. The repository homepage is currently empty.
-- [ ] Land the final README, package homepage, reporting-channel, and site-status
-      updates after the verified Pages deployment.
+      implying production deployment. The homepage points to the verified Pages site.
+- [x] Land the README, package homepage, reporting-channel, and site-status
+      corrections, and verify the deployed homepage, support, and status pages.
 - [x] Review all 22 documentation pages against current code, specifications,
       tests, and available measurements; correct the 15 identified documentation
-      issues in the local follow-up.
+      issues in the shipped follow-up.
       Do not infer human usability from staging success, human review from a
       signature, or factual truth from citation integrity.
 - [x] Complete the requested Claude Opus documentation and problem-fit review.
@@ -102,7 +104,7 @@ audited source-only contents.
       also returns HTTP 200.
 
 The first visual pass sampled four routes; it was not an all-page visual review.
-The expanded suite discovers every documentation page and runs 138 combinations:
+The expanded suite discovers every documentation page and passed 138 combinations:
 22 docs pages plus the homepage across three viewport sizes and two themes.
 Manual desktop/mobile screenshot inspection covered all 22 docs pages. The
 follow-up fixes the heading-wrapper separator defect, inconsistent navigation
@@ -185,14 +187,20 @@ the remaining gates before any later tagged release or broader announcement:
       2026-09-12.
 - [x] Enable and verify Dependabot security updates: `enabled: true`,
       `paused: false`. This does not imply scheduled version-update configuration.
-- [ ] Protect `main` with a ruleset or branch protection requiring pull requests,
-      review, and the seven actual CI job contexts below. Block force pushes and
-      deletion. The owner selected one independent approving review, up-to-date
-      required checks, and no administrator bypass. This policy is authorized
-      but has not yet been applied while the final publication changes are pending.
 - [x] Verify default Actions permissions: `read`, with workflow approval of pull
       request reviews disabled. Workflow-level permissions also remain explicit.
-- [ ] Rerun and verify CI on the final public `main` commit after all corrections.
+- [ ] Before a later tagged release, verify green CI on that exact target commit.
+
+### Required main protection policy
+
+The owner requires pull requests, one independent approving review, dismissal of
+stale approvals, up-to-date required checks, and no administrator bypass.
+Force pushes and deletion must be blocked. Required checks must come from GitHub
+Actions (app ID `15368`), not merely share their names.
+
+Protection is managed in GitHub settings, independently of this source document.
+Verify the live policy with `gh api repos/patschmittdev/Ziggurat/branches/main/protection`
+before a later release; a documented policy alone is not enforcement evidence.
 
 Required check contexts:
 
@@ -225,9 +233,12 @@ Missing or unexpected visibility fails closed. Do not remove this guard.
 - [x] Verify live Pagefind search: `authorization` returned 20 results under
       `/Ziggurat/`, including normal search-dialog results.
 - [x] Inspect live light/dark and mobile rendering. This exposed visual defects
-      now corrected locally, rather than establishing that the deployed UI was finished.
-- [ ] Deploy and recheck the local documentation and visual follow-up.
-- [ ] Only then advertise the live site in README.md, package metadata, and
+      subsequently corrected in the shipped follow-up; automated checks are not
+      a claim that every possible visual or accessibility defect is absent.
+- [x] Deploy the documentation and visual follow-up:
+      [Pages run 34700745105](https://github.com/patschmittdev/Ziggurat/actions/runs/34700745105)
+      succeeded on `6169885`; public HTML contains the corrected figures and status.
+- [x] Advertise the verified live site in README.md, package metadata, and
       repository homepage settings.
 
 ## 6. Tagged pre-release: deferred by the maintainer
