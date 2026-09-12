@@ -24,6 +24,7 @@ export default defineConfig({
       favicon: '/favicon.svg',
       social: [{ icon: 'github', label: 'GitHub', href: repository }],
       customCss: ['./src/styles/tokens.css', './src/styles/starlight.css'],
+      components: { MobileMenuToggle: './src/components/AccessibleMenuToggle.astro' },
       editLink: { baseUrl: `${repository}/edit/main/site/` },
       lastUpdated: false,
       pagination: true,

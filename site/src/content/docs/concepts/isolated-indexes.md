@@ -15,8 +15,12 @@ Retrieval is lexical (BM25) over the Gold index. No embeddings are computed and 
 | Index | Contents | Intended use |
 |---|---|---|
 | `.ziggurat/gold-index.json` | Authorized Gold only | Answer context |
-| `.ziggurat/review-index.json` | Silver whose candidate and every source pass model-access privacy filters, plus eligible Gold | Local advisory review |
+| `.ziggurat/review-index.json` | Silver with candidate `pii: false` whose every Bronze source is PII-false, non-restricted, and hash-verified, plus eligible Gold | Local advisory review |
 | `.ziggurat/evidence-index.json` | Integrity-verified Bronze that passes model-access privacy filters, plus eligible Gold | Local forensic tracing |
+
+The Silver addition has no candidate-sensitivity or egress gate. It is advisory
+context, not Gold admission; see the
+[policy decisions](https://github.com/patschmittdev/Ziggurat/blob/main/docs/policy-enforcement.md).
 
 ## What each index carries
 

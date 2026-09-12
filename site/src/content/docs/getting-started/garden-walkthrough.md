@@ -17,9 +17,9 @@ to knowledge.
 ## What the fixture contains
 
 `fixtures/garden/inbox/poisoned-memory-rule.md` is a plausible-looking memo that
-instructs an AI to skip review and to remember a vendor as approved. It is exactly the
-kind of document that succeeds against a system where writing memory is an ordinary model
-action.
+instructs an AI to skip review and to remember a vendor as approved. It illustrates
+the risk when untrusted content can enter durable memory through ordinary model
+writes; this fixture is not evidence of a successful attack against another product.
 
 That material is described here, never reproduced. Nothing on this site quotes the
 hostile instruction text, and nothing retrieved through Ziggurat carries instruction
@@ -74,8 +74,11 @@ ingest is the only writer of Bronze. The source must resolve to a real regular f
 ### A model may draft, and may write nothing else
 
 The host reads Bronze on the model's behalf. Each refine request carries a bounded
-reference block of host-selected records: at most 12 records, 32 KiB per record, and
-256 KiB in total. Each record is labelled as non-instructional reference, with oversize
+reference block of host-selected records: at most 12 records, 32 KiB of canonical
+Bronze body bytes per source, and 256 KiB of combined canonical Bronze body bytes.
+JSON encoding, metadata, prompts, and optional target context are additional
+request bytes, subject to the separate 1 MiB request ceiling.
+Each record is labelled as non-instructional reference, with oversize
 records omitted rather than truncated. The model has no filesystem or fetch capability.
 It returns a strict `RefinementDraft` v1 with supplied source IDs and line ranges, not
 quotes or hashes. The host derives canonical Silver v2 and stages it only after every
@@ -108,7 +111,11 @@ build admits a page to Gold only when every check holds: reviewed status, retrie
 
 ### Authorized is still not instruction authority
 
-Shipped MCP startup is Gold-only and read-only, exposing exactly search_context and read_context. Retrieval is bounded to 1024 query characters, 20 results per search, and 200 retained citations per session; reaching the ceiling evicts the oldest citation IDs, which revokes them. Every returned chunk, Gold included, reports content_role: reference and instruction_authority: none.
+Shipped MCP startup is Gold-only and read-only, exposing exactly `search_context`
+and `read_context`. Query length is bounded to 1,024 UTF-16 code units, with 20
+results per search and 200 retained citations per session. Reaching the citation
+ceiling evicts the oldest IDs, which revokes them. Every returned chunk, Gold
+included, reports `content_role: reference` and `instruction_authority: none`.
 
 - `search_context, read_context`
 - `instruction_authority: none`

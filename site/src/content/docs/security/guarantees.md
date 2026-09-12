@@ -60,7 +60,8 @@ owns the normative threat model and residual risks.
 
 - Not an OS sandbox.
 - Not multi-tenant authorization.
-- No key custody, revocation, hosted identity, transport security, or GUI review.
+- No key-custody service, revocation service, hosted identity, transport security,
+  or GUI review.
 - A stolen key or inattentive approval can authorize harm, and approved text can still
   contain prompt injection.
 

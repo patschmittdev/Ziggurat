@@ -214,25 +214,34 @@ at 68ch. Headings use `text-wrap: balance`.
 A `78rem` page maximum with a fluid gutter (`clamp(1.25rem, 0.75rem + 2vw, 3rem)`)
 that respects `env(safe-area-inset-*)`.
 
-Vertical rhythm comes from one spacing scale on a 4px base. Sections are separated
-by a `2xl` (5.5rem) block and a `rule-strong` hairline. More space sits above a
-heading than below it.
+Vertical rhythm comes from one spacing scale on a 4px base. A section has `l`
+(2.25rem) block padding and an inset `rule-strong` separator followed by `m`
+(1.5rem) space. Do not compound these with an additional large heading gap.
+The homepage visual gate caps inter-section content-to-heading gaps at 160px.
 
-Breakpoints as actually used: `40rem` (masthead compression), `48rem` (narrative
-datum rail narrows), `52rem` (four-column ledger becomes labelled blocks), `60rem`
-(title block and two-up comparisons), `64rem` (the narrative becomes sticky).
+Breakpoints: `40rem` compresses the masthead, `52rem` turns the four-column ledger
+into labelled blocks, `60rem` enables the title-block specification column, and
+`64rem` enables the shared two-column content grid. The thesis, comparisons,
+walkthrough, guarantees, evaluation paths, and status use equal columns with the
+same `xl` (3.5rem) gutter. Their second-column edges must agree within 1px.
 
-The signature layout is the **ascent**: on screens at or above `64rem` the section
-drawing is `position: sticky` beside a scrolling list of seven levels. Below that it
-is an ordinary stacked reading sequence with no sticky scrub, explanation first, and
-no behaviour that depends on scroll position.
+The **ascent** places the complete section drawing beside seven numbered explanations.
+Below `64rem`, the drawing and explanations stack in DOM order. Neither sticky
+scrolling nor an active-level controller is required to read the diagram.
+The walkthrough ends with a standard 44px-minimum action, not a bare link against
+a table rule.
+
+Documentation section rules belong to Starlight's block heading wrapper, never
+the inline heading itself. Wrapped titles must not acquire a rule on each line.
+A page that begins with a section heading does not need a second separator after
+the page-title border. Previous/next navigation uses square, shadow-free links.
 
 ## Elevation & Depth
 
 There is no shadow in this system, and that is a decision rather than an omission. A
 plate is flat. Depth is expressed by three ground values (`sunk`, `ground`,
 `raised`) and by rule weight: a hairline separates, a `rule-strong` hairline divides
-sections, and a 3px double rule marks the one boundary the product is about.
+sections, and dashed lips mark the authorization gap in the ascent.
 
 The authorization gap in the section drawing is drawn as a recess: the ground colour
 inside a raised figure, bounded by dashed lips.
@@ -252,11 +261,14 @@ for texture is a defect.
 - **Title block.** The first viewport is a drawing title block: the thesis at display
   scale on the left, the project's real specification as a `dt`/`dd` grid on the
   right, hairline above. It is not a hero.
-- **Boundary plate (Figure 1).** Two stacked fields, gold above and silver below,
-  divided by a 3px double seam reading `NO CODE PATH CROSSES`, with the
-  key entering from outside the frame. Real HTML text, not an image.
+- **Admission flow (Figure 1).** Four ordered model, host, reviewer, and host steps.
+  Actor labels and directional connectors distinguish the hand-offs. Only the
+  external reviewer label uses the Gold field; the output names read-only Gold MCP.
+  Real HTML text keeps the figure readable without scaling an image.
 - **Section drawing (Figure 3).** Inline SVG, complete in the served markup, with a
   datum rail, seven annotated levels, solid tier courses, and a recessed gap.
+  Its 13-18px labels are SVG coordinate sizes, including narrow-screen compensation,
+  not additions to the body typography scale.
 - **Level index.** A monospace elevation number plus a solid tier chip in a ruled
   left rail. This is a measured datum, not an eyebrow: the reader is ascending a
   structure and the level is the fact that orders the sequence.
@@ -273,11 +285,8 @@ for texture is a defect.
 
 Two tiers, and no third.
 
-**Signature.** The datum cursor that tracks the level being read, easing on
-`--zg-ease-datum` (`cubic-bezier(0.16, 1, 0.3, 1)`) over `--zg-dur-datum` (620ms). It is
-**additive** and dims nothing, so no text ever loses contrast to a scroll position. It
-runs only at or above `64rem`, where the plate is sticky. Its first appearance is a fade
-at the correct level, never a traverse up the plate from zero.
+The ascent currently renders statically. Its dormant cursor styles are not a claim
+that an active-level controller is running. No diagram fact depends on motion.
 
 **Orientation.** Section entry and a root-only cross-document route fade. A group
 carries `data-reveal="1|2|3"`, its place in the entry rhythm, which the stylesheet turns

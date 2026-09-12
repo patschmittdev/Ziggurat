@@ -1,0 +1,36 @@
+---
+import DefaultMobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
+---
+
+<ziggurat-menu-state><DefaultMobileMenuToggle /></ziggurat-menu-state>
+
+<script>
+  class MenuState extends HTMLElement {
+    observer: MutationObserver | undefined;
+
+    connectedCallback() {
+      const toggle = this.querySelector('starlight-menu-button');
+      const button = toggle?.querySelector('button');
+      if (!toggle || !button) throw new Error('Documentation menu toggle markup is missing.');
+
+      // The framework updates its host state; expose the same state on its button.
+      const sync = () => button.setAttribute('aria-expanded',
+        String(toggle.getAttribute('aria-expanded') === 'true'));
+      this.observer = new MutationObserver(sync);
+      this.observer.observe(toggle, { attributes: true, attributeFilter: ['aria-expanded'] });
+      sync();
+    }
+
+    disconnectedCallback() {
+      this.observer?.disconnect();
+    }
+  }
+
+  customElements.define('ziggurat-menu-state', MenuState);
+</script>
+
+<style>
+  ziggurat-menu-state {
+    display: contents;
+  }
+</style>

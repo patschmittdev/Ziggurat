@@ -35,15 +35,18 @@ untrusted content enters a durable store and silently influences later model beh
 
 ## How it differs from other agent-memory systems
 
-mem0, Letta, and Zep persist model-originated memory automatically. mem0's `add`
-pipeline lets an LLM decide what to store, Letta agents edit their own memory blocks
-through tools, and Zep extracts facts into its context graph as conversations arrive.
-Those are reasonable defaults for recall quality, and each is better than Ziggurat at
-hosted, multi-tenant retrieval. Ziggurat makes the opposite trade: nothing
-model-originated becomes authorized reference data without a detached Ed25519 receipt
-from a key that operator policy assigns to a human. That is a capability boundary, not a
-review convention, and it is the only thing Ziggurat claims to do better. Vendor
-behaviour is as documented on 2026-09-09; Ziggurat does not integrate with any of them.
+[Mem0's add pipeline](https://docs.mem0.ai/core-concepts/memory-operations/add)
+supports automatic memory extraction.
+[Letta agents](https://docs.letta.com/v1-sdk/concepts/stateful-agents) can edit
+their memory blocks through tools, and
+[Zep](https://help.getzep.com/adding-messages.md) extracts facts into a context
+graph from conversation messages.
+
+These systems support automatic extraction or agent-managed memory. Ziggurat does
+not offer hosted, multi-tenant retrieval and instead requires detached
+configured-key authorization before model-originated content can enter Gold.
+This is a design trade-off, not a measured superiority claim. Ziggurat does not
+integrate with these products.
 
 ## What it is not
 
@@ -65,8 +68,9 @@ Gold carries no truth or safety guarantee; see
   it.
 - [Your first vault](./first-vault.md) creates a vault and captures
   evidence.
-- [The garden walkthrough](./garden-walkthrough.md) runs the poisoned-memory
-  scenario end to end.
+- [The garden walkthrough](./garden-walkthrough.md) prepares the poisoned-memory
+  fixture vault and explains the separate end-to-end automated test and remaining
+  manual steps.
 - [The human authority boundary](../concepts/human-authority-boundary.md) explains why the
   boundary is a capability rather than a convention.
 - [Threat model](../security/threat-model.md) covers assets, actors, assumptions, and

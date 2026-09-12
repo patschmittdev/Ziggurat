@@ -3,8 +3,8 @@ title: Provenance, authorization, and instruction authority
 description: Three claims that look similar, must never be conflated, and are handled separately.
 ---
 
-Most memory-poisoning incidents depend on one of three claims quietly standing in for
-another. Ziggurat keeps them apart by name.
+Memory-poisoning risks can arise when these three claims are conflated.
+Ziggurat keeps them separate.
 
 ## 1. Provenance
 

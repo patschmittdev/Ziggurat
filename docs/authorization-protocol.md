@@ -152,8 +152,10 @@ Gold admission verifies all of the following:
 7. Its Ed25519 signature verifies over the domain-separated signing payload.
 8. Every other Gold eligibility rule also passes.
 
-Any failure leaves the page out of Gold. Trust-policy, receipt, page, or corpus
-changes also invalidate existing indexes until they are rebuilt.
+Any failure leaves the page out of Gold. Trust-policy changes, and changes that
+alter a profile's eligible chunks or their verified provenance, invalidate that
+index until rebuilt. Changes to unrelated excluded artifacts need not change its
+fingerprint; invalid active proposal state still fails verification.
 
 ## Interoperability test vectors
 
@@ -182,9 +184,12 @@ the vectors and the implementation cannot drift apart silently.
 
 ## Rotation and revocation
 
-To rotate a key, add a new unique key ID, sign future receipts with it, and retain the
-old public key only while old receipts should remain valid. Removing a key revokes
-all receipts that depend on it after the next verification or rebuild.
+Each trust entry requires a unique reviewer ID and key ID. For overlapping old/new
+validity, use a distinct reviewer ID and key ID for the new entry and bind future
+page metadata and receipts to that pair. Replacing the existing reviewer entry
+instead revokes receipts using its previous key at the next verification.
+Retain the old entry only while its receipts should remain valid. Removing a key
+revokes all receipts that depend on it at the next verification or rebuild.
 
 To revoke one page, remove or replace its receipt or change the page so the receipt
 no longer matches, then commit the change and rebuild. To correct a page, update its

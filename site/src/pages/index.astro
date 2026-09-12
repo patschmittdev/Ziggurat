@@ -4,6 +4,8 @@ import '../styles/home.css';
 import '../styles/motion.css';
 import ThemeScript from '../components/ThemeScript.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import AdmissionFigure from '../components/AdmissionFigure.astro';
+import AscentFigure from '../components/AscentFigure.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const url = (path: string) => `${base}/${path.replace(/^\//, '')}`;
@@ -70,8 +72,7 @@ const notGuaranteed = [
     boundary, read the threat model, or run the walkthrough.
     FIRST VIEWPORT: A drawing title block carries the thesis at display scale on the left and the
     project's real specification on the right. Below it, the lead paragraph and three actions sit
-    beside Figure 1, a two-field plate whose double seam reads NO CODE PATH CROSSES, with the key
-    entering from outside the frame.
+    beside Figure 1, an ordered flow separating model, host, and external reviewer responsibilities.
     FORM: Annotated section plate; first of seven derived candidates; staging pinned by the
     approved brief, so no concept roll was dealt.
   -->
@@ -114,7 +115,7 @@ const notGuaranteed = [
             <dt>Licence</dt>
             <dd>MIT</dd>
             <dt>Package</dt>
-            <dd>source only, private</dd>
+            <dd>source only, not on npm</dd>
           </dl>
         </div>
 
@@ -138,38 +139,7 @@ const notGuaranteed = [
             </div>
           </div>
 
-          <figure class="figure">
-            <div class="boundary__key">
-              <svg viewBox="0 0 112 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M112 10H26"></path>
-                <circle cx="16" cy="10" r="7"></circle>
-              </svg>
-              <span>the admission capability enters from outside the system</span>
-            </div>
-            <div class="boundary__zone boundary__zone--above">
-              <p class="boundary__zone-label" id="boundary-above">Only an external key holder may</p>
-              <ul class="boundary__list" aria-labelledby="boundary-above">
-                <li>admit a curated page to durable Gold memory</li>
-              </ul>
-            </div>
-            <div class="boundary__seam">
-              <p>
-                NO CODE PATH CROSSES
-                <span class="mono" translate="no">no signer · no apply · no approve · no promote</span>
-              </p>
-            </div>
-            <div class="boundary__zone boundary__zone--below">
-              <p class="boundary__zone-label" id="boundary-below">A model may</p>
-              <ul class="boundary__list" aria-labelledby="boundary-below">
-                <li>read authorized Gold as labelled reference data</li>
-                <li>receive a bounded, host-selected block of Bronze bytes</li>
-                <li>return one strict schema-version-1 refinement draft; the host materializes stored Silver v2</li>
-              </ul>
-            </div>
-            <figcaption class="figure__caption">
-              <b>Figure 1.</b> The admission capability. Key custody lives outside the vault by design.
-            </figcaption>
-          </figure>
+          <AdmissionFigure />
         </div>
       </section>
 
@@ -177,7 +147,6 @@ const notGuaranteed = [
       <section class="band wrap" aria-labelledby="durable-title">
         <div class="split">
           <div class="prose" data-reveal="1">
-            <p class="band__kicker">The problem</p>
             <h2 id="durable-title">Durable memory turns one poisoned document into a repeated write</h2>
             <p>
               Persistent context means a poisoned document, a fabricated preference, or an
@@ -243,7 +212,6 @@ const notGuaranteed = [
       <!-- 3. Metadata is not authority -->
       <section class="band wrap" aria-labelledby="metadata-title">
         <div class="band__head prose" data-reveal="1">
-          <p class="band__kicker">Metadata vs authorization</p>
           <h2 id="metadata-title">A reviewed_by field is a claim. A receipt is a capability.</h2>
           <p>
             Anything that can write the page can write the string. Review metadata records that
@@ -294,43 +262,39 @@ retrieval_eligible: true
         </div>
       </section>
 
-      <!-- 4. The walkthrough summary -->
+      <!-- 4. The walkthrough -->
       <section class="band wrap" id="ascent" aria-labelledby="ascent-title">
         <div class="band__head prose" data-reveal="1">
-          <p class="band__kicker">How it moves</p>
           <h2 id="ascent-title">Follow a poisoned memo up the structure</h2>
         </div>
-        <table class="ledger" data-reveal="2">
-          <thead>
-            <tr>
-              <th scope="col">Step</th>
-              <th scope="col">Boundary</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Capture</th>
-              <td data-label="Boundary">Bronze: no-overwrite, hash-verified</td>
-            </tr>
-            <tr>
-              <th scope="row">Propose</th>
-              <td data-label="Boundary">Silver: model-originated, byte-checked citations, no authority</td>
-            </tr>
-            <tr>
-              <th scope="row">Admit</th>
-              <td data-label="Boundary">Gold: only with an external Ed25519 receipt</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="prose" data-reveal="3">
-          <a href={url('getting-started/garden-walkthrough/')}>Follow the full seven-step walkthrough</a>
-        </p>
+        <div class="walkthrough">
+          <figure class="figure walkthrough__figure" data-reveal="2">
+            <AscentFigure />
+            <figcaption class="figure__caption">
+              <b>Figure 3.</b> Read the structure from the bottom up. A model reaches Silver;
+              Gold also requires external authorization and every eligibility check.
+            </figcaption>
+          </figure>
+          <div data-reveal="3">
+            <ol class="walkthrough__steps" start="0">
+              <li><strong>Capture an untrusted memo</strong><p>The source starts as evidence, not an instruction or an approved claim.</p></li>
+              <li><strong>Preserve it as Bronze</strong><p><code>ingest</code> records canonical text without overwriting an existing capture.</p></li>
+              <li><strong>Stage a Silver proposal</strong><p>The model drafts content and source ranges. The host checks them against live evidence.</p></li>
+              <li><strong>Refuse self-asserted authority</strong><p>A <code>reviewed_by</code> field alone does not admit the page.</p></li>
+              <li><strong>Review and sign outside the system</strong><p>The reviewer authors the final page and obtains an external Ed25519 signature.</p></li>
+              <li><strong>Verify before admitting Gold</strong><p><code>build</code> requires the receipt and every other eligibility condition.</p></li>
+              <li><strong>Retrieve reference data only</strong><p>Gold MCP exposes read-only context, not instruction authority.</p></li>
+            </ol>
+            <div class="actions">
+              <a class="action action--primary" href={url('getting-started/garden-walkthrough/')}>Read the seven-step walkthrough</a>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- 5. Physical index separation -->
       <section class="band wrap" aria-labelledby="isolation-title">
         <div class="band__head prose" data-reveal="1">
-          <p class="band__kicker">Storage</p>
           <h2 id="isolation-title">Three indexes, physically separate</h2>
           <p>
             build writes three separate version-2 indexes rather than one store with filters.
@@ -374,7 +338,6 @@ retrieval_eligible: true
       <!-- 6. Guarantees beside non-guarantees -->
       <section class="band wrap" aria-labelledby="guarantees-title">
         <div class="band__head prose" data-reveal="1">
-          <p class="band__kicker">Guarantees</p>
           <h2 id="guarantees-title">What is enforced, and what is not</h2>
           <p>
             The second column is not a disclaimer. A boundary you cannot describe the edges of is
@@ -401,7 +364,6 @@ retrieval_eligible: true
       <!-- 7. Evaluation paths -->
       <section class="band wrap" aria-labelledby="evaluate-title">
         <div class="band__head prose" data-reveal="1">
-          <p class="band__kicker">Run it</p>
           <h2 id="evaluate-title">Three ways to check this yourself</h2>
         </div>
 
@@ -455,20 +417,21 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
       </section>
 
       <!-- 8. Honest status -->
-      <section class="band wrap" aria-labelledby="status-title">
+      <section class="band wrap status" aria-labelledby="status-title">
+        <div class="status__layout">
         <div class="band__head prose" data-reveal="1">
-          <p class="band__kicker">Status</p>
           <h2 id="status-title">Where this actually is</h2>
         </div>
+        <div>
         <div class="status__body prose" data-reveal="2">
           <p>
-            The package is private and source-distributed, so do not depend on the ziggurat npm package name.
+            Ziggurat is distributed as source, not as a published npm package.
             Contracts, index formats, and CLI behaviour may change before 1.0.
           </p>
           <p>
             Continuous integration is configured to run the full suite on Linux, macOS, and Windows
             against Node.js 22 and 24. Bounded model, retrieval, signing-interoperability,
-            and operating-envelope measurements are documented in
+            and operating-envelope measurements are documented in{' '}
             <a href={url('project/status/')}>project status</a>, alongside failures and
             remaining gaps. Human usability is unmeasured; no adoption, deployment,
             third-party audit, or production maturity is claimed.
@@ -483,6 +446,8 @@ node dist/src/cli/main.js build --root ./my-vault</code></pre>
         <div class="actions" data-reveal="3">
           <a class="action action--primary" href={url('getting-started/overview/')}>Read the documentation</a>
           <a class="action" href={repo}>Source on GitHub</a>
+        </div>
+        </div>
         </div>
       </section>
     </main>

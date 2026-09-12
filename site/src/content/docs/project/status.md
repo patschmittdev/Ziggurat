@@ -14,8 +14,9 @@ Version 0.1 is a pre-release, single-operator reference implementation.
 Continuous integration is configured to run the full suite on Linux, macOS, and Windows
 against Node.js 22 and 24, plus the documentation-site build. The
 [release checklist](https://github.com/patschmittdev/Ziggurat/blob/main/docs/release-checklist.md)
-records dated CI evidence and the outstanding publication gates. No release is tagged
-and the documentation site is not yet published.
+records dated CI evidence and outstanding verification. The repository and
+documentation site are public. Distribution remains source-only: no npm package,
+tag, or GitHub prerelease has been published.
 
 ## Measured development evidence
 
@@ -61,9 +62,10 @@ Every schema now rejects unknown fields; earlier pre-release builds tolerated th
 - A configuration file carrying an unknown key, including an unknown key inside
   `lifecycle`, `domain`, `privacy`, `adapters`, or `trust`, now fails to load rather than
   being silently ignored.
-- A `config/clean-room.yaml` that exists but is malformed, unreadable, not a mapping, or
-  carries unknown keys now fails `ziggurat check`. Delete the file to use documented
-  defaults.
+- A `config/clean-room.yaml` with malformed YAML, unreadable content, unknown keys,
+  invalid list entries, or a non-null non-mapping document fails `ziggurat check`.
+  Absent, empty, comments-only, and YAML-null documents use defaults; missing or
+  null list values mean empty additional lists.
 
 ## Migrating an older pre-release vault
 

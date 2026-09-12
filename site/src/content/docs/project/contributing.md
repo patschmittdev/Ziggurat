@@ -67,9 +67,9 @@ asset reference in the built output and fails on any root-relative URL that esca
 - `SECURITY.md`, `ARCHITECTURE.md`, and `docs/authorization-protocol.md` stay canonical at
   their repository paths. Site pages explain and link to them; they never copy the full
   normative text.
-- Authored Markdown links must include the base path, as in
-  `/Ziggurat/concepts/tiers/`. Starlight prefixes its own navigation but not hand-written
-  links, and the validator enforces this.
+- Use relative `.md` links between documentation pages; the remark plugin rewrites
+  them to base-prefixed routes. Hand-written root-relative route links must include
+  `/Ziggurat/`. The built-output validator checks resolved links and the base path.
 - Never invent users, deployments, audits, benchmarks, or production maturity.
   Cite measured development reports with their workload, failures, and limitations;
   do not present them as human acceptance or production evidence.

@@ -14,7 +14,11 @@ receipts, or trust anchors.
 ziggurat ingest --root <vault> --file inbox/some-note.md
 ```
 
-`ingest` reads and deletes its source, so an escaping source path would be a combined
+For a new capture, `ingest` creates and verifies a Bronze record before deleting
+the inbox source. If the canonical body already exists, it returns `duplicate`
+and leaves the inbox source untouched.
+
+Because a new capture reads and deletes its source, an escaping path would be a combined
 arbitrary-read and arbitrary-delete primitive. It is validated hard: the source must
 resolve to a real regular file physically under `inbox/`.
 
@@ -69,10 +73,13 @@ The host reads Bronze on the model's behalf and builds a bounded reference block
 | Bound | Value |
 |---|---|
 | Records per request | 12 |
-| Bytes per record | 32 KiB |
-| Total reference bytes | 256 KiB |
+| Canonical Bronze body bytes per source | 32 KiB |
+| Combined canonical Bronze body bytes | 256 KiB |
 | Request deadline | 30 seconds |
 | Request and response body ceiling | 1 MiB each |
+
+JSON encoding, metadata, prompts, and optional target context add request bytes;
+they share the separate 1 MiB request ceiling.
 
 The host verifies each record and supplies its body as explicit `{line_number, text}`
 entries with a source ID, using 1-based Bronze body coordinates rather than candidate

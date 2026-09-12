@@ -1,11 +1,11 @@
 # Release Checklist
 
 This is the publication gate, not a claim that every gate has passed.
-**Current verdict: HOLD pending launch controls (2026-09-12).** The owner has
-accepted the retained email disclosure and authorized controlled public launch
-after green CI. The final documentation and problem-fit review is complete.
-Do not tag, create a public release, or announce the site before the remaining
-launch gates pass.
+**Publication status (2026-09-12): source and documentation are public.** The
+owner accepted the retained email disclosure and authorized publication after
+green CI. The owner explicitly deferred all tags and GitHub prereleases.
+Follow-up documentation and visual corrections are local until published;
+remaining operational verification is recorded below, not implied complete.
 
 The 2026-09-09 evidence at `164bc98` was historical evidence, not approval of a
 later candidate. It remains available in repository history and PR #10. The
@@ -50,10 +50,13 @@ dated results below supersede its blanket completion marks.
       passed across four routes, three viewport sizes, and light/dark themes.
       It checks overflow, a single H1, and automated WCAG 2 A/AA rules and captures
       screenshots; it is not a complete manual accessibility audit.
-- [ ] Commit and publish the validated source, documentation, and CI corrections with explicit
-      maintainer approval, then require green CI on the resulting `main` commit.
-      The maintainer authorized switching to `main`, committing, and pushing on
-      2026-09-12. The green run above does not cover these uncommitted corrections.
+- [x] Publish the approved cleanup and initial claim corrections to `main`.
+      Commit `e19fa2c0b4e0c0170be2be489868db9ba52aadd9` passed all seven jobs in
+      [CI run 34696499687](https://github.com/patschmittdev/Ziggurat/actions/runs/34696499687),
+      including the new clean-room and Linux ENOSPC steps.
+- [ ] Publish the subsequent full documentation review and visual corrections,
+      then require green CI on that exact `main` commit. The run above does not
+      cover the current local follow-up.
 - [ ] Audit the exact final publication tree and record its identity using
       `node dist/src/cli/main.js check --root <publication-tree> --audit-clean-room`.
       Audit source contents, not a directory containing local measurement logs.
@@ -68,7 +71,7 @@ The cleanup follow-through preserved the 32 flagged files outside the repository
 verified each relocated file's SHA-256, and retained a restoration manifest.
 The checkout audit now **passes** without any new exclusions or deletion of those
 artifacts. The CI matrix now runs the explicit checkout audit after the core suite.
-These workflow changes still require publication and a green remote run.
+These workflow changes are published and passed in CI run 34696499687.
 Git ignore is not a clean-room exclusion; generated files can make a later checkout
 audit fail again. Do not archive the entire working directory as a substitute for
 audited source-only contents.
@@ -80,10 +83,11 @@ audited source-only contents.
 - [x] Both packages retain `"private": true`; distribution is source-only.
 - [x] Repository description and topics describe the memory boundary without
       implying production deployment. The repository homepage is currently empty.
-- [ ] Land the README, package homepage, reporting-channel, and site-status
-      corrections. Until Pages is verified, link to repository documentation
-      rather than advertise a live site.
-- [ ] Recheck all public statements against the final code and measurements.
+- [ ] Land the final README, package homepage, reporting-channel, and site-status
+      updates after the verified Pages deployment.
+- [x] Review all 22 documentation pages against current code, specifications,
+      tests, and available measurements; correct the 15 identified documentation
+      issues in the local follow-up.
       Do not infer human usability from staging success, human review from a
       signature, or factual truth from citation integrity.
 - [x] Complete the requested Claude Opus documentation and problem-fit review.
@@ -92,8 +96,18 @@ audited source-only contents.
       versus stored Silver, reporting availability, operator-managed Git, signed
       commit authority, downstream labels, and page authorship. This was an AI
       review, not an independent third-party security audit or human usability study.
-- [ ] Confirm the social preview in repository settings. A tracked image alone
-      does not verify that the setting is configured.
+- [x] Verify the repository's generated social-preview image returns HTTP 200.
+      This is GitHub's default preview, not a claim that the tracked custom image
+      was uploaded in repository settings. The site's own social-preview image
+      also returns HTTP 200.
+
+The first visual pass sampled four routes; it was not an all-page visual review.
+The expanded suite discovers every documentation page and runs 138 combinations:
+22 docs pages plus the homepage across three viewport sizes and two themes.
+Manual desktop/mobile screenshot inspection covered all 22 docs pages. The
+follow-up fixes the heading-wrapper separator defect, inconsistent navigation
+styling, and mobile-menu expanded-state reporting. Passing these checks is not
+a comprehensive accessibility certification or proof of every runtime behavior.
 
 ### Measured evidence and limits
 
@@ -119,7 +133,7 @@ publication pass; their reports remain separately dated development evidence.
 The cleanup follow-through also ran `npm run test:disk-full:container` on a
 constrained, disposable Linux tmpfs. Actual `ENOSPC`, preservation of the previous
 index, and subsequent replacement after releasing space passed. The Ubuntu/Node 24
-job is wired to repeat it, but that workflow change is still local. The full
+job repeated it successfully in CI run 34696499687. The full
 platform and isolation scope is in the operating-envelope report.
 
 ## 3. History hygiene and disclosure
@@ -153,24 +167,29 @@ that is not proof that no private clone exists.
 
 ## 4. Controlled visibility and repository settings
 
-Keep visibility private until section 3 passes. Do not make the repository public
-merely to unlock settings. After authorized visibility change, complete these gates
-before tagging or announcing:
+Section 3 passed through informed consent, and the owner authorized the visibility
+change after CI run 34696499687 succeeded. The repository is now public. Complete
+the remaining gates before any later tagged release or broader announcement:
 
-- [ ] Enable private vulnerability reporting and verify the report form from a
-      non-maintainer account before advertising it as available. Current status:
-      GET and enable attempts return HTTP 404 on this private repository.
-- [ ] Enable secret scanning and push protection; verify both enabled states,
-      scan completion, and review findings. Current status: alert access says
-      scanning is disabled; activation returns HTTP 422, feature unavailable.
+- [x] Enable private vulnerability reporting: API reports `enabled: true`.
+      The public report URL reaches GitHub's normal sign-in flow.
+- [ ] Verify the form from an independent signed-in non-maintainer account.
+      This manual check is still unverified; no test report was submitted.
+- [x] Enable secret scanning and push protection: both read back as enabled,
+      with zero secret-scanning alerts at inspection.
+      The hosted scan-history API returns HTTP 404 under this account, so hosted
+      full-scan completion is not independently observable and is not claimed.
+      An isolated local scan of fetched GitHub branches and PRs #1 through #17
+      reported no leaks: 112 reachable commits, 108 scanned non-merge commits.
 - [x] Enable and verify Dependabot alerts: HTTP 204; zero alerts returned on
       2026-09-12.
 - [x] Enable and verify Dependabot security updates: `enabled: true`,
       `paused: false`. This does not imply scheduled version-update configuration.
 - [ ] Protect `main` with a ruleset or branch protection requiring pull requests,
       review, and the seven actual CI job contexts below. Block force pushes and
-      deletion; document any deliberately granted bypass. Current read attempts
-      return HTTP 403 requiring GitHub Pro or public visibility.
+      deletion. The owner selected one independent approving review, up-to-date
+      required checks, and no administrator bypass. This policy is authorized
+      but has not yet been applied while the final publication changes are pending.
 - [x] Verify default Actions permissions: `read`, with workflow approval of pull
       request reviews disabled. Workflow-level permissions also remain explicit.
 - [ ] Rerun and verify CI on the final public `main` commit after all corrections.
@@ -195,24 +214,27 @@ Record the configured rules and verify enforcement, not just a saved settings fo
 The `pages` workflow remains gated on explicit public visibility for both jobs.
 Missing or unexpected visibility fails closed. Do not remove this guard.
 
-- [ ] Set Pages build source to **GitHub Actions** after authorized publication.
-      Current API result is HTTP 404 and repository metadata says `has_pages: false`.
-- [ ] Configure any desired `github-pages` environment protection.
-- [ ] Run `pages` on the final `main` and verify both build and deploy succeed.
-      [Run 34692227763](https://github.com/patschmittdev/Ziggurat/actions/runs/34692227763)
-      was correctly skipped while private; a skip is not a successful deployment.
-- [ ] Verify <https://patschmittdev.github.io/Ziggurat/> and a documentation route,
-      stylesheet, logo, and in-page navigation. The homepage returned HTTP 404 on
-      2026-09-12.
-- [ ] Verify live Pagefind search returns results under the `/Ziggurat/` base path.
-- [ ] Verify light/dark themes and mobile rendering on the deployed site.
+- [x] Set Pages build source to **GitHub Actions**; HTTPS is enforced.
+- [x] Restrict the `github-pages` environment to the `main` branch.
+- [x] Verify initial public build and deployment:
+      [run 34696983306](https://github.com/patschmittdev/Ziggurat/actions/runs/34696983306)
+      succeeded on `e19fa2c`. The earlier private-repository run was skipped,
+      and the earlier homepage HTTP 404 is historical, not current status.
+- [x] Verify <https://patschmittdev.github.io/Ziggurat/>, a documentation route,
+      stylesheets, logos, and the site social preview return HTTP 200.
+- [x] Verify live Pagefind search: `authorization` returned 20 results under
+      `/Ziggurat/`, including normal search-dialog results.
+- [x] Inspect live light/dark and mobile rendering. This exposed visual defects
+      now corrected locally, rather than establishing that the deployed UI was finished.
+- [ ] Deploy and recheck the local documentation and visual follow-up.
 - [ ] Only then advertise the live site in README.md, package metadata, and
       repository homepage settings.
 
-## 6. First tagged pre-release
+## 6. Tagged pre-release: deferred by the maintainer
 
-Only after the applicable gates above pass and the maintainer explicitly approves
-the remaining engineering limitations:
+The current authorization is **public source and documentation only**. Do not
+create a tag, GitHub prerelease, or announcement of a tagged release. These are
+future steps, not actions authorized by this publication:
 
 - [ ] Choose a prerelease tag from the exact green `main` commit.
 - [ ] Mark the GitHub release as a pre-release.
@@ -222,4 +244,5 @@ the remaining engineering limitations:
       operating profile, and unverified recovery cases in the release notes.
 - [ ] Announce only after the reporting channel, protections, and live site work.
 
-No tag, GitHub release, visibility change, or announcement was performed in this pass.
+A visibility change and Pages publication were performed with owner approval.
+No tag, GitHub release, or broader announcement was made.

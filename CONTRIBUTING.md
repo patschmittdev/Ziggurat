@@ -48,7 +48,8 @@ Maintainers preparing a published build follow the
 
 ## External key-holder authority
 
-- Models may return strict Silver proposal payloads only.
+- Models return strict `RefinementDraft` v1 only. The host materializes,
+  live-validates, and stages strict stored Silver v2.
 - Model and refine pathways must never write Bronze, knowledge pages, reviewed
   metadata, trusted reviewer keys, authorization receipts, or indexes.
 - Ziggurat ships no signer, apply, approve, or promote command; preserve the

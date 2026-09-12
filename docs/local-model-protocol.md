@@ -51,8 +51,12 @@ truth, or reviewer attention.
 | Bound | Value |
 |---|---|
 | Records | 12 |
-| Bytes per record | 32 KiB |
-| Total reference bytes | 256 KiB |
+| Canonical Bronze body bytes per source | 32 KiB |
+| Combined canonical Bronze body bytes | 256 KiB |
+
+These limits count UTF-8 bytes in canonical Bronze bodies. JSON encoding, metadata,
+prompts, and optional target context add request bytes and are subject to the
+separate 1 MiB request ceiling.
 
 Records are supplied with host-assigned source IDs and explicit
 `{line_number, text}` entries using 1-based Bronze body coordinates. The prompt

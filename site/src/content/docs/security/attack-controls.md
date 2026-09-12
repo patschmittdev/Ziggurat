@@ -1,10 +1,11 @@
 ---
 title: Attack-control mapping
-description: Each recommended memory-poisoning control and the specific Ziggurat enforcement that implements it.
+description: Selected Microsoft memory-poisoning recommendations and the Ziggurat mechanisms related to them.
 ---
 
 [ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md#enforcement-points)
-enumerates the enforcement points; this page maps Microsoft's control names onto them.
+enumerates the enforcement points; this page relates selected Microsoft recommendations
+to those mechanisms.
 
 The primary scenario is Microsoft's AI memory and context poisoning technique. The same
 failure can begin as indirect prompt injection, become persistent data poisoning, and
@@ -16,18 +17,23 @@ OWASP LLM01, LLM04, and LLM08 and to MITRE ATLAS context and RAG poisoning techn
 The normative mapping is in
 [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#attack-controls).
 
+This is a partial mapping, not full implementation of Microsoft's controls.
+Ziggurat uses strict record schemas but retains free-text bodies, preserves hostile
+instructions as evidence, and does not provide automatic purges, semantic
+sanitization, or drift monitoring.
+
 | Memory-poisoning control | Enforcement point or workflow |
 |---|---|
 | Source approval | Inbox boundary, Bronze store, Gold eligibility |
 | Provenance | Evidence validator, index verifier |
 | Memory write governance | Receipt verifier, external signing workflow |
-| Schema-bound memory | Proposal contract, corpus collector, index verifier |
+| Strict record and proposal schemas | Proposal contract, corpus collector, index verifier |
 | Review and diff transparency | Human review packets |
 | Presentation sanitization | Human review packet rendering |
 | Integrity | Page canonicalizer, receipt verifier, index verifier |
 | Isolation | Profile builders |
 | Revalidation | Gold eligibility, index verifier |
-| Versioning and rollback | Git workflow, profile builders |
+| Versioning and rollback | Operator-managed Git history and index rebuilds |
 | Least privilege | Proposal store, refine reference builder, MCP server |
 | Suspicious instruction handling | Refine reference builder, index verifier |
 | Resource bounds | Adapter transport, refine reference builder, MCP server |

@@ -26,20 +26,23 @@ global link.
 | Option | Meaning |
 |---|---|
 | `--root <path>` | The vault directory, or for `check` the repository root |
-| `--json` | Machine-readable output |
+| `--json` | Machine-readable reports for ingest, refine, review, build, query, check, and eval. `init` retains its text message; MCP uses its stdio protocol rather than a CLI JSON report. |
 | `--help` | Usage for the CLI or for a single command |
 
 ## What each command may write
 
 | Command | Writes | Cannot write |
 |---|---|---|
-| `init` | Vault directories, an empty `config/trust.yaml` | Reviewer keys |
-| `ingest` | One no-overwrite Bronze record, then deletion of the captured inbox source | Other vault state |
+| `init` | Vault directories and missing starter configuration files; existing configuration is never overwritten | Reviewer keys |
+| `ingest` | New capture: one no-overwrite Bronze record, then deletion of the captured inbox source. Duplicate: no write or deletion. | Other vault state |
 | `refine` | One strict v2 proposal materialized from a model draft under `.ziggurat/proposals/` | Bronze, knowledge, receipts, trust, reviewed metadata, indexes |
 | `review` | Nothing | Anything |
 | `build` | Generated indexes, including admitted Gold chunks for eligible pages | Knowledge pages, authorization receipts, or trust keys |
 | `query`, `mcp`, `eval` | Nothing | Anything |
 | `check` | Nothing | Anything |
+
+The starter files created by `init` are `ziggurat.yaml`, `domain.yaml`,
+`privacy.yaml`, `adapters.yaml`, and an empty `trust.yaml`, all under `config/`.
 
 ## refine, repeated `--source`, and `--target`
 

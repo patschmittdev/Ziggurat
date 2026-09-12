@@ -71,21 +71,16 @@ Ziggurat does not supply a Git workflow or sanitize hostile source text.
   [provenance and authority](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/provenance-and-authority.md).
 
 ```mermaid
-flowchart LR
-    U[Untrusted source] --> I[ingest]
-    I --> B[Bronze evidence]
-    B --> R[refine model]
-    R --> D[RefinementDraft v1]
-    D --> M[Host materialization and validation]
-    M --> S[Silver proposal v2]
-    S -. recommended review .-> H{Operator-assigned reviewer\nwith external Ed25519 key}
-    H -->|independently authored page + signed receipt| G[Gold reference]
-    G --> C[Gold MCP\nread only]
-    B --> E[Evidence index\nadvisory]
-    S --> V[Review index\nadvisory]
-    G --> V
-    G --> E
+flowchart TB
+    B["Bronze evidence<br/>captured by ingest"] --> D["Model draft v1<br/>content and source ranges"]
+    D --> S["Host validation<br/>stored Silver v2"]
+    S -. review .-> H["External reviewer<br/>authors page and signs receipt"]
+    H --> G["Gold admission<br/>receipt and eligibility checks"]
+    G --> C["Gold MCP<br/>read-only reference data"]
 ```
+
+This diagram follows admission. The local review and evidence indexes remain
+separate advisory profiles; neither is exposed by shipped MCP.
 
 The shipped refine and MCP interfaces do not receive the signing capability. An
 operator who gives an AI shell, filesystem, or key access has delegated authority
@@ -242,9 +237,10 @@ npm run dev           # local development server
 npm run check         # type check, production build, built-output validation
 ```
 
-The documentation site is not published yet. Use the local commands above or browse
-the [documentation source](site/src/content/docs/). Pages deployment remains disabled
-while the repository is private; a live URL will be advertised only after verification.
+The documentation site is live at <https://patschmittdev.github.io/Ziggurat/>.
+You can also use the local commands above or browse the
+[documentation source](site/src/content/docs/). Source and documentation are public;
+no tag or GitHub prerelease has been published.
 
 **Additional local-only gate:** From `site/`, run `npx playwright install chromium` once, then `npm run visual` for visual and accessibility checks; screenshots land in `site/.artifacts/`. CI is active, but this visual gate is not part of either package's `npm run check` or the CI workflow.
 

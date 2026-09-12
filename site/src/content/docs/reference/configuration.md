@@ -7,7 +7,9 @@ Configuration lives in `config/` and is validated strictly. Unknown keys are rej
 the top level **and** inside every nested object, so a typo such as `default_sensitvity`
 fails to load rather than being silently ignored.
 
-YAML anchors, aliases, explicit type tags, and tab characters are rejected outright.
+The five main vault configuration files reject YAML anchors, aliases, explicit type
+tags, and tabs. `config/clean-room.yaml` uses a separate parser and does not apply
+that blanket prohibition.
 
 ## `config/ziggurat.yaml`
 
@@ -124,14 +126,11 @@ Each reviewer entry carries `reviewer_id`, `key_id`, `algorithm: ed25519`, and
 
 ## `config/clean-room.yaml`
 
-Only `project_names` and `exclude_paths` are allowed, and both must be lists of non-empty
-strings.
-
-A file that exists but is unreadable, is not valid YAML, is not a mapping, carries an
-unknown key, or carries a malformed list **fails** `ziggurat check`. Deleting the file is
-the supported way to use documented defaults. A gate that silently defaulted when its own
-configuration was broken would report "clean" while ignoring every exclusion a human
-configured.
+Only `project_names` and `exclude_paths` are allowed. Missing or null values mean
+empty additional lists; otherwise each must be a list of non-empty strings.
+An absent, empty, comments-only, or YAML-null document uses built-in defaults.
+Other non-mapping documents, malformed YAML, unknown keys, unreadable files, and
+invalid list entries **fail** `ziggurat check`.
 
 Because the scan covers this file too, a configured project name is also a finding in it.
 Add `config/clean-room.yaml` to `exclude_paths` when you configure names, and re-read the
@@ -142,8 +141,8 @@ file by hand before every release.
 | Limit | Value | Applies to |
 |---|---|---|
 | Records per refine reference block | 12 | `refine` |
-| Bytes per referenced record | 32 KiB | `refine` |
-| Total reference bytes | 256 KiB | `refine` |
+| Canonical Bronze body bytes per source | 32 KiB | `refine` |
+| Combined canonical Bronze body bytes | 256 KiB | `refine` |
 | Adapter request deadline | 30 seconds | `refine` model endpoint |
 | Request body ceiling | 1 MiB | `refine` model endpoint |
 | Response body ceiling | 1 MiB, enforced while reading response bytes | `refine` model endpoint |
@@ -154,6 +153,10 @@ file by hand before every release.
 | Search excerpt length | 500 UTF-16 code units | `search_context` |
 | CLI JSON excerpt length | 300 UTF-16 code units | `query --json` |
 | Gold verification age | 90 days | `build`, `query`, MCP |
+
+The Bronze-body limits do not include JSON encoding, metadata, prompts, or optional
+target context. Those are additional request bytes, subject to the separate 1 MiB
+request ceiling.
 
 The loopback restriction applies to the configured model endpoint. The deadline, redirect
 refusal, and byte ceilings are enforced by the refine adapter, which is the only shipped

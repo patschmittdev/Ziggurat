@@ -21,13 +21,24 @@ fingerprint, and a corpus fingerprint over complete chunk integrity.
 |---|---|---|
 | Startup, search, or read refuses after an index mismatch | The stored index no longer matches the live corpus, trust policy, or its own integrity data | Rebuild with `ziggurat build` |
 | A page will not enter Gold | One or more eligibility checks failed | Check status, retrieval eligibility, privacy, sensitivity, egress, verification age, Bronze lineage, contradictions, and the receipt |
-| Silver and contradiction state is unverifiable | Proposal corruption | Restage the proposal |
+| Silver and contradiction state is unverifiable | Proposal corruption | Inspect the named artifact; see [Corrupt proposals](#corrupt-proposals) before restaging |
 | A corpus entry is reported as rejected | It is unreadable, lacks frontmatter, has invalid YAML, or fails its schema | Repair the named file |
-| `ziggurat check` fails on `config/clean-room.yaml` | The file exists but is unreadable, invalid, not a mapping, or carries unknown keys | Fix or delete the file |
+| `ziggurat check` fails on `config/clean-room.yaml` | Unreadable or malformed YAML, unknown keys, invalid list entries, or a non-null non-mapping document | Fix the reported problem; absent, empty, comments-only, or YAML-null documents use defaults |
 
 Rejection diagnostics deliberately carry no file content and no parsed values. For schema
 failures they name field paths and issue codes only, so a restricted page is never quoted
 back through build output or logs.
+
+## Corrupt proposals
+
+Inspect the named artifact and its cited evidence. Restore a valid artifact from
+trusted history where possible. If it is irrecoverable, preserve that specific
+artifact outside the active proposal store and reconcile its identity and
+contradictions before restaging.
+
+Restaging alone does not remove corrupt active JSON. Quarantine is not signed
+contradiction resolution, and it must not be used to discard a valid blocking
+contradiction.
 
 ## Rebuild
 
@@ -48,7 +59,9 @@ Version-1 proposals and indexes are unsupported and must be restaged or rebuilt.
 ziggurat eval --root <vault>
 ```
 
-`eval` runs the built-in conformance cases against a vault.
+`eval` runs four built-in self-checks using synthetic page inputs and the supplied
+root. It is not a complete audit of the vault, a real-model evaluation, or proof
+that all stored artifacts are valid.
 
 ## Key and incident handling
 

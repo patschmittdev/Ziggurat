@@ -4,16 +4,14 @@
 
 Do not open a public issue for suspected vulnerabilities.
 
-As of 2026-09-12, this repository is private and GitHub's private vulnerability
-reporting endpoint is unavailable. There is no verified public reporting channel
-yet. Existing collaborators should use their established private maintainer contact;
-do not post vulnerability details in issues or discussions.
-
-Public launch is blocked until private vulnerability reporting is enabled and the
-report form is verified from a non-maintainer account. Once verified, the intended
-route is **Security**, **Advisories**, **Report a vulnerability**, at
+GitHub private vulnerability reporting is enabled for this public repository.
+Use **Security**, **Advisories**, **Report a vulnerability**, at
 <https://github.com/patschmittdev/Ziggurat/security/advisories/new>.
-See the [release checklist](docs/release-checklist.md) for the gate status.
+GitHub sign-in is required. The enabled setting and logged-out sign-in route
+were verified on 2026-09-12; an independent signed-in non-maintainer form check
+remains unverified. See the [release checklist](docs/release-checklist.md) for
+outstanding verification. Do not post vulnerability details in public issues or
+discussions.
 
 Include the affected commit or version, threat scenario, reproduction using
 fictional data, security impact, and any suggested mitigation. Do not submit private
@@ -66,8 +64,11 @@ give that endpoint filesystem or tool capabilities. The refine pathway owns only
 root-constrained Silver writer.
 
 The host reads Bronze and places the selected bytes into the request as an explicit,
-bounded, labeled reference block: at most 12 records, 32 KiB per record, 256 KiB in
-total, each carrying its verified body digest and 1-based lines. The model receives
+bounded, labeled reference block: at most 12 records, 32 KiB of canonical Bronze
+body bytes per source, and 256 KiB of combined canonical Bronze body bytes.
+JSON encoding, metadata, prompts, and optional target context add request bytes
+and share the separate 1 MiB request ceiling. Each source carries its verified
+body digest and 1-based lines. The model receives
 data, never a path, handle, or fetch capability, and the proposal it returns is still
 revalidated against the real Bronze files before staging. Oversize records are
 omitted rather than truncated so a citation can never be computed against bytes that
@@ -96,7 +97,7 @@ file physically under `inbox/`. The following are all refused before the file is
 
 A refused source is never read, copied, or unlinked.
 
-Retrieval is bounded per session: 1024 query characters, 20 results per search, and
+Retrieval is bounded per session: 1,024 UTF-16 code units per query, 20 results per search, and
 200 retained citations. Over-long queries are refused rather than truncated. When the
 citation ceiling is reached the oldest IDs are evicted, which revokes them: a read
 against an evicted ID fails closed with the same error as a forged ID.
@@ -131,12 +132,17 @@ to prevent every prompt-injection or model-behavior failure.
 
 ## Attack controls
 
+This is a partial mapping to related memory-poisoning recommendations, not full
+implementation of Microsoft's controls. Ziggurat retains free-text bodies and
+hostile instructions as evidence. It does not provide automatic purges, semantic
+sanitization, or drift monitoring.
+
 | Memory-poisoning control | Ziggurat enforcement |
 |---|---|
 | Source approval | Sources remain isolated Bronze; extracted claims require separate admission |
 | Provenance | Exact Bronze citations, body hashes, quote hashes, and Gold lineage |
 | Memory write governance | External human signing capability required for Gold |
-| Schema-bound memory | Strict Zod v4 contracts reject unknown fields on Bronze records, configuration and its nested objects, proposals, receipts, and indexes |
+| Strict record and proposal schemas | Strict Zod v4 contracts reject unknown fields on Bronze records, main vault configuration and its nested objects, proposals, receipts, and indexes; clean-room configuration is validated separately |
 | Review and diff transparency | Complete Silver candidates and evidence in `review` |
 | Presentation sanitization | Candidate bodies are indented; quoted fields and control characters are escaped |
 | Integrity | Receipt binding plus complete chunk, BM25, policy, and live-corpus verification |
@@ -173,11 +179,12 @@ detail so an operator can repair it. Rejection diagnostics deliberately carry no
 content and no parsed values: for schema failures they name field paths and issue
 codes only, so a restricted page is never quoted back through build output or logs.
 
-A `config/clean-room.yaml` that exists but is unreadable, is not valid YAML, is not a
-mapping, carries an unknown key, or carries a malformed list fails `ziggurat check`
-with an actionable diagnostic. A release gate that silently defaults when its own
-configuration is broken would report "clean" while ignoring every exclusion and
-project name a human configured. An absent file still uses documented defaults.
+A `config/clean-room.yaml` that is unreadable, has malformed YAML, carries unknown
+keys or invalid list entries, or is a non-null non-mapping document fails
+`ziggurat check` with an actionable diagnostic. Absent, empty, comments-only, and
+YAML-null documents use built-in defaults. Missing or null list values mean empty
+additional lists. This separate parser does not apply the main vault configuration
+parser's blanket prohibition on YAML anchors, aliases, explicit type tags, and tabs.
 
 ## Provenance is not instruction authority
 

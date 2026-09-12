@@ -42,12 +42,13 @@ command; see the
 A `reviewed_by: alice` string is self-asserted metadata and is insufficient by
 itself.
 
-Comparators, stated once and honestly: mem0, Letta, and Zep persist model-originated
-memory automatically (LLM-decided writes, agent-edited memory blocks, automatic fact
-extraction respectively) and are stronger than Ziggurat at hosted, multi-tenant
-retrieval. Ziggurat's single differentiating claim is the human authorization gate as a
-cryptographic capability. Documentation may name these comparators only with that
-framing, dated to when their behaviour was checked, and never as integrations.
+Comparisons describe capabilities, not unmeasured superiority. Mem0 supports automatic
+memory extraction, Letta supports agent-editable memory blocks, and Zep extracts facts
+into a context graph. Ziggurat does not offer hosted, multi-tenant retrieval; its
+differentiator is separately configured key authorization before admission. Link
+vendor capability statements to the primary documentation listed in the overview.
+Do not claim comparative quality or historical verification without evidence, and
+never present these products as integrations.
 
 ## Operating Context
 
@@ -72,9 +73,11 @@ The pipeline the documentation must explain:
    `docs/authorization-protocol.md`. Ziggurat does not enforce that workflow as proof
    of human attention.
 5. `build` rebuilds three physically separate indexes: gold (eligible,
-   externally key-authorized Gold only), review (Silver whose candidate and every
-   source pass model-access privacy filters, plus Gold), and evidence (Bronze that
+   externally key-authorized Gold only), review (Silver with candidate `pii: false`
+   and every Bronze source PII-false, non-restricted, and hash-verified, plus Gold),
+   and evidence (Bronze that
    passes integrity and model-access privacy filters, plus Gold).
+   The Silver addition has no candidate-sensitivity or egress gate.
 6. `mcp` serves Gold only, read only, exposing `search_context` and
    `read_context`.
 
@@ -120,9 +123,9 @@ owns their explanation:
 
 Documentation-site constraints:
 
-- At this commit the repository is private, and the Pages workflow remains inert. A
-  later public release may deploy only after visibility is explicitly public and the
-  publication checklist passes.
+- The repository and Pages documentation are public. The Pages workflow still
+  refuses deployment unless repository visibility is explicitly public.
+  No tagged prerelease is authorized in the current source/docs-only publication.
 - `SECURITY.md`, `ARCHITECTURE.md`, `docs/authorization-protocol.md`, and
   `docs/local-model-protocol.md` remain
   canonical repository specifications at their existing paths. Site pages explain and

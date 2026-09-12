@@ -1,0 +1,127 @@
+---
+const stages = [
+  { actor: 'Model', title: 'Propose a draft', detail: 'Content and source ranges, without admission authority.' },
+  { actor: 'Host', title: 'Validate and stage Silver', detail: 'Resolve citations and check the live evidence.' },
+  { actor: 'Reviewer', title: 'Author the page and sign externally', detail: 'The private key stays outside the model and host.', external: true },
+  { actor: 'Host', title: 'Admit eligible Gold', detail: 'Verify the receipt and every other eligibility condition.' },
+];
+---
+
+<figure class="figure admission" aria-labelledby="admission-caption">
+  <figcaption id="admission-caption" class="admission__heading">From draft to authorized memory</figcaption>
+  <ol class="admission__flow">
+    {stages.map((stage) => (
+      <li class:list={{ 'admission__external': stage.external }}>
+        <span class="admission__actor">{stage.actor}</span>
+        <div class="admission__step">
+          <strong>{stage.title}</strong>
+          <p>{stage.detail}</p>
+        </div>
+        <svg class="admission__connector" viewBox="0 0 12 24" aria-hidden="true">
+          <path d="M6 0v20m-4-4 4 4 4-4" />
+        </svg>
+      </li>
+    ))}
+  </ol>
+  <p class="admission__output"><strong>Gold MCP</strong> Read-only reference data</p>
+  <p class="figure__caption"><b>Figure 1.</b> The review hand-off is external. No shipped path signs or approves a page.</p>
+</figure>
+
+<style>
+  .admission__heading {
+    padding: var(--zg-space-s) var(--zg-space-m);
+    border-bottom: var(--zg-hair) solid var(--zg-rule);
+    color: var(--zg-ink);
+    font-size: var(--zg-text-0);
+    font-weight: 600;
+  }
+
+  .admission__flow {
+    list-style: none;
+    margin: 0;
+    padding: var(--zg-space-m);
+    display: grid;
+    gap: var(--zg-space-l);
+  }
+
+  .admission__flow li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: var(--zg-space-s);
+    align-items: start;
+  }
+
+  .admission__actor {
+    padding-block: var(--zg-space-3xs);
+    border: var(--zg-hair) solid var(--zg-rule-strong);
+    color: var(--zg-ink-2);
+    font-size: var(--zg-text--1);
+    text-align: center;
+  }
+
+  .admission__step strong {
+    display: block;
+    color: var(--zg-ink);
+    font-size: var(--zg-text-0);
+    line-height: var(--zg-leading-snug);
+  }
+
+  .admission__step p {
+    margin-block-start: var(--zg-space-3xs);
+    font-size: var(--zg-text--1);
+    line-height: var(--zg-leading-body);
+  }
+
+  .admission__external .admission__actor {
+    color: var(--zg-gold);
+    border-color: currentColor;
+    background: var(--zg-gold-field);
+  }
+
+  .admission__connector {
+    position: absolute;
+    left: 2.75rem;
+    bottom: calc(-1 * var(--zg-space-l));
+    width: 0.75rem;
+    height: var(--zg-space-m);
+    transform: translateX(-50%);
+    fill: none;
+    stroke: var(--zg-rule-strong);
+    stroke-width: 1.5;
+  }
+
+  .admission__flow li:last-child .admission__connector {
+    display: none;
+  }
+
+  .admission__output {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--zg-space-2xs) var(--zg-space-s);
+    max-width: none;
+    padding: var(--zg-space-xs) var(--zg-space-m);
+    border-top: var(--zg-hair) solid var(--zg-rule);
+    color: var(--zg-ink-2);
+    font-size: var(--zg-text--1);
+  }
+
+  .admission__output strong {
+    color: var(--zg-gold);
+  }
+
+  @media (max-width: 40rem) {
+    .admission__flow {
+      padding: var(--zg-space-s);
+    }
+
+    .admission__flow li {
+      grid-template-columns: 4.5rem minmax(0, 1fr);
+      gap: var(--zg-space-xs);
+    }
+
+    .admission__connector {
+      left: 2.25rem;
+    }
+  }
+</style>

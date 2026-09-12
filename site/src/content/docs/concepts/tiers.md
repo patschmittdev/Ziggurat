@@ -32,7 +32,10 @@ not write the file.
 The host, not the model, reads Bronze. Each request carries a bounded reference block
 containing verified records' canonical bodies as 1-based lines with source IDs, labelled
 `content_role: reference` and `instruction_authority: none`. At most 12
-records, 32 KiB per record, and 256 KiB in total are included. Oversize records are
+records are included, with at most 32 KiB of canonical Bronze body bytes per source
+and 256 KiB of combined canonical Bronze body bytes. JSON encoding, metadata,
+prompts, and optional target context add request bytes and share the separate
+1 MiB request ceiling. Oversize records are
 omitted rather than truncated, because a truncated body would produce citations that fail
 validation for reasons no operator could diagnose. Every omission is reported with a
 reason.

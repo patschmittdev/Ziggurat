@@ -15,10 +15,10 @@ response-time service level.
 
 :::danger[Do not open a public issue for a suspected vulnerability]
 Check [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md#reporting-a-vulnerability)
-for current private reporting availability and safe report contents. The reporting
-form is not verified while the repository remains private; enabling and verifying
-it is a public-launch gate. Do not disclose vulnerability details in public issues
-or discussions.
+for current private reporting guidance and safe report contents. Private
+vulnerability reporting is enabled, and the report URL reaches GitHub sign-in.
+An independent signed-in non-maintainer form check remains unverified. Do not
+disclose vulnerability details in public issues or discussions.
 :::
 
 ## Before you ask

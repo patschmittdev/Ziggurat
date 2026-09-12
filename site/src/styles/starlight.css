@@ -36,6 +36,7 @@
   --sl-line-height: var(--zg-leading-body);
   --sl-line-height-headings: 1.18;
   --sl-text-body: var(--zg-text-0);
+  --sl-menu-button-size: 2.75rem;
 }
 
 :root[data-theme='light'] {
@@ -68,21 +69,41 @@ site-search dialog {
   font-size: var(--sl-text-body);
 }
 
+.sl-markdown-content > h2,
+.sl-markdown-content .sl-heading-wrapper.level-h2 {
+  margin-block-start: var(--zg-space-xl);
+  padding-block-start: var(--zg-space-s);
+  border-block-start: var(--zg-hair) solid var(--zg-rule-strong);
+}
+
 .sl-markdown-content h2 {
-  margin-top: var(--zg-space-xl);
-  padding-top: var(--zg-space-s);
-  border-top: var(--zg-hair) solid var(--zg-rule-strong);
   letter-spacing: -0.018em;
 }
 
+.sl-markdown-content > h3,
+.sl-markdown-content .sl-heading-wrapper.level-h3 {
+  margin-block-start: var(--zg-space-l);
+}
+
 .sl-markdown-content h3 {
-  margin-top: var(--zg-space-l);
   letter-spacing: -0.012em;
 }
 
-.sl-markdown-content h2 + *,
-.sl-markdown-content h3 + *,
-.sl-markdown-content h4 + * {
+/* Starlight keeps the heading inline to attach its permalink to the last line. */
+.sl-markdown-content .sl-heading-wrapper > :is(h2, h3, h4) {
+  margin-block: 0;
+  padding-block: 0;
+  border-block: 0;
+}
+
+.sl-markdown-content > .sl-heading-wrapper.level-h2:first-child {
+  margin-block-start: 0;
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+.sl-markdown-content > :is(h2, h3, h4) + *,
+.sl-markdown-content .sl-heading-wrapper:is(.level-h2, .level-h3, .level-h4) + * {
   margin-top: var(--zg-space-xs) !important;
 }
 
@@ -247,6 +268,29 @@ header.header {
   color: var(--zg-ink);
   font-weight: 600;
   box-shadow: inset 2px 0 0 0 var(--zg-ink);
+}
+
+.sidebar-content a,
+.pagination-links a,
+starlight-menu-button button {
+  border-radius: 0;
+}
+
+.pagination-links a {
+  background: var(--zg-ground);
+  border-color: var(--zg-rule-strong);
+  box-shadow: none;
+}
+
+.pagination-links a:hover {
+  background: var(--zg-raised);
+  border-color: var(--zg-ink);
+}
+
+starlight-menu-button button {
+  min-width: 44px;
+  min-height: 44px;
+  box-shadow: none;
 }
 
 :where(a, button, summary, input, select):focus-visible {
