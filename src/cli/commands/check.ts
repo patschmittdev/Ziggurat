@@ -6,6 +6,7 @@ import type { CliIO } from '../main.js';
 import { GENERATED_ARTIFACTS, auditCleanRoom } from '../../eval/clean-room.js';
 import type { CleanRoomReport } from '../../eval/clean-room.js';
 import { renderCleanRoomMarkdown } from '../../eval/report.js';
+import { inertSingleLineText } from '../../presentation/inert.js';
 
 /**
  * Directories that never contain authored content. Everything else in the repository is
@@ -230,7 +231,7 @@ export async function runCheck(root: string, json: boolean, io: CliIO): Promise<
     } else {
       io.stdout(renderCleanRoomMarkdown(failure) + '\n');
     }
-    io.stderr(`error: ${err.message}\n`);
+    io.stderr(`error: ${inertSingleLineText(err.message)}\n`);
     return 1;
   }
 

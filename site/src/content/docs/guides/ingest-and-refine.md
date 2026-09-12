@@ -16,7 +16,8 @@ ziggurat ingest --root <vault> --file inbox/some-note.md
 
 For a new capture, `ingest` creates and verifies a Bronze record before deleting
 the inbox source. If the canonical body already exists, it returns `duplicate`
-and leaves the inbox source untouched.
+and leaves the inbox source untouched, even when the existing Bronze record uses
+CRLF line endings on disk or the duplicate has a different inbox filename.
 
 Because a new capture reads and deletes its source, an escaping path would be a combined
 arbitrary-read and arbitrary-delete primitive. It is validated hard: the source must
@@ -37,6 +38,8 @@ into `inbox/` as a fresh copy rather than linking it.
 :::
 
 The result is canonical UTF-8 text after CRLF-to-LF normalization in a Bronze record.
+Reading, hash verification, and duplicate detection use that same normalization;
+lone carriage returns are preserved and remain significant to the body hash.
 Ingest creates it atomically without overwriting; SHA-256 verification detects later body
 mutation. Fresh captures default to `sensitivity: restricted` and `pii: unknown`.
 

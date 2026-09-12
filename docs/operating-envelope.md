@@ -121,16 +121,26 @@ claimed to be an atomic snapshot of the whole filesystem.
 
 | Failure | Required behavior | Operator action |
 | --- | --- | --- |
+| Listing `knowledge` fails for a reason other than `ENOENT`, such as `ENOTDIR` or permission denial | Fail explicitly before publishing any index; preserve all three previous index files | Restore the knowledge directory or its read permissions, then rebuild |
 | Serialization, write, or sync fails | Preserve the previous index; close and remove the writer's own temporary file | Check the reported phase, disk space, permissions, and rebuild |
 | Windows publication encounters transient sharing locks | Retry the atomic rename within a bounded 155 ms wait budget, then fail explicitly | Stop persistent overlapping writers or readers that deny sharing, then rebuild |
 | Process dies before publication | Old index remains intact; an incomplete temporary file may remain | Rebuild; remove only specifically identified remnants after confirming no writer owns them |
 | A build publishes only part of the three-file set | Live verification refuses any stale profile | Rerun the complete build after stabilizing corpus state |
 | Corpus or trust changes after citation issuance | Search and citation read must reverify and refuse stale authority | Correct/re-authorize source artifacts as appropriate and rebuild |
 
+An absent `knowledge` directory (`ENOENT`) still means an empty curated collection.
+A build may publish an empty Gold index and rebuild the advisory profiles in that
+case. A failed directory listing is not treated as an absent directory or as an
+individual rejected page. The diagnostic reports the directory and filesystem
+error code, not corpus contents or a raw exception message.
+
 Temporary remnants are not proposals, approval records, or authoritative indexes.
 Recovery must not bulk-delete staged proposals or hide unresolved contradictions.
 The automated tests use real files, concurrent CLI processes, and a deliberately
 terminated child writer, not filesystem mocks.
+Knowledge-listing regressions verify byte-identical existing Gold, review, and
+evidence indexes after failure. Permission-denial coverage skips explicitly when
+the filesystem or current user does not enforce directory mode bits.
 
 ## Actual disk-full test
 

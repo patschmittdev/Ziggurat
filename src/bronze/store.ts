@@ -13,6 +13,7 @@ import { dirname, join, relative } from 'node:path';
 import * as YAML from 'yaml';
 import { BronzeRecordSchema } from '../contracts/index.js';
 import type { BronzeRecord } from '../contracts/index.js';
+import { parseCorpusDocument } from '../corpus/documents.js';
 import { sha256Text } from './canonical.js';
 
 export interface VerifyResult {
@@ -32,36 +33,19 @@ export class BronzeCorruptionError extends Error {
   }
 }
 
-interface BronzeSplit {
-  yamlText: string;
-  body: string;
-}
-
-/**
- * Splits a Bronze file into its YAML frontmatter text and body.
- * Format: ---\n<yaml>\n---\n<body>
- */
-function splitBronzeFile(content: string): BronzeSplit | null {
-  if (!content.startsWith('---\n')) return null;
-  const afterOpen = content.slice(4);
-  const closeIdx = afterOpen.indexOf('\n---\n');
-  if (closeIdx === -1) return null;
-  return {
-    yamlText: afterOpen.slice(0, closeIdx),
-    body: afterOpen.slice(closeIdx + 5),
-  };
-}
-
 /** Parses a Bronze file's frontmatter + validates through BronzeRecordSchema. */
 export function parseBronzeRecord(content: string): BronzeRecord {
   return parseBronzeFile(content).record;
 }
 
 export function parseBronzeFile(content: string): { record: BronzeRecord; body: string } {
-  const split = splitBronzeFile(content);
-  if (split === null) throw new Error('not a valid Bronze file: missing frontmatter');
-  const parsed = YAML.parse(split.yamlText) as unknown;
-  return { record: BronzeRecordSchema.parse(parsed), body: split.body };
+  const parsed = parseCorpusDocument(content, BronzeRecordSchema, Object.keys(BronzeRecordSchema.shape));
+  if (!parsed.valid) {
+    const detail = parsed.failure.reason === 'missing-frontmatter'
+      ? 'missing frontmatter' : parsed.failure.detail;
+    throw new Error(`not a valid Bronze file: ${detail}`);
+  }
+  return { record: parsed.data, body: parsed.body };
 }
 
 /** Serializes a BronzeRecord + canonical body into the on-disk file format. */
@@ -95,18 +79,13 @@ export async function collectBronzeHashes(root: string): Promise<Map<string, str
     if (!filePath.endsWith('.md')) return;
     try {
       const content = await readFile(filePath, 'utf8');
-      const split = splitBronzeFile(content);
-      if (split === null) return;
-      const parsed = YAML.parse(split.yamlText) as unknown;
-      const result = BronzeRecordSchema.safeParse(parsed);
-      if (result.success) {
-        const actualHash = sha256Text(split.body);
-        if (actualHash !== result.data.sha256) {
-          throw new BronzeCorruptionError(filePath, result.data.sha256, actualHash);
-        }
-        const relPath = relative(root, filePath).replace(/\\/gu, '/');
-        hashes.set(result.data.sha256, relPath);
+      const { record, body } = parseBronzeFile(content);
+      const actualHash = sha256Text(body);
+      if (actualHash !== record.sha256) {
+        throw new BronzeCorruptionError(filePath, record.sha256, actualHash);
       }
+      const relPath = relative(root, filePath).replace(/\\/gu, '/');
+      hashes.set(record.sha256, relPath);
     } catch (err) {
       if (err instanceof BronzeCorruptionError) throw err;
       /* skip unreadable or invalid files */
@@ -181,10 +160,7 @@ export async function atomicWriteBronze(
  */
 export async function verifyBronzeFile(filePath: string): Promise<VerifyResult> {
   const content = await readFile(filePath, 'utf8');
-  const split = splitBronzeFile(content);
-  if (split === null) throw new Error(`${filePath}: not a valid Bronze file (no frontmatter)`);
-  const parsed = YAML.parse(split.yamlText) as unknown;
-  const record = BronzeRecordSchema.parse(parsed);
-  const actual = sha256Text(split.body);
+  const { record, body } = parseBronzeFile(content);
+  const actual = sha256Text(body);
   return { valid: actual === record.sha256, expected: record.sha256, actual };
 }

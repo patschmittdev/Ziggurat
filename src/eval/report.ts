@@ -1,5 +1,6 @@
 import type { ConformanceReport } from './conformance.js';
 import type { CleanRoomReport } from './clean-room.js';
+import { inertSingleLineText } from '../presentation/inert.js';
 
 /** Renders a ConformanceReport as Markdown. */
 export function renderConformanceMarkdown(report: ConformanceReport): string {
@@ -13,7 +14,7 @@ export function renderConformanceMarkdown(report: ConformanceReport): string {
 
   for (const f of report.findings) {
     const icon = f.passed ? '✓' : '✗';
-    lines.push(`${icon} ${f.case_id}: ${f.detail}`);
+    lines.push(`${icon} ${inertSingleLineText(f.case_id)}: ${inertSingleLineText(f.detail)}`);
   }
 
   return lines.join('\n');
@@ -31,7 +32,7 @@ export function renderCleanRoomMarkdown(report: CleanRoomReport): string {
     lines.push('No findings.');
   } else {
     for (const f of report.findings) {
-      lines.push(`- ${f.path}:${f.line} [${f.category}] ${f.detail}`);
+      lines.push(`- ${inertSingleLineText(f.path)}:${f.line} [${inertSingleLineText(f.category)}] ${inertSingleLineText(f.detail)}`);
     }
   }
 
