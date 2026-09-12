@@ -82,8 +82,13 @@ export async function collectCuratedPagesDetailed(root: string): Promise<Curated
   let entries: string[];
   try {
     entries = await readdir(knowledgeDir);
-  } catch {
-    return { pages, rejected };
+  } catch (error) {
+    const code = error instanceof Error && 'code' in error ? String(error.code) : 'unknown error';
+    if (code === 'ENOENT') return { pages, rejected };
+    throw new Error(
+      `Cannot list knowledge directory (${code}); curated state is unknown. Check the directory and its permissions.`,
+      { cause: error },
+    );
   }
   await mapCorpusReads(entries.sort().filter(entry => isKnowledgePath(`knowledge/${entry}`)), async entry => {
     const relPath = `knowledge/${entry}`;
