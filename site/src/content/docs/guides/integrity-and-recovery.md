@@ -22,12 +22,20 @@ fingerprint, and a corpus fingerprint over complete chunk integrity.
 | Startup, search, or read refuses after an index mismatch | The stored index no longer matches the live corpus, trust policy, or its own integrity data | Rebuild with `ziggurat build` |
 | A page will not enter Gold | One or more eligibility checks failed | Check status, retrieval eligibility, privacy, sensitivity, egress, verification age, Bronze lineage, contradictions, and the receipt |
 | Silver and contradiction state is unverifiable | Proposal corruption | Inspect the named artifact; see [Corrupt proposals](#corrupt-proposals) before restaging |
+| `build` cannot list the knowledge directory | Curated state is unknown, for example because `knowledge` is a regular file (`ENOTDIR`) or listing is denied (`EACCES` or `EPERM`) | Restore the directory or its permissions, then rebuild; no index files are replaced by this failed build |
 | A corpus entry is reported as rejected | It is unreadable, lacks frontmatter, has invalid YAML, or fails its schema | Repair the named file |
 | `ziggurat check` fails on `config/clean-room.yaml` | Unreadable or malformed YAML, unknown keys, invalid list entries, or a non-null non-mapping document | Fix the reported problem; absent, empty, comments-only, or YAML-null documents use defaults |
 
 Rejection diagnostics deliberately carry no file content and no parsed values. For schema
 failures they name field paths and issue codes only, so a restricted page is never quoted
 back through build output or logs.
+
+An absent `knowledge` directory (`ENOENT`) still represents an empty curated
+collection, so rebuilding may replace Gold with an empty index while retaining
+eligible advisory content. Other listing failures exit unsuccessfully before any
+index publication and report a filesystem error code without corpus contents.
+Live verification also refuses an index when the knowledge directory cannot be
+listed.
 
 ## Corrupt proposals
 
