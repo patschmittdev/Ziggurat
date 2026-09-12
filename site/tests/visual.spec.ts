@@ -1,17 +1,67 @@
-import { mkdir } from 'node:fs/promises';
 import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-const artifacts = fileURLToPath(new URL('../.artifacts/', import.meta.url));
 const docsDirectory = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
 const docRoutes = readdirSync(docsDirectory, { recursive: true, encoding: 'utf8' })
   .filter(path => /\.(md|mdx)$/.test(path))
   .map(path => path.replaceAll('\\', '/').replace(/\.(md|mdx)$/, '').replace(/(^|\/)index$/, '$1'))
   .map(path => `${path.replace(/\/$/, '')}/`);
 const routes = [...new Set(['/', ...docRoutes])].sort();
+
+test('homepage inline prose link boundaries', async ({ page }) => {
+  await page.goto('./');
+  const boundaries = await page.locator('main p a, main li a, main dd a, main figcaption a, .site-footer p a')
+    .evaluateAll(links => links.map(link => {
+      const prose = link.closest('p, li, dd, figcaption')!;
+      const before = document.createRange();
+      before.selectNodeContents(prose);
+      before.setEndBefore(link);
+      const after = document.createRange();
+      after.selectNodeContents(prose);
+      after.setStartAfter(link);
+      // DOM ranges retain missing spaces that layout gaps and accessibility checks cannot detect.
+      return {
+        text: link.textContent,
+        before: before.toString().replace(/\s+/g, ' '),
+        after: after.toString().replace(/\s+/g, ' '),
+      };
+    }));
+
+  expect(boundaries).toEqual([
+    {
+      text: 'provenance and authority',
+      before: expect.stringMatching(/; see $/),
+      after: '.',
+    },
+    {
+      text: 'repository',
+      before: expect.stringMatching(/Clone the $/),
+      after: expect.stringMatching(/^, then from the checkout root:/),
+    },
+    {
+      text: 'Threat model overview',
+      before: expect.stringMatching(/^\s*$/),
+      after: expect.stringMatching(/^, then the attack-control mapping and the guarantees and residual risks\.\s*$/),
+    },
+    {
+      text: 'attack-control mapping',
+      before: expect.stringMatching(/Threat model overview, then the $/),
+      after: expect.stringMatching(/^ and the guarantees and residual risks\.\s*$/),
+    },
+    {
+      text: 'guarantees and residual risks',
+      before: expect.stringMatching(/attack-control mapping and the $/),
+      after: expect.stringMatching(/^\.\s*$/),
+    },
+    {
+      text: 'project status',
+      before: expect.stringMatching(/documented in $/),
+      after: expect.stringMatching(/^, alongside failures and remaining gaps\./),
+    },
+  ]);
+});
 
 for (const route of routes) {
   test(`${route} visual and accessibility`, async ({ page }, testInfo) => {
@@ -27,6 +77,12 @@ for (const route of routes) {
     await expect(page.locator('h1')).toHaveCount(1);
 
     if (route === '/') {
+      await expect(page.locator('.thesis .prose')).toContainText(
+        'Ziggurat ships no signer. Keeping the private key outside the vault and inaccessible to the model and Ziggurat process is an operator responsibility.',
+      );
+      await expect(page.locator('.admission__external')).toContainText(
+        'Keep the private key separate from the model and host.',
+      );
       await expect(page.locator('.admission__flow > li')).toHaveCount(4);
       await expect(page.locator('#ascent [data-ascent-figure]')).toBeVisible();
       await expect(page.locator('.walkthrough__steps > li')).toHaveCount(7);
@@ -116,10 +172,8 @@ for (const route of routes) {
     expect(violations, `Axe violations on ${route} (${testInfo.project.name})`).toEqual([]);
 
     const slug = route === '/' ? 'home' : route.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
-    const [project, scheme] = testInfo.project.name.split('-');
-    await mkdir(artifacts, { recursive: true });
     await page.screenshot({
-      path: join(artifacts, `${slug}-${project}-${scheme}.png`),
+      path: testInfo.outputPath(`${slug}-${testInfo.project.name}.png`),
       fullPage: true,
       animations: 'disabled',
     });

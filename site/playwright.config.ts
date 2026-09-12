@@ -1,6 +1,10 @@
 import { defineConfig } from '@playwright/test';
 
-const baseURL = 'http://127.0.0.1:4329/Ziggurat/';
+const port = process.env.PORT ?? '4329';
+if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
+  throw new Error('PORT must be a decimal integer between 1 and 65535.');
+}
+const baseURL = `http://127.0.0.1:${Number(port)}/Ziggurat/`;
 const sizes = [
   { name: 'desktop', viewport: { width: 1280, height: 900 } },
   { name: 'tablet', viewport: { width: 834, height: 1112 } },
@@ -30,7 +34,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run build && node scripts/serve-dist.mjs',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

@@ -129,7 +129,8 @@ const notGuaranteed = [
               A model can read authorized content and draft a complete, evidence-backed
               candidate. It cannot admit that candidate to durable shared memory. Only the
               holder of an external Ed25519 private key that operator policy assigns to a reviewer
-              can, and that key is never reachable from any shipped code path.
+              can. Ziggurat ships no signer. Keeping the private key outside the vault and
+              inaccessible to the model and Ziggurat process is an operator responsibility.
               The receipt proves key control and exact-content authorization, not humanity or attention.
             </p>
             <div class="actions">
@@ -373,7 +374,7 @@ retrieval_eligible: true
               <h3>Watch the boundary hold</h3>
               <p>
                 The garden walkthrough runs the poisoned-memory scenario against fixture data and
-                stops at the human signing boundary by design. Clone the
+                stops at the human signing boundary by design. Clone the{' '}
                 <a href={repo}>repository</a>, then from the checkout root:
               </p>
             </div>
@@ -392,8 +393,8 @@ node scripts/run-garden-walkthrough.mjs</code></pre>
             </div>
             <div class="prose">
               <p>
-                <a href={url('security/threat-model/')}>Threat model overview</a>, then the
-                <a href={url('security/attack-controls/')}>attack-control mapping</a> and the
+                <a href={url('security/threat-model/')}>Threat model overview</a>, then the{' '}
+                <a href={url('security/attack-controls/')}>attack-control mapping</a> and the{' '}
                 <a href={url('security/guarantees/')}>guarantees and residual risks</a>.
               </p>
             </div>
