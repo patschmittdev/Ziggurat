@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -133,7 +133,13 @@ async function checkLink(raw, file) {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Node resolves module URLs through symlinks, while argv can retain the alias.
+const invokedPath = process.argv[1] ? await realpath(resolve(process.argv[1])).catch(error => {
+  if (error.code === 'ENOENT') return undefined;
+  throw error;
+}) : undefined;
+
+if (invokedPath !== undefined && invokedPath === await realpath(fileURLToPath(import.meta.url))) {
   try {
     for (const entry of await readdir(join(ROOT, 'docs'), { withFileTypes: true })) {
       if (entry.isFile() && entry.name.endsWith('.md')) queue.push(join(ROOT, 'docs', entry.name));

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -37,7 +37,7 @@ test('extracts reference-style links with nested brackets in their labels', () =
   assert.deepEqual(markdownLinks('[See [tiers]][t]\n\n[t]: ./tiers.md#body_sha256\n'), ['./tiers.md#body_sha256']);
 });
 
-async function fixture(t, readme, sitePage) {
+async function fixture(t, readme, sitePage, linked = false) {
   const directory = await mkdtemp(join(tmpdir(), 'ziggurat-link-regression-'));
   assert.equal(dirname(resolve(directory)), resolve(tmpdir()));
   assert.ok(basename(directory).startsWith('ziggurat-link-regression-'));
@@ -52,7 +52,13 @@ async function fixture(t, readme, sitePage) {
     await mkdir(join(directory, 'site/src/content/docs/concepts'), { recursive: true });
     await writeFile(join(directory, 'site/src/content/docs/concepts/tiers.md'), sitePage);
   }
-  return spawnSync(process.execPath, [join(directory, 'scripts/check-docs-links.mjs')], { encoding: 'utf8' });
+  let scriptDirectory = join(directory, 'scripts');
+  if (linked) {
+    const alias = join(directory, 'linked-scripts');
+    await symlink(scriptDirectory, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    scriptDirectory = alias;
+  }
+  return spawnSync(process.execPath, [join(scriptDirectory, 'check-docs-links.mjs')], { encoding: 'utf8' });
 }
 
 test('rejects missing targets behind nested-bracket labels', async (t) => {
@@ -67,4 +73,11 @@ test('recursively checks site pages reached through nested-bracket labels', asyn
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stderr, /site\/src\/content\/docs\/concepts\/tiers\.md: \.\/missing\.md: target does not exist/);
   assert.match(result.stdout, /1 linked site page\(s\) scanned; 1 failure\(s\)/);
+});
+
+test('executes the checker when the script path contains a directory symlink', async t => {
+  const result = await fixture(t, '[Missing](missing.md)\n', undefined, true);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stderr, /README\.md: missing\.md: target does not exist/);
+  assert.match(result.stdout, /1 link\(s\) checked .*1 failure\(s\)/);
 });
