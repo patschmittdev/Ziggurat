@@ -17,6 +17,21 @@ const fixtures = join(process.cwd(), 'fixtures', 'retrieval', 'v1');
 const fixture = RetrievalFixtureSchema.parse(JSON.parse(await readFile(join(fixtures, 'corpus.json'), 'utf8')));
 const baseline = RetrievalBaselineSchema.parse(JSON.parse(await readFile(join(fixtures, 'baseline.json'), 'utf8')));
 
+function assertBaselineRankings(actual: typeof baseline.rankings, expected: typeof baseline.rankings): void {
+  const identities = (rows: typeof baseline.rankings) => rows.map(row => ({
+    query_id: row.query_id, hits: row.hits.map(hit => hit.id),
+  }));
+  assert.deepEqual(identities(actual), identities(expected));
+  actual.forEach((row, rowIndex) => row.hits.forEach((hit, hitIndex) => {
+    const expectedScore = expected[rowIndex]!.hits[hitIndex]!.score;
+    // Math.log can differ by a few floating-point units across platforms.
+    const tolerance = 8 * Number.EPSILON * Math.max(1, Math.abs(expectedScore));
+    assert(Number.isFinite(hit.score) && Number.isFinite(expectedScore)
+      && Math.abs(hit.score - expectedScore) <= tolerance,
+    `${row.query_id}/${hit.id}: score ${hit.score} differs from baseline ${expectedScore}`);
+  }));
+}
+
 test('retrieval CLI: bundled defaults work from another cwd without weakening explicit path/output restrictions', async () => {
   const root = await mkdtemp(join(process.cwd(), '.retrieval-cli-'));
   const execute = promisify(execFile);
@@ -58,8 +73,23 @@ test('retrieval baseline: captured original rankings reproduce letters-only BM25
   const rankings = fixture.queries.map(query => ({
     query_id: query.id, hits: bm25Search(letters(query.query), snapshot).slice(0, 5),
   }));
-  assert.deepEqual(rankings, baseline.rankings);
+  assertBaselineRankings(rankings, baseline.rankings);
   assert.equal(evaluateRetrievalBaseline(fixture, baseline).exact_identifier_holdout_pass, false);
+});
+
+test('retrieval baseline comparison tolerates platform rounding but preserves exact ranks and meaningful scores', () => {
+  const expected = [{ query_id: 'platform', hits: [
+    { id: 'first', score: 2.74806096358101 }, { id: 'second', score: 1 },
+  ] }];
+  assertBaselineRankings([{ query_id: 'platform', hits: [
+    { id: 'first', score: 2.7480609635810103 }, { id: 'second', score: 1 },
+  ] }], expected);
+  assert.throws(() => assertBaselineRankings([{ ...expected[0]!, hits: [...expected[0]!.hits].reverse() }], expected));
+  for (const score of [2.748061, NaN, Infinity]) {
+    assert.throws(() => assertBaselineRankings([{ query_id: 'platform', hits: [
+      { id: 'first', score }, expected[0]!.hits[1]!,
+    ] }], expected));
+  }
 });
 
 test('retrieval quality: every unambiguous holdout identifier is top one, without pretending semantics are solved', () => {
