@@ -29,6 +29,22 @@ global link.
 | `--json` | Machine-readable reports for ingest, refine, review, build, query, check, and eval. `init` retains its text message; MCP uses its stdio protocol rather than a CLI JSON report. |
 | `--help` | Usage for the CLI or for a single command |
 
+### Human output and machine data
+
+The `init` root, `ingest` result path, finding strings in the human-readable
+`check` and `eval` reports, and `check` configuration errors on stderr use inert
+single-line rendering. Terminal controls, C1 controls, bidirectional controls,
+and Unicode line separators become visible escapes such as `\u001b`, `\u009b`,
+and `\u202e`; line endings become `\n`.
+Ordinary text and literal backslashes are unchanged. This is display hardening,
+not Markdown sanitization, a filesystem rename, or an admission decision.
+
+This human-output escaping does not alter machine report values. The
+`safeJsonStringify` helper used by some JSON outputs escapes the serialized text
+without changing decoded values: `JSON.parse` still recovers the original controls,
+line endings, quotes, and backslashes. Consumers must render decoded strings
+inertly themselves rather than treating machine JSON as sanitized content.
+
 ## What each command may write
 
 | Command | Writes | Cannot write |
