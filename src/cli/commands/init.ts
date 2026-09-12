@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CliIO } from '../main.js';
+import { inertSingleLineText } from '../../presentation/inert.js';
 
 const STARTER_DIRS = [
   'bronze',
@@ -51,6 +52,6 @@ export async function runInit(root: string, io: CliIO): Promise<number> {
     }
   }
 
-  io.stdout(`Initialized Ziggurat vault at ${root}\n`);
+  io.stdout(`Initialized Ziggurat vault at ${inertSingleLineText(root)}\n`);
   return 0;
 }
