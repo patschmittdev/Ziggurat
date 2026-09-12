@@ -78,6 +78,18 @@ indexes are unsupported and must be restaged or rebuilt. This does not refer to
 model-facing `RefinementDraft` v1 or external authorization receipt v1; neither changes
 the stored v2 formats.
 
+Gold bodies are served with CRLF and lone CR normalized to LF, matching the
+existing signed canonical representation. This applies to Gold in all three
+indexes and never rewrites knowledge or Bronze files. Bronze still normalizes
+CRLF only, preserving lone CR in its hashes and citations.
+
+After updating, run `ziggurat build` for any vault whose indexed Gold bodies
+contain lone CR. Their chunk IDs and fingerprints change, so obtain new
+citations after rebuilding. LF/CRLF-only Gold chunks are unchanged. Live
+verification still refuses a post-build lone-CR representation change until
+rebuild; receipts and their signed bytes do not change. See the
+[index compatibility details](https://github.com/patschmittdev/Ziggurat/blob/main/docs/retrieval-evaluation.md#gold-body-line-endings-and-index-compatibility).
+
 :::caution[Gold is not a truth label]
 Every retrieved chunk carries `content_role: reference` and
 `instruction_authority: none`; see [Gold's limits](./provenance-and-authority.md).
