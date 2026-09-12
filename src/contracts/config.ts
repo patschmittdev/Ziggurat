@@ -4,17 +4,6 @@ import { z } from 'zod';
 import * as YAML from 'yaml';
 import { TrustPolicySchema } from './authorization.js';
 
-export interface ZigguratConfig {
-  schema_version: 1;
-  lifecycle: { review_queue_limit: number };
-  domain: { page_types: string[]; tags: string[] };
-  privacy: { default_sensitivity: 'restricted'; default_pii: 'unknown' };
-  adapters: {
-    model_endpoint?: string;
-  };
-  trust: z.infer<typeof TrustPolicySchema>;
-}
-
 /**
  * Configuration is strict at the top level and inside every nested object.
  *
@@ -37,9 +26,12 @@ export const ZigguratConfigSchema = z.object({
   }).strict(),
   adapters: z.object({
     model_endpoint: z.string().url().optional(),
+    model_name: z.string().min(1).max(128).optional(),
   }).strict(),
   trust: TrustPolicySchema,
 }).strict();
+
+export type ZigguratConfig = z.infer<typeof ZigguratConfigSchema>;
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 
@@ -99,11 +91,14 @@ async function loadYamlFile(filePath: string): Promise<unknown> {
 }
 
 function buildAdapters(
-  raw: { model_endpoint?: string | undefined },
+  raw: ZigguratConfig['adapters'],
 ): ZigguratConfig['adapters'] {
   const adapters: ZigguratConfig['adapters'] = {};
   if (raw.model_endpoint !== undefined) {
     adapters.model_endpoint = raw.model_endpoint;
+  }
+  if (raw.model_name !== undefined) {
+    adapters.model_name = raw.model_name;
   }
   return adapters;
 }

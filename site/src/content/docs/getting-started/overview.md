@@ -6,8 +6,9 @@ description: What Ziggurat is, what it enforces, and what it deliberately does n
 Ziggurat is a human-gated memory firewall: a local TypeScript reference implementation
 that treats durable AI memory as a privileged write surface.
 
-A model can read authorized content and return a candidate with byte-validated citations.
-The refine host may persist that model-originated JSON only as Silver. Gold requires a
+A model can read authorized content and return a strict version-1 refinement draft with
+source IDs and line ranges. The refine host derives canonical citations and version-2
+Silver, then validates and persists only that artifact. Gold requires a
 valid receipt from a configured Ed25519 key that operator policy assigns to a reviewer.
 Ziggurat verifies key control and exact-content authorization, not humanity, attention,
 semantic support, or factual truth.
@@ -16,9 +17,9 @@ semantic support, or factual truth.
 
 Content moves through three tiers. **Bronze** is canonical UTF-8 text captured from
 untrusted sources after CRLF-to-LF normalization; ingest creates it without overwriting,
-and its body hash detects later mutation. **Silver** is model-originated strict JSON that
-the refine host validates and persists; every citation is revalidated against stored
-Bronze text. **Gold** is eligible knowledge content admitted by `build` after a detached
+and its body hash detects later mutation. **Silver** is strict version-2 JSON that the
+refine host materializes from a model draft, validates, and persists; every citation is
+revalidated against stored Bronze text. **Gold** is eligible knowledge content admitted by `build` after a detached
 Ed25519 receipt from a configured key and every other eligibility check pass.
 
 Ziggurat ships no signer, apply, approve, or promote command; see the
@@ -79,3 +80,4 @@ repository and remain authoritative:
 - [ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md)
 - [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md)
 - [docs/authorization-protocol.md](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md)
+- [docs/local-model-protocol.md](https://github.com/patschmittdev/Ziggurat/blob/main/docs/local-model-protocol.md)

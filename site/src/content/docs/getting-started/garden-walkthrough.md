@@ -73,11 +73,17 @@ ingest is the only writer of Bronze. The source must resolve to a real regular f
 
 ### A model may draft, and may write nothing else
 
-The host reads Bronze on the model’s behalf. Each refine request carries a bounded reference block of host-selected records: at most 12 records, 32 KiB per record, and 256 KiB in total. Each record is labelled as non-instructional reference, with oversize records omitted rather than truncated. The model is handed no path it could fetch. It returns JSON, and the refine pathway can stage only a strict schema-version-2 proposal, whose every citation is revalidated against the real Bronze bytes, hashes, and line ranges.
+The host reads Bronze on the model's behalf. Each refine request carries a bounded
+reference block of host-selected records: at most 12 records, 32 KiB per record, and
+256 KiB in total. Each record is labelled as non-instructional reference, with oversize
+records omitted rather than truncated. The model has no filesystem or fetch capability.
+It returns a strict `RefinementDraft` v1 with supplied source IDs and line ranges, not
+quotes or hashes. The host derives canonical Silver v2 and stages it only after every
+citation is revalidated against the real Bronze bytes, hashes, and line ranges.
 
 - `.ziggurat/proposals/<id>.json`
 - `no status, reviewer, or receipt fields`
-- `a fabricated quote or digest fails staging`
+- `unknown source IDs or invalid line ranges fail staging`
 
 ### A page that reviews itself changes nothing
 

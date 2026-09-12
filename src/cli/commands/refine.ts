@@ -1,8 +1,7 @@
 import type { CliIO } from '../main.js';
-import { stageProposal } from '../../refine/proposal.js';
+import { executeRefinement } from '../../refine/proposal.js';
 import { parseZigguratConfig } from '../../contracts/config.js';
 import { LoopbackChatAdapter } from '../../refine/adapter.js';
-import { buildBronzeReference, buildRefineMessages } from '../../refine/context.js';
 import { inertSingleLineText } from '../../presentation/inert.js';
 
 export interface RefineOptions {
@@ -12,6 +11,7 @@ export interface RefineOptions {
    * allows. Naming sources is a deliberate human decision to widen that set.
    */
   sources?: readonly string[] | undefined;
+  target?: string | undefined;
 }
 
 export async function runRefine(
@@ -33,22 +33,24 @@ export async function runRefine(
     return 1;
   }
 
-  const reference = await buildBronzeReference(root, { sourcePaths: options.sources });
-  if (reference.sources.length === 0) {
-    io.stderr(
-      'error: no Bronze evidence is available for this request. A model cannot produce '
-      + 'exact citations without it.\n',
-    );
-    for (const omission of reference.omitted) {
-      io.stderr(`  omitted ${inertSingleLineText(omission.source_path)}: ${omission.reason}\n`);
-    }
-    return 1;
-  }
-
-  const adapter = new LoopbackChatAdapter(endpoint);
-  const raw = await adapter.completeJson(buildRefineMessages({ topic: query }, reference));
-
-  const staged = await stageProposal(root, raw);
+  const adapter = new LoopbackChatAdapter(endpoint, {
+    ...(config.adapters.model_name === undefined ? {} : { model: config.adapters.model_name }),
+  });
+  const staged = await executeRefinement(adapter, {
+    root,
+    topic: query,
+    target_path: options.target,
+    bronze_source_paths: options.sources,
+  }, {
+    onReference(reference) {
+      for (const omission of reference.omitted) {
+        io.stderr(
+          `warning: omitted Bronze source ${inertSingleLineText(omission.source_path)}: ${omission.reason}\n`,
+        );
+      }
+    },
+  });
+  const reference = staged.reference;
 
   if (json) {
     io.stdout(JSON.stringify({
@@ -63,10 +65,5 @@ export async function runRefine(
     io.stdout(`Bronze reference sources: ${reference.sources.length}\n`);
   }
 
-  for (const omission of reference.omitted) {
-    io.stderr(
-      `warning: omitted Bronze source ${inertSingleLineText(omission.source_path)}: ${omission.reason}\n`,
-    );
-  }
   return 0;
 }

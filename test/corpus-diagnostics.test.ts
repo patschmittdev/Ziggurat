@@ -8,6 +8,7 @@ import {
   collectBronzeFilesDetailed,
   collectCuratedPagesDetailed,
 } from '../src/corpus/collect.js';
+import { CORPUS_READ_CONCURRENCY, createCorpusReadLimiter, mapCorpusReads } from '../src/corpus/read-pool.js';
 
 const SECRET_LINE = 'CONFIDENTIAL merger terms for the eastern district.';
 
@@ -90,7 +91,7 @@ test('bronze collection: a schema-invalid record is reported and stays unusable'
     const { records, rejected } = await collectBronzeFilesDetailed(root);
     assert.equal(rejected.length, 1);
     assert.equal(rejected[0]?.reason, 'schema-invalid');
-    assert.match(rejected[0]?.detail ?? '', /retrieval_eligible/u);
+    assert.match(rejected[0]?.detail ?? '', /<root>.*unrecognized_keys/u);
     assert.ok(!JSON.stringify(rejected).includes(SECRET_LINE));
 
     // The record is retained only in its maximally restricted, unverified form so
@@ -239,5 +240,128 @@ test('curated collection: a valid page is still admitted alongside rejections', 
     const { pages, rejected } = await collectCuratedPagesDetailed(root);
     assert.deepEqual(pages.map(p => p.path), ['knowledge/good.md']);
     assert.deepEqual(rejected.map(r => r.path), ['knowledge/bare.md']);
+  });
+});
+
+test('schema diagnostics never echo private values used as unknown field names', async () => {
+  await withVault(async root => {
+    const privateKey = 'PRIVATE merger proposal marker';
+    const body = 'Reference body.\n';
+    await write(root, 'bronze/private.md',
+      validBronze(body).replace("pii: 'false'\n", `pii: 'false'\n"${privateKey}": hidden\n`));
+    const { rejected } = await collectBronzeFilesDetailed(root);
+    assert.equal(rejected[0]?.reason, 'schema-invalid');
+    assert.deepEqual(rejected[0]?.fields, ['<root>']);
+    assert(!JSON.stringify(rejected).includes(privateKey));
+    assert(!JSON.stringify(rejected).includes('hidden'));
+  });
+});
+
+test('shared corpus parser rejects duplicate YAML keys and preserves CRLF body hashes', async () => {
+  await withVault(async root => {
+    await write(root, 'bronze/duplicate.md',
+      validBronze('Evidence.\n').replace("pii: 'false'\n", "pii: 'false'\npii: 'false'\n"));
+    await write(root, 'bronze/crlf.md', validBronze('Evidence.\n').replace(/\n/gu, '\r\n'));
+    const { records, rejected } = await collectBronzeFilesDetailed(root);
+    assert.equal(rejected[0]?.reason, 'invalid-yaml');
+    assert.equal(records.length, 1);
+    assert.equal(records[0]?.hashVerified, true);
+    assert.equal(records[0]?.body, 'Evidence.\n');
+  });
+});
+
+test('corpus read pool caps real concurrent reads at 32 and preserves input order', async () => {
+  await withVault(async root => {
+    await write(root, 'source.txt', 'Actual file contents.');
+    let active = 0;
+    let peak = 0;
+    const entries = Array.from({ length: 97 }, (_, index) => index);
+    const result = await mapCorpusReads(entries, async index => {
+      active++;
+      peak = Math.max(peak, active);
+      try {
+        return `${index}:${await readFile(join(root, 'source.txt'), 'utf8')}`;
+      } finally {
+        active--;
+      }
+    });
+    assert.equal(CORPUS_READ_CONCURRENCY, 32);
+    assert.equal(peak, 32);
+    assert.equal(active, 0);
+    assert.deepEqual(result, entries.map(index => `${index}:Actual file contents.`));
+    assert.deepEqual(await mapCorpusReads([], async () => ''), []);
+  });
+});
+
+test('corpus read pool drains in-flight reads before propagating a failure', async () => {
+  await withVault(async root => {
+    await write(root, 'source.txt', 'Actual file contents.');
+    let active = 0;
+    await assert.rejects(mapCorpusReads(
+      ['missing.txt', ...Array<string>(70).fill('source.txt')],
+      async filename => {
+        active++;
+        try {
+          return await readFile(join(root, filename), 'utf8');
+        } finally {
+          active--;
+        }
+      },
+    ), { code: 'ENOENT' });
+    assert.equal(active, 0, 'failed scan must not leave reads using a released vault');
+  });
+});
+
+test('parallel corpus collection preserves sorted pages, records and safe rejections', async () => {
+  await withVault(async root => {
+    const names = Array.from({ length: 70 }, (_, index) => `page-${String(69 - index).padStart(3, '0')}`);
+    for (const name of names) {
+      await write(root, `bronze/nested/${name}.md`, validBronze(`${name}\n`));
+      await write(root, `knowledge/${name}.md`, `---\n${JSON.stringify({
+        schema_version: 1, title: name, type: 'concept', sources: [`bronze/nested/${name}.md`],
+        confidence: 'high', status: 'draft', retrieval_eligible: false, pii: 'false',
+        sensitivity: 'public', visibility: 'internal', egress: 'local-only',
+      })}\n---\n${name}\n`);
+    }
+    for (const name of ['z-invalid', 'a-invalid']) {
+      await write(root, `bronze/nested/${name}.md`, '---\npii: [\n---\nPRIVATE');
+      await write(root, `knowledge/${name}.md`, '---\npii: [\n---\nPRIVATE');
+    }
+    const [bronze, curated] = await Promise.all([
+      collectBronzeFilesDetailed(root), collectCuratedPagesDetailed(root),
+    ]);
+    const sorted = [...names].sort();
+    assert.deepEqual(bronze.records.map(record => record.path), sorted.map(name => `bronze/nested/${name}.md`));
+    assert.deepEqual(curated.pages.map(page => page.path), sorted.map(name => `knowledge/${name}.md`));
+    for (const collection of [bronze, curated]) {
+      assert.equal(collection.rejected.length, 2);
+      assert(collection.rejected[0]!.path < collection.rejected[1]!.path);
+      assert(collection.rejected.every(entry => entry.reason === 'invalid-yaml'));
+      assert(!JSON.stringify(collection.rejected).includes('PRIVATE'));
+    }
+    assert.deepEqual(await collectBronzeFilesDetailed(root), bronze);
+    assert.deepEqual(await collectCuratedPagesDetailed(root), curated);
+  });
+});
+
+test('lazy source read limiter caps active file reads and releases slots after rejection', async () => {
+  await withVault(async root => {
+    await write(root, 'source.txt', 'Actual file contents.');
+    const limit = createCorpusReadLimiter();
+    let active = 0;
+    let peak = 0;
+    const results = await Promise.allSettled(Array.from({ length: 97 }, (_, index) => limit(async () => {
+      active++;
+      peak = Math.max(peak, active);
+      try {
+        return await readFile(join(root, index === 0 ? 'missing.txt' : 'source.txt'), 'utf8');
+      } finally {
+        active--;
+      }
+    })));
+    assert.equal(peak, 32);
+    assert.equal(active, 0);
+    assert.equal(results.filter(result => result.status === 'rejected').length, 1);
+    assert.equal(await limit(() => readFile(join(root, 'source.txt'), 'utf8')), 'Actual file contents.');
   });
 });

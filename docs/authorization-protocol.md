@@ -172,8 +172,10 @@ is a deterministic vector file for independent signer implementations. It contai
 No private key material is published. Verification, which is the only operation
 Ziggurat performs, needs only the public key. A signer implementation is conformant
 when it reproduces `canonical_page_content`, `content_sha256`, and `signing_payload`
-byte for byte from the frontmatter and body alone, and when its own signature over
-that payload verifies against the published public key.
+byte for byte from the frontmatter and body alone, and verifies the supplied
+signature against the published public key. A new signature made with an
+independently controlled key must verify against that key's corresponding public
+key, not the published fixture key.
 
 `test/authorization-vectors.test.ts` runs every case against the shipped verifier, so
 the vectors and the implementation cannot drift apart silently.
@@ -197,3 +199,6 @@ and rebuild.
 - Never expose the signer as an MCP tool or model-callable command.
 - Write only the strict detached receipt, then let Ziggurat verify it independently.
 - Test LF and CRLF inputs and reject unknown fields or unsupported algorithms.
+
+See [external signing interoperability](external-signing-interop.md) for the
+independently tested implementation and operator handoff.

@@ -1,10 +1,15 @@
 import { readFile, realpath } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { posix } from 'node:path';
-import type { EvidenceCitation } from '../contracts/index.js';
-import { canonicalBronzeBody, sha256Text } from '../bronze/canonical.js';
-import { parseBronzeRecord, BronzeCorruptionError } from '../bronze/store.js';
+import { BronzeRecordSchema } from '../contracts/index.js';
+import type { BronzeRecord, EvidenceCitation } from '../contracts/index.js';
+import { sha256Text } from '../bronze/canonical.js';
+import { BronzeCorruptionError } from '../bronze/store.js';
+import { bodyLines } from '../bronze/lines.js';
 import { assertRealPathWithinRoot } from '../fs/boundary.js';
+import { parseCorpusDocument } from '../corpus/documents.js';
+import type { DocumentFailure } from '../corpus/documents.js';
+import { createCorpusReadLimiter } from '../corpus/read-pool.js';
 
 export type EvidenceFailedField = 'body_sha256' | 'line_range' | 'quote' | 'quote_sha256';
 
@@ -14,12 +19,59 @@ export interface EvidenceValidationError {
   message: string;
 }
 
-function extractBronzeBody(content: string): string {
-  if (!content.startsWith('---\n')) throw new Error('not a valid Bronze file: missing opening frontmatter delimiter');
-  const afterOpen = content.slice(4);
-  const closeIdx = afterOpen.indexOf('\n---\n');
-  if (closeIdx === -1) throw new Error('not a valid Bronze file: unclosed frontmatter');
-  return afterOpen.slice(closeIdx + 5);
+export class BronzeDocumentError extends Error {
+  constructor(public readonly reason: DocumentFailure['reason'], detail: string) {
+    super(detail);
+    this.name = 'BronzeDocumentError';
+  }
+}
+
+export interface VerifiedBronzeSource {
+  readonly record: Readonly<BronzeRecord>;
+  readonly body: string;
+  readonly lines: readonly string[];
+}
+
+/** Root-bound actual-file reads, owned by one request and never reused afterwards. */
+export class VerifiedBronzeReader {
+  readonly #root: string;
+  readonly #sources = new Map<string, Promise<VerifiedBronzeSource>>();
+  readonly #limit = createCorpusReadLimiter();
+
+  constructor(root: string) {
+    this.#root = resolve(root);
+  }
+
+  read(root: string, sourcePath: string): Promise<VerifiedBronzeSource> {
+    if (resolve(root) !== this.#root) {
+      return Promise.reject(new Error('Verified Bronze reader belongs to a different vault root'));
+    }
+    const cached = this.#sources.get(sourcePath);
+    if (cached !== undefined) return cached;
+    const pending = this.#limit(() => this.#readSource(sourcePath));
+    this.#sources.set(sourcePath, pending);
+    return pending;
+  }
+
+  async #readSource(sourcePath: string): Promise<VerifiedBronzeSource> {
+    const filePath = await resolveBronzeSourcePath(this.#root, sourcePath);
+    const raw = await readFile(filePath, 'utf8');
+    const parsed = parseCorpusDocument(raw, BronzeRecordSchema, Object.keys(BronzeRecordSchema.shape));
+    if (!parsed.valid) throw new BronzeDocumentError(parsed.failure.reason, parsed.failure.detail);
+    const actual = sha256Text(parsed.body);
+    if (actual !== parsed.data.sha256) {
+      throw new BronzeCorruptionError(filePath, parsed.data.sha256, actual);
+    }
+    return Object.freeze({
+      record: Object.freeze(parsed.data),
+      body: parsed.body,
+      lines: Object.freeze(bodyLines(parsed.body)),
+    });
+  }
+}
+
+export function createVerifiedBronzeReader(root: string): VerifiedBronzeReader {
+  return new VerifiedBronzeReader(root);
 }
 
 /**
@@ -81,19 +133,10 @@ export async function resolveBronzeSourcePath(
 export async function validateEvidenceCitation(
   root: string,
   citation: EvidenceCitation,
+  bronzeReader: VerifiedBronzeReader = createVerifiedBronzeReader(root),
 ): Promise<EvidenceValidationError | null> {
-  const filePath = await resolveBronzeSourcePath(root, citation.source_path);
-
-  const rawContent = await readFile(filePath, 'utf8');
-  const content = canonicalBronzeBody(rawContent);
-
-  const bronzeRecord = parseBronzeRecord(content);
-  const body = extractBronzeBody(content);
-
-  const actualBodySha = sha256Text(body);
-  if (actualBodySha !== bronzeRecord.sha256) {
-    throw new BronzeCorruptionError(filePath, bronzeRecord.sha256, actualBodySha);
-  }
+  const source = await bronzeReader.read(root, citation.source_path);
+  const actualBodySha = source.record.sha256;
 
   if (actualBodySha !== citation.body_sha256) {
     return {
@@ -103,10 +146,13 @@ export async function validateEvidenceCitation(
     };
   }
 
-  const lines = body.split('\n');
-  const lineCount = body.endsWith('\n') ? lines.length - 1 : lines.length;
+  const lines = source.lines;
+  const lineCount = lines.length;
   if (
-    citation.line_end < citation.line_start
+    !Number.isInteger(citation.line_start)
+    || !Number.isInteger(citation.line_end)
+    || citation.line_start < 1
+    || citation.line_end < citation.line_start
     || citation.line_start > lineCount
     || citation.line_end > lineCount
   ) {

@@ -1,8 +1,4 @@
-export type { Tier, TierArtifact } from './tier.js';
-export { classifyTier } from './tier.js';
-
-export type { TransitionActor } from './eligibility.js';
-export { canTransition } from './eligibility.js';
-
-export type { PolicyRecord, GoldCandidate } from './profile.js';
-export { contextExclusionReasons, goldExclusionReasons } from './profile.js';
+export type { PolicyReason, PolicyReasonCode } from './reasons.js';
+export type { ModelSourceState } from './model-source.js';
+export { bronzeBlockedFromModelAccess, modelSourceAccessReasons } from './model-source.js';
+export { piiBlocksModelAccess } from './privacy.js';

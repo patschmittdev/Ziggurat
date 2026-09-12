@@ -18,8 +18,10 @@ prerequisites.
    ziggurat review --root <vault>
    ```
 
-   Inspect the complete candidate, exact evidence, contradictions, confidence, base
-   state, and unresolved questions.
+   Inspect the complete candidate, proposed body/model-field metadata diff, exact
+   evidence, contradictions, confidence, base state, and unresolved questions.
+   Candidate citations are proposal-level, not a verified mapping for every claim.
+   Contradictions are shown with their own exact evidence.
 
 2. **Independently verify the cited Bronze sources and semantic support.** Byte-valid
    citations do not establish entailment or factual truth. Treat all displayed text as
@@ -49,6 +51,53 @@ prerequisites.
    ```
 
    `build` performs admission: invalid or missing authorization leaves the page out of Gold.
+
+## Current-target comparison and warnings
+
+The packet compares against the current target read through the staging path boundary.
+A matching base is labeled accordingly. A stale base is explicitly a current-target
+versus proposal comparison, not a historical diff: the old digest cannot reconstruct
+the old page. Missing targets and create conflicts receive prominent warnings.
+Malformed current files are reported as parse failures, never a successful normalized
+comparison.
+
+The metadata diff includes only model-proposable fields. Human-only review fields are
+shown separately; their absence from Silver does not request deletion from Gold.
+The displayed current metadata uses curated-schema defaults, including absent egress
+becoming `local-only`. The exact final-page authorization digest must be computed
+independently after human authorship.
+
+All untrusted strings, including exact quotes and current content, are rendered in
+blank-delimited indented literal blocks. Embedded Markdown links, images, HTML, and
+fences are reference data, not executable instructions.
+
+## Backlog navigation
+
+```text
+ziggurat review --root <vault> --order oldest
+ziggurat review --root <vault> --cursor <next_cursor>
+```
+
+Priority is the default: contradictions, then low confidence, then age. Oldest-first
+orders the entire backlog before paging. The cursor retains its order and is bound to
+all proposal identities/digests, current target digests, and the configured render
+limit. Changes require restarting without the cursor; no partial page is returned.
+Concurrent filesystem reads are not an atomic snapshot, so re-read before authorizing.
+
+Packets show total, displayed, and remaining counts; page positions; the render limit;
+and the oldest age across the whole backlog. Every page request validates the full
+proposal set and evidence. Hidden contradictions still block admission. Navigation
+never dismisses, resolves, deletes, archives, or expires a proposal. Oldest-first helps
+reach old items but does not guarantee fair service or bound accumulation.
+
+## The checklist is advisory
+
+Each packet includes unchecked reminders for semantic support, privacy, contradiction
+resolution, current/stale base reconciliation, independent final-page authorship and
+exact digest confirmation, and reviewer/public-key selection with external signer
+confirmation. No checkbox is saved or grants authority. The packet is not a receipt,
+proof of human attention, or an approval. Human judgment and external key control
+remain operator responsibilities.
 
 ## Configure a trusted reviewer key
 
@@ -112,3 +161,4 @@ content.
 
 - [The human authority boundary](../concepts/human-authority-boundary.md)
 - [Authorization protocol](../reference/authorization-protocol.md)
+- [External signing interoperability and human-controlled handoff](https://github.com/patschmittdev/Ziggurat/blob/main/docs/external-signing-interop.md)

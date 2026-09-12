@@ -54,10 +54,14 @@ function splitBronzeFile(content: string): BronzeSplit | null {
 
 /** Parses a Bronze file's frontmatter + validates through BronzeRecordSchema. */
 export function parseBronzeRecord(content: string): BronzeRecord {
+  return parseBronzeFile(content).record;
+}
+
+export function parseBronzeFile(content: string): { record: BronzeRecord; body: string } {
   const split = splitBronzeFile(content);
   if (split === null) throw new Error('not a valid Bronze file: missing frontmatter');
   const parsed = YAML.parse(split.yamlText) as unknown;
-  return BronzeRecordSchema.parse(parsed);
+  return { record: BronzeRecordSchema.parse(parsed), body: split.body };
 }
 
 /** Serializes a BronzeRecord + canonical body into the on-disk file format. */

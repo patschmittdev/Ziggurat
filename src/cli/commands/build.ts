@@ -1,13 +1,16 @@
 import type { CliIO } from '../main.js';
-import { buildGoldIndex } from '../../retrieval/gold-index.js';
+import { buildGoldIndex, collectEligibleGoldChunks } from '../../retrieval/gold-index.js';
 import { buildReviewIndex, buildEvidenceIndex } from '../../retrieval/profile-index.js';
 import { collectBronzeFilesDetailed, collectCuratedPagesDetailed } from '../../corpus/collect.js';
 import type { CorpusRejection } from '../../corpus/collect.js';
 import { collectStagedProposals } from '../../refine/store.js';
 import { parseZigguratConfig } from '../../contracts/config.js';
 import { inertSingleLineText } from '../../presentation/inert.js';
+import { createVerifiedBronzeReader } from '../../refine/evidence.js';
 
 export async function runBuild(root: string, json: boolean, io: CliIO): Promise<number> {
+  const asOf = new Date();
+  const config = await parseZigguratConfig(root);
   const curatedCollection = await collectCuratedPagesDetailed(root);
   const bronzeCollection = await collectBronzeFilesDetailed(root);
   const curated = curatedCollection.pages;
@@ -16,17 +19,19 @@ export async function runBuild(root: string, json: boolean, io: CliIO): Promise<
     ...curatedCollection.rejected,
     ...bronzeCollection.rejected,
   ];
-  const proposals = await collectStagedProposals(root);
-  const config = await parseZigguratConfig(root);
-  const asOf = new Date();
-
-  const goldIndex = await buildGoldIndex(root, curated, { asOf, config, proposals });
+  const bronzeReader = createVerifiedBronzeReader(root);
+  const proposals = await collectStagedProposals(root, { bronzeReader });
+  const gold = await collectEligibleGoldChunks(root, curated, {
+    asOf, config, proposals, bronze, bronzeRejections: bronzeCollection.rejected, bronzeReader,
+  });
+  const goldIndex = await buildGoldIndex(root, curated, { gold });
   const reviewIndex = await buildReviewIndex(root, {
     curated,
     bronze,
     proposals,
     config,
     asOf,
+    gold,
   });
   const evidenceIndex = await buildEvidenceIndex(root, {
     curated,
@@ -34,6 +39,7 @@ export async function runBuild(root: string, json: boolean, io: CliIO): Promise<
     proposals,
     config,
     asOf,
+    gold,
   });
 
   const result = {
@@ -42,6 +48,7 @@ export async function runBuild(root: string, json: boolean, io: CliIO): Promise<
     evidence_chunks: evidenceIndex.chunks.length,
     corpus_fingerprint: goldIndex.corpus_fingerprint,
     rejected_corpus_entries: rejected,
+    gold_decisions: gold.decisions,
   };
 
   if (json) {
@@ -57,6 +64,13 @@ export async function runBuild(root: string, json: boolean, io: CliIO): Promise<
     io.stderr(`warning: ${rejected.length} corpus entr${rejected.length === 1 ? 'y was' : 'ies were'} rejected and not indexed:\n`);
     for (const entry of rejected) {
       io.stderr(`  ${inertSingleLineText(entry.path)} [${entry.reason}]: ${inertSingleLineText(entry.detail)}\n`);
+    }
+  }
+  for (const decision of gold.decisions) {
+    if (decision.eligible) continue;
+    io.stderr(`Gold excluded: ${inertSingleLineText(decision.path)}\n`);
+    for (const reason of decision.reason_details) {
+      io.stderr(`  [${reason.code}] ${inertSingleLineText(reason.message)}${reason.path === decision.path ? '' : ` (${inertSingleLineText(reason.path ?? '')})`}\n`);
     }
   }
   return 0;

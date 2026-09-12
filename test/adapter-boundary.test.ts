@@ -3,7 +3,8 @@ import { createServer } from 'node:http';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import test from 'node:test';
-import { ADAPTER_LIMITS, LoopbackChatAdapter } from '../src/refine/adapter.js';
+import { ADAPTER_LIMITS, AdapterError, LoopbackChatAdapter } from '../src/refine/adapter.js';
+import type { AdapterErrorCode } from '../src/refine/adapter.js';
 
 type Handler = Parameters<typeof createServer>[1];
 
@@ -43,6 +44,14 @@ function endpoint(port: number): string {
 
 const MESSAGES = [{ role: 'user' as const, content: 'test' }];
 
+function failure(code: AdapterErrorCode): (err: unknown) => boolean {
+  return (err: unknown): boolean => {
+    assert.ok(err instanceof AdapterError);
+    assert.equal(err.code, code);
+    return true;
+  };
+}
+
 test('adapter: refuses a loopback redirect to a non-loopback destination', async () => {
   const redirector = await startServer((_req, res) => {
     // 198.51.100.0/24 is TEST-NET-2: a stand-in for an off-machine exfiltration target.
@@ -56,7 +65,7 @@ test('adapter: refuses a loopback redirect to a non-loopback destination', async
     });
     await assert.rejects(
       () => adapter.completeJson(MESSAGES),
-      /refusing HTTP 30\d redirect .*198\.51\.100\.7.*Redirects are not followed/su,
+      failure('redirect'),
     );
     assert.equal(redirector.requestCount(), 1);
   } finally {
@@ -80,7 +89,7 @@ test('adapter: a redirect destination is never contacted', async () => {
     const adapter = new LoopbackChatAdapter(endpoint(redirector.port));
     await assert.rejects(
       () => adapter.completeJson(MESSAGES),
-      /Redirects are not followed/u,
+      failure('redirect'),
     );
     assert.equal(target.requestCount(), 0);
   } finally {
@@ -101,7 +110,7 @@ test('adapter: refuses a response whose declared content-length exceeds the limi
     const adapter = new LoopbackChatAdapter(endpoint(server.port));
     await assert.rejects(
       () => adapter.completeJson(MESSAGES),
-      /declares \d+ bytes, exceeding the \d+ byte limit/u,
+      failure('response_limit'),
     );
   } finally {
     await server.close();
@@ -114,7 +123,7 @@ test('adapter: refuses an oversize streamed response without buffering it all', 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     // Chunked, so no content-length is declared: the ceiling must hold while streaming.
     const pump = (): void => {
-      if (res.writableEnded) return;
+      if (res.writableEnded || res.destroyed) return;
       if (res.write(chunk)) setImmediate(pump);
       else res.once('drain', pump);
     };
@@ -126,7 +135,7 @@ test('adapter: refuses an oversize streamed response without buffering it all', 
     });
     await assert.rejects(
       () => adapter.completeJson(MESSAGES),
-      /response exceeded the 8192 byte limit/u,
+      failure('response_limit'),
     );
   } finally {
     await server.close();
@@ -143,7 +152,7 @@ test('adapter: times out a server that never responds', async () => {
     });
     await assert.rejects(
       () => adapter.completeJson(MESSAGES),
-      /failed or timed out after 150ms/u,
+      failure('timeout'),
     );
   } finally {
     await server.close();
@@ -159,7 +168,7 @@ test('adapter: refuses a non-JSON response body', async () => {
     const adapter = new LoopbackChatAdapter(endpoint(server.port));
     await assert.rejects(
       () => adapter.completeJson(MESSAGES),
-      /is not valid JSON/u,
+      failure('invalid_json'),
     );
   } finally {
     await server.close();
@@ -173,7 +182,7 @@ test('adapter: refuses a non-2xx response', async () => {
   });
   try {
     const adapter = new LoopbackChatAdapter(endpoint(server.port));
-    await assert.rejects(() => adapter.completeJson(MESSAGES), /HTTP 500 from/u);
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('http_error'));
   } finally {
     await server.close();
   }
@@ -182,12 +191,12 @@ test('adapter: refuses a non-2xx response', async () => {
 test('adapter: accepts a well-formed bounded JSON response', async () => {
   const server = await startServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end('{"choices":[{"message":{"content":"{}"}}]}');
+    res.end('{"choices":[{"message":{"role":"assistant","content":"{}"},"finish_reason":"stop"}]}');
   });
   try {
     const adapter = new LoopbackChatAdapter(endpoint(server.port));
     const result = await adapter.completeJson(MESSAGES);
-    assert.deepEqual(result, { choices: [{ message: { content: '{}' } }] });
+    assert.deepEqual(result, {});
   } finally {
     await server.close();
   }
@@ -196,11 +205,11 @@ test('adapter: accepts a well-formed bounded JSON response', async () => {
 test('adapter: rejects non-positive resource limits at construction', () => {
   assert.throws(
     () => new LoopbackChatAdapter('http://127.0.0.1:1/x', { requestTimeoutMs: 0 }),
-    /requestTimeoutMs must be a positive integer/u,
+    failure('invalid_options'),
   );
   assert.throws(
     () => new LoopbackChatAdapter('http://127.0.0.1:1/x', { maxResponseBytes: -1 }),
-    /maxResponseBytes must be a positive integer/u,
+    failure('invalid_options'),
   );
 });
 
@@ -220,9 +229,180 @@ test('adapter: refuses a request body larger than the request ceiling', async ()
     const huge = 'y'.repeat(ADAPTER_LIMITS.maxRequestBytes + 1);
     await assert.rejects(
       () => adapter.completeJson([{ role: 'user', content: huge }]),
-      /request body is \d+ bytes, exceeding the \d+ byte limit/u,
+      failure('request_limit'),
     );
     assert.equal(server.requestCount(), 0, 'an oversize request must never be sent');
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: times out while streaming a response body', async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.write('{"choices":[');
+  });
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port), { requestTimeoutMs: 150 });
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('timeout'));
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: times out while streaming an HTTP error body', async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.write('{"error":');
+  });
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port), { requestTimeoutMs: 150 });
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('timeout'));
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: resource overrides cannot raise hard production ceilings', () => {
+  for (const options of [
+    { requestTimeoutMs: ADAPTER_LIMITS.requestTimeoutMs + 1 },
+    { maxResponseBytes: ADAPTER_LIMITS.maxResponseBytes + 1 },
+    { requestTimeoutMs: Number.POSITIVE_INFINITY },
+    { maxResponseBytes: Number.NaN },
+    { requestTimeoutMs: 1.5 },
+    { maxResponseBytes: 1.5 },
+  ]) {
+    assert.throws(
+      () => new LoopbackChatAdapter('http://127.0.0.1:1/x', options),
+      failure('invalid_options'),
+    );
+  }
+});
+
+test('adapter: HTTP error bodies are bounded too', async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end('x'.repeat(4096));
+  });
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port), { maxResponseBytes: 1024 });
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('response_limit'));
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: a response at the byte ceiling is accepted, one byte above is refused', async () => {
+  const body = JSON.stringify({
+    choices: [{
+      message: { role: 'assistant', content: '{"title":"évidence 🧱"}' },
+      finish_reason: 'stop',
+    }],
+  });
+  const size = Buffer.byteLength(body);
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Content-Length': size });
+    res.end(body);
+  });
+  try {
+    const accepted = new LoopbackChatAdapter(endpoint(server.port), { maxResponseBytes: size });
+    assert.deepEqual(await accepted.completeJson(MESSAGES), { title: 'évidence 🧱' });
+    const refused = new LoopbackChatAdapter(endpoint(server.port), { maxResponseBytes: size - 1 });
+    await assert.rejects(() => refused.completeJson(MESSAGES), failure('response_limit'));
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: redirect errors do not echo untrusted Location headers', async () => {
+  const secret = 'private-reference-fragment';
+  const server = await startServer((_req, res) => {
+    res.writeHead(302, { Location: `http://example.com/${secret}` });
+    res.end();
+  });
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port));
+    await assert.rejects(() => adapter.completeJson(MESSAGES), (err: unknown) => {
+      assert.ok(err instanceof AdapterError);
+      assert.equal(err.code, 'redirect');
+      assert.ok(!err.message.includes(secret));
+      assert.ok(!err.message.includes('example.com'));
+      return true;
+    });
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: premature connection failure has a safe transport error', async () => {
+  const server = await startServer((req, _res) => {
+    req.socket.destroy();
+  });
+  try {
+    const adapter = new LoopbackChatAdapter(`${endpoint(server.port)}?private-reference-fragment`);
+    await assert.rejects(() => adapter.completeJson(MESSAGES), (err: unknown) => {
+      assert.ok(err instanceof AdapterError);
+      assert.equal(err.code, 'transport_error');
+      assert.ok(!err.message.includes('private-reference-fragment'));
+      return true;
+    });
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: diagnostics never captures a response exceeding its declared byte ceiling', async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Content-Length': ADAPTER_LIMITS.maxResponseBytes + 1,
+    });
+    res.end();
+  });
+  const observed: unknown[] = [];
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port), {
+      onResponse: response => observed.push(response),
+    });
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('response_limit'));
+    assert.deepEqual(observed, []);
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: diagnostics never captures a response exceeding the streaming byte ceiling', async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked' });
+    res.write('x'.repeat(1024));
+    res.end('x');
+  });
+  const observed: unknown[] = [];
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port), {
+      maxResponseBytes: 1024,
+      onResponse: response => observed.push(response),
+    });
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('response_limit'));
+    assert.deepEqual(observed, []);
+  } finally {
+    await server.close();
+  }
+});
+
+test('adapter: diagnostics never captures partial response bodies on timeout', async () => {
+  const server = await startServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.write('{"choices":[');
+  });
+  const observed: unknown[] = [];
+  try {
+    const adapter = new LoopbackChatAdapter(endpoint(server.port), {
+      requestTimeoutMs: 150,
+      onResponse: response => observed.push(response),
+    });
+    await assert.rejects(() => adapter.completeJson(MESSAGES), failure('timeout'));
+    assert.deepEqual(observed, []);
   } finally {
     await server.close();
   }
