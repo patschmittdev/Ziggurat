@@ -152,16 +152,25 @@ for (const route of routes) {
 
       const menu = page.getByRole('button', { name: 'Menu', exact: true });
       if (await menu.isVisible()) {
-        await menu.focus();
-        await page.keyboard.press('Enter');
+        const closedIcon = page.locator('starlight-menu-button .open-menu');
+        const buttonBox = await menu.boundingBox();
+        const iconBox = await closedIcon.boundingBox();
+        expect(buttonBox).not.toBeNull();
+        expect(iconBox).not.toBeNull();
+        expect(Math.abs((buttonBox!.x + buttonBox!.width / 2) - (iconBox!.x + iconBox!.width / 2)))
+          .toBeLessThanOrEqual(1);
+        expect(Math.abs((buttonBox!.y + buttonBox!.height / 2) - (iconBox!.y + iconBox!.height / 2)))
+          .toBeLessThanOrEqual(1);
+
+        await menu.click();
         await expect(menu).toHaveAttribute('aria-expanded', 'true');
         await expect(page.locator('body')).toHaveAttribute('data-mobile-menu-expanded', '');
-        await page.keyboard.press('Enter');
+        await expect(page.locator('#starlight__sidebar')).toBeVisible();
+        await menu.click();
         await expect(menu).toHaveAttribute('aria-expanded', 'false');
         await expect(page.locator('body')).not.toHaveAttribute('data-mobile-menu-expanded', '');
-        const box = await menu.boundingBox();
-        expect(box?.width).toBeGreaterThanOrEqual(44);
-        expect(box?.height).toBeGreaterThanOrEqual(44);
+        expect(buttonBox?.width).toBeGreaterThanOrEqual(44);
+        expect(buttonBox?.height).toBeGreaterThanOrEqual(44);
       }
     }
 
