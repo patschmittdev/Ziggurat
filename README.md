@@ -2,6 +2,21 @@
 
 **Models propose. Humans decide what persists.**
 
+## For evaluators
+
+An agent can draft memory. It cannot admit it.
+
+Admission is a detached Ed25519 signature from a key this repository never holds.
+There is no promote, apply, approve, or signer command.
+
+This is a local 0.1 reference implementation, distributed as source, not a hosted
+service, OS sandbox, or multi-tenant product. A valid signature proves key control
+and exact-content authorization. It does not prove careful review or that the
+content is true.
+
+Start with [SECURITY.md](SECURITY.md) and `test/memory-boundary.test.ts`. Deeper
+docs are on the [project site](https://patschmittdev.github.io/Ziggurat/).
+
 Ziggurat is a human-gated memory firewall: a local TypeScript reference implementation
 that treats durable AI memory as a privileged write surface. An AI can read authorized
 content and return a structured draft with source IDs and line ranges. The refine host
