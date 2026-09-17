@@ -14,20 +14,16 @@ or review.
 ## Why I built this
 
 I built Ziggurat because I worried about memory and context poisoning of my own data
-while autonomous agents research on the open web. The question I kept coming back to
-was: how do you prevent the AI from erroneously promoting a Silver proposal to Gold?
+while autonomous agents research on the open web. So I started looking for a way to
+prevent the AI from erroneously promoting a Silver proposal to Gold.
 The answer here is to remove the door. There is no promote command. A human curates the
 Gold layer with a key that no shipped code path holds.
 
-I was also experimenting with aggressive coding-agent velocity. Over long sessions,
-I found myself balancing trust in the guardrails I had established against pulling
-back when review fatigue started affecting output quality. It felt like a hawk-dove
-game: press ahead behind those guardrails, or become more cautious as my capacity
-for careful review faded. Related guardrail work is captured in
+Related guardrail work is captured in
 [Trust Surface Ratchet](https://github.com/patschmittdev/trust-surface-ratchet),
 which grew out of my work on Castrum, a private, unpublished project.
 
-That experience motivated a narrower question here: can an agent propose durable
+The question here is whether an agent can propose durable
 memory without also having the authority to admit it? Ziggurat makes that admission
 an explicit, separately authorized step. It does not prove that a person reviewed
 carefully, solve review fatigue, or establish better coding output. Pagination and
