@@ -7,7 +7,7 @@ import type {
 } from '../contracts/gold-index.js';
 import type { VerifiedAuthorization } from '../authorization/verify.js';
 
-function chunkId(profile: string, path: string, body: string): string {
+export function chunkId(profile: string, path: string, body: string): string {
   return sha256Text(`${profile}\0${path}\0${sha256Text(body)}`);
 }
 

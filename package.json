@@ -30,6 +30,7 @@
     "eval:model": "npm run build && node dist/test/manual/refine-model.js",
     "eval:envelope": "npm run build && node dist/test/manual/operating-envelope.js",
     "eval:retrieval": "npm run build && node dist/test/manual/retrieval-evaluation.js",
+    "eval:abstention": "npm run build && node dist/test/manual/retrieval-abstention.js",
     "test:interop": "npm run build && node --test dist/test/manual/authorization-interop.test.js",
     "test:disk-full": "npm run build && node dist/test/manual/disk-full.js",
     "test:disk-full:container": "npm run build && node scripts/test-disk-full-container.mjs",

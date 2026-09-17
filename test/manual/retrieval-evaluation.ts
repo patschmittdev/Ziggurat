@@ -167,7 +167,7 @@ export async function evaluateAuthorizedRetrieval(input: RetrievalFixture) {
   }
 }
 
-function cwdPath(path: string): string {
+export function cwdPath(path: string): string {
   const resolved = resolve(path);
   const rel = relative(process.cwd(), resolved);
   if (isAbsolute(rel) || rel === '..' || rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)) {

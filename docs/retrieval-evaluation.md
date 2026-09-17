@@ -206,3 +206,84 @@ change policy decisions, conformance semantics, or the shipped Gold-only MCP
 tools. The fixture directly exercises the CLI build implementation and the
 ContextAccess boundary shared by CLI/MCP; it is not an MCP wire transport or
 human-user acceptance test.
+
+## Frozen abstention v1 experiment
+
+The separate abstention evaluator leaves the v1 corpus, saved v1 baseline, BM25
+implementation, runtime query behavior, MCP behavior, admission policy,
+authorization receipts, and index formats unchanged. Run it from the repository
+root with:
+
+```powershell
+npm run eval:abstention -- --output abstention-report.json
+```
+
+The only options are `--scorer-only`, `--output`, and `--help`. Defaults load
+the frozen abstention fixture relative to the compiled module, so an operator
+may run the compiled script by absolute path from an external artifact
+directory. Without `--output`, the report is written as JSON to stdout. Output
+paths must remain under cwd and output files are created exclusively. Unknown
+options, malformed identities, authorization failures, parity failures, legacy
+identifier regressions, and operational failures exit nonzero. A failed
+experimental selection or holdout acceptance is successful report data and
+exits zero.
+
+The fixture is `synthetic-retrieval-abstention-v1` with query revision
+`ai-labels-abstention-v1`. Its manifest is `retrieval-abstention-v1`, with
+fixture SHA-256
+`a888f98ab17dc559beda33c3c4255ae331dd5d823cc58f4ad4e21154483cae8d`
+and legacy v1 fixture SHA-256
+`3d135d86a3ff8e49e0352e99aa16246e3550de71d9f3c1cea92ee943e27ad02b`.
+Labels are `ai-authored-synthetic`, human review is `unverified`, and the
+declared authoring method is `separate-context-no-policy-or-results`. Fixture
+and manifest identities are validated before scoring.
+
+The experimental scorer reports `ranking_identity: gold-chunk-id`. It derives
+each identity with the existing Gold `chunkId` helper over
+`knowledge/<page-id>.md` and
+`normalizeText(canonicalBronzeBody(<body> + newline))`, then builds the normal
+BM25 snapshot over `<title> <canonical body>`. Ranked Gold chunk IDs map back to
+fixture page IDs without a post-sort. This is a scorer identity compatibility
+measure, not a new authorization object or runtime ranking change.
+
+The fixed `top-result-query-token-coverage` policy evaluates thresholds `0.25`,
+`0.5`, `0.75`, and `1` on tuning only. Coverage is the fraction of distinct
+query tokens present in the top ranked page's title and body. A threshold is
+eligible only when all answerable category Recall@5 and MRR@5 values and
+exact-identifier top-one accuracy do not regress, while no-good-answer false
+positives are strictly fewer. Among eligible thresholds, selection favors fewer
+false positives and then the lower threshold. A selected candidate alone is
+evaluated on holdout, where the same answerable metrics cannot regress and
+no-good-answer false positives must be at most half of baseline.
+
+`--scorer-only` sets `authorized` to `null`. A signed run uses the existing
+ephemeral test-vault helper, reports
+`fixture_kind: synthetic-test-keys-not-human-authorization`, and requires the
+seven existing boundary checks to pass. It also requires scorer and signed
+ranks to have identical query IDs and ordered page IDs, finite scores within
+the platform rounding tolerance, and identical decisions, metric values,
+selection, and acceptance. Implementation labels are not treated as relevance
+metrics.
+
+The retained signed report selected no candidate. Its Gold-ID baseline measured:
+
+| Split | Answerable queries | Recall@5 | MRR@5 | Exact top-1 | No-answer false positives |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Tuning | 16 | 0.968750 | 0.937500 | 5/6 (0.833333) | 4/8 (0.500000) |
+| Holdout | 16 | 0.791667 | 0.812500 | 3/6 (0.500000) | 4/8 (0.500000) |
+
+All four frozen thresholds were ineligible. Threshold `0.25` retained all four
+tuning false positives and regressed ambiguous recall and MRR. Threshold `0.5`
+reduced them to one but regressed paraphrase and ambiguous recall and MRR.
+Thresholds `0.75` and `1` reduced false positives to zero but regressed
+exact-identifier, paraphrase, and ambiguous metrics. The report therefore has
+`selection.status: no_eligible_candidate`, `candidate: null`, no decisions,
+and `holdout_acceptance.status: not_run`. Signed parity passed and all seven
+authorization boundary checks passed. This negative result is retained without
+retuning the frozen policy or labels.
+
+This experiment has coverage only. It does not establish calibrated confidence,
+semantic support, answer correctness, independent real-world generalization,
+human authorization, external signing interoperability, or human-usability
+acceptance. The original v1 measurements and their caveats above remain the
+separate retrieval record.
