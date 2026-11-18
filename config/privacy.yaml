@@ -1,0 +1,3 @@
+privacy:
+  default_sensitivity: restricted
+  default_pii: unknown

@@ -1,0 +1,23 @@
+---
+/** Shared theme resolution. Mirrors Starlight's storage key so the homepage and
+ * the documentation never disagree about which theme is in force. */
+---
+
+<script is:inline>
+  (() => {
+    const KEY = 'starlight-theme';
+    let stored = null;
+    try {
+      stored = localStorage.getItem(KEY);
+    } catch {
+      stored = null;
+    }
+    const theme =
+      stored === 'light' || stored === 'dark'
+        ? stored
+        : window.matchMedia('(prefers-color-scheme: light)').matches
+          ? 'light'
+          : 'dark';
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>

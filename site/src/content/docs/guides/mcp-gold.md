@@ -1,0 +1,90 @@
+---
+title: Gold MCP
+description: Serve authorized Gold to an AI client over a read-only, Gold-only MCP server.
+---
+
+```bash
+ziggurat mcp --root <vault>
+```
+
+Shipped MCP startup is Gold-only and read-only. There is no selectable profile, so
+review and evidence cannot be reached through it.
+
+## Tools
+
+The server exposes exactly two tools:
+
+| Tool | Purpose |
+|---|---|
+| `search_context` | Search authorized Gold and return citation-scoped results |
+| `read_context` | Read a previously returned citation by ID |
+
+Tool inputs are strict.
+
+## Bounds
+
+| Bound | Value |
+|---|---|
+| Query length | 1,024 UTF-16 code units |
+| Results per search | 20 |
+| Retained citations per session | 200 |
+
+Over-long queries are refused rather than truncated. When the citation ceiling is
+reached, the oldest citation IDs are evicted and become invalid: a read against an
+evicted ID fails closed with the same error as a forged ID.
+
+## What every result says
+
+Every retrieved chunk carries `content_role: reference` and
+`instruction_authority: none`.
+
+:::caution[Consumers must honour the label]
+Approved text can still contain prompt injection; see
+[provenance and authority](../concepts/provenance-and-authority.md).
+:::
+
+## Verification before every read
+
+Stored chunks, labels, lineage, proposal provenance, authorization provenance, BM25 data,
+trust policy, and the live corpus are verified at startup and again before both search
+and citation reads. A mismatch prevents startup or the next operation rather than
+returning a degraded answer.
+
+## Editor binding
+
+The following MCP client configuration starts the Gold MCP server without a selectable profile.
+
+```json
+{
+  "servers": {
+    "ziggurat-gold": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/dist/src/cli/main.js",
+        "mcp",
+        "--root",
+        "${workspaceFolder}"
+      ]
+    }
+  }
+}
+```
+
+Adapt the file location and key names to your MCP client.
+
+Configure the model endpoint only in `config/adapters.yaml`, and only as an HTTP
+loopback address.
+
+## Command-line equivalent
+
+```bash
+ziggurat query --root <vault> --query "<text>"
+```
+
+`query` reads the same Gold index from the terminal.
+
+## Related
+
+- [Isolated indexes](../concepts/isolated-indexes.md)
+- [Configuration](../reference/configuration.md)
