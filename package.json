@@ -1,0 +1,56 @@
+{
+  "name": "ziggurat",
+  "version": "0.1.0",
+  "description": "A human-gated memory firewall for evidence-backed AI context.",
+  "private": true,
+  "license": "MIT",
+  "repository": "github:patschmittdev/Ziggurat",
+  "homepage": "https://github.com/patschmittdev/Ziggurat",
+  "bugs": {
+    "url": "https://github.com/patschmittdev/Ziggurat/issues"
+  },
+  "keywords": [
+    "ai-memory",
+    "context-poisoning",
+    "human-in-the-loop",
+    "mcp",
+    "retrieval"
+  ],
+  "type": "module",
+  "bin": {
+    "ziggurat": "./dist/src/cli/main.js"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run clean && npm run build && node --test \"dist/test/*.test.js\"",
+    "check": "npm run test && node --test scripts/check-docs-links.test.mjs scripts/test-disk-full-container.test.mjs scripts/run-ziggurat.test.mjs && npm run check:links && npm run check:style",
+    "check:links": "node scripts/check-docs-links.mjs",
+    "check:style": "node scripts/check-style.mjs",
+    "eval:model": "npm run build && node dist/test/manual/refine-model.js",
+    "eval:envelope": "npm run build && node dist/test/manual/operating-envelope.js",
+    "eval:retrieval": "npm run build && node dist/test/manual/retrieval-evaluation.js",
+    "eval:abstention": "npm run build && node dist/test/manual/retrieval-abstention.js",
+    "test:interop": "npm run build && node --test dist/test/manual/authorization-interop.test.js",
+    "test:disk-full": "npm run build && node dist/test/manual/disk-full.js",
+    "test:disk-full:container": "npm run build && node scripts/test-disk-full-container.mjs",
+    "site:dev": "cd site && npm run dev",
+    "site:build": "cd site && npm run build",
+    "site:check": "cd site && npm run check",
+    "ziggurat:profiled": "node scripts/run-ziggurat.mjs",
+    "prepublishOnly": "npm run check"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "fast-check": "^4.0.0",
+    "typescript": "^7.0.0"
+  }
+}

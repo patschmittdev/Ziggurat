@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "experiment_id": "retrieval-abstention-v1",
+  "fixture_sha256": "a888f98ab17dc559beda33c3c4255ae331dd5d823cc58f4ad4e21154483cae8d",
+  "legacy_fixture_sha256": "3d135d86a3ff8e49e0352e99aa16246e3550de71d9f3c1cea92ee943e27ad02b",
+  "label_provenance": "ai-authored-synthetic",
+  "human_review": "unverified",
+  "authoring_method": "separate-context-no-policy-or-results",
+  "query_rationales": [
+    {
+      "query_id": "t-evidence-ledger",
+      "rationale": "The evidence-ledger record is the requested identifier and describes source digests and review decisions."
+    },
+    {
+      "query_id": "t-protocol-v1",
+      "rationale": "The protocol-v1 record is the requested identifier for the legacy protocol page."
+    },
+    {
+      "query_id": "t-protocol-v2",
+      "rationale": "The protocol-v2 record is the requested identifier for the streaming protocol page."
+    },
+    {
+      "query_id": "t-release-123",
+      "rationale": "The release-123 record is the requested identifier for the stable release page."
+    },
+    {
+      "query_id": "t-arch-x86",
+      "rationale": "The arch-x86 record is the requested identifier for the older desktop processor package."
+    },
+    {
+      "query_id": "t-garden-path",
+      "rationale": "The garden-path record is the requested identifier for the gravel path page."
+    },
+    {
+      "query_id": "t-stream-cancel",
+      "rationale": "The protocol-v2 page states that it streams incremental replies and supports cancellation."
+    },
+    {
+      "query_id": "t-rejected-credentials",
+      "rationale": "The error-auth page says rejected credentials require renewing the access token before retrying."
+    },
+    {
+      "query_id": "t-older-desktop",
+      "rationale": "The arch-x86 page says its package targets older desktop processors."
+    },
+    {
+      "query_id": "t-source-bytes",
+      "rationale": "The hash-256 page says sha256 identifies source bytes and should be compared before accepting evidence."
+    },
+    {
+      "query_id": "t-cover-soil",
+      "rationale": "The garden-mulch page says mulch covers soil to reduce evaporation."
+    },
+    {
+      "query_id": "t-aerate-compost",
+      "rationale": "The garden-compost page says to turn the pile to provide air."
+    },
+    {
+      "query_id": "t-connection-retries",
+      "rationale": "The error-conn page provides E123 and ERR_CONN with delayed retry guidance after checking the listener address, while error-auth provides E124 and ERR_AUTH with access-token renewal before retrying. The query asks for those error codes and their guidance."
+    },
+    {
+      "query_id": "t-protocol-versions",
+      "rationale": "The protocol-v1 and protocol-v2 pages are the two corpus records for protocol versions."
+    },
+    {
+      "query_id": "t-processor-packages",
+      "rationale": "The arch-x86 and arch-arm64 pages both describe package choices for different processor targets."
+    },
+    {
+      "query_id": "t-garden-watering-approaches",
+      "rationale": "The garden-irrigation, garden-tomato, and solar-water pages each describe a different garden watering approach."
+    },
+    {
+      "query_id": "t-ocean-tides",
+      "rationale": "No corpus record addresses ocean tides or forecasting."
+    },
+    {
+      "query_id": "t-quantum-telescope",
+      "rationale": "No corpus record addresses quantum telescopes or calibration."
+    },
+    {
+      "query_id": "t-bicycle-chain",
+      "rationale": "No corpus record addresses bicycle chains or repair."
+    },
+    {
+      "query_id": "t-medieval-grammar",
+      "rationale": "No corpus record addresses medieval translation or grammar."
+    },
+    {
+      "query_id": "t-arm64-price",
+      "rationale": "The arch-arm64 page describes the package target but provides no price."
+    },
+    {
+      "query_id": "t-release-rollback",
+      "rationale": "The release-123 page describes a retry fix and stable deployment but provides no rollback behavior."
+    },
+    {
+      "query_id": "t-emitter-replacement",
+      "rationale": "The garden-irrigation page recommends checking emitters but does not provide a replacement procedure."
+    },
+    {
+      "query_id": "t-tomato-treatment",
+      "rationale": "The garden-tomato page discusses watering and reduced leaf disease but provides no treatment dosage."
+    },
+    {
+      "query_id": "h-release-124",
+      "rationale": "The release-124 record is the requested identifier for the preview release page."
+    },
+    {
+      "query_id": "h-error-conn",
+      "rationale": "The error-conn record is the requested identifier for the connection failure page."
+    },
+    {
+      "query_id": "h-error-auth",
+      "rationale": "The error-auth record is the requested identifier for the authentication failure page."
+    },
+    {
+      "query_id": "h-arch-arm64",
+      "rationale": "The arch-arm64 record is the requested identifier for the mobile processor package."
+    },
+    {
+      "query_id": "h-hash-512",
+      "rationale": "The hash-512 record is the requested identifier for the long digest page."
+    },
+    {
+      "query_id": "h-lang-cpp",
+      "rationale": "The lang-cpp record is the requested identifier for the native binding page."
+    },
+    {
+      "query_id": "h-stable-retries",
+      "rationale": "The release-123 page states that release 1.2.3 fixes connection retries and is deployed to stable clients."
+    },
+    {
+      "query_id": "h-water-near-roots",
+      "rationale": "The garden-irrigation page says drip irrigation delivers water near plant roots."
+    },
+    {
+      "query_id": "h-soil-amendments",
+      "rationale": "The garden-soil page says to measure acidity before choosing amendments."
+    },
+    {
+      "query_id": "h-tomato-wet-leaves",
+      "rationale": "The garden-tomato page says deep root watering avoids wet foliage."
+    },
+    {
+      "query_id": "h-daylight-rainwater",
+      "rationale": "The solar-water page says a solar powered pump moves stored rainwater during daylight."
+    },
+    {
+      "query_id": "h-native-ownership",
+      "rationale": "The lang-cpp page states that the C++ binding uses deterministic destructors and native object ownership."
+    },
+    {
+      "query_id": "h-client-releases",
+      "rationale": "The release-123 and release-124 pages describe deployed stable and preview client releases."
+    },
+    {
+      "query_id": "h-digest-comparison",
+      "rationale": "The hash-256 and hash-512 pages describe source digests, and evidence-ledger records source digests in review decisions."
+    },
+    {
+      "query_id": "h-garden-soil-care",
+      "rationale": "The garden-mulch, garden-compost, and garden-soil pages describe soil covering, compost, and acidity measurement."
+    },
+    {
+      "query_id": "h-binding-memory",
+      "rationale": "The lang-cpp and lang-csharp pages describe native ownership and managed garbage collection for bindings."
+    },
+    {
+      "query_id": "h-volcanic-ash",
+      "rationale": "No corpus record addresses volcanic ash analysis."
+    },
+    {
+      "query_id": "h-piano-tuning",
+      "rationale": "No corpus record addresses piano tuning or schedules."
+    },
+    {
+      "query_id": "h-satellite-orbit",
+      "rationale": "No corpus record addresses satellites or orbit correction."
+    },
+    {
+      "query_id": "h-marine-navigation",
+      "rationale": "No corpus record addresses marine navigation charts."
+    },
+    {
+      "query_id": "h-csharp-license",
+      "rationale": "The lang-csharp page describes managed objects and garbage collection but provides no license."
+    },
+    {
+      "query_id": "h-preview-stable-date",
+      "rationale": "The release-124 page identifies preview deployment but provides no date for stable availability."
+    },
+    {
+      "query_id": "h-soil-fertilizer-amount",
+      "rationale": "The garden-soil page recommends choosing amendments from a pH measurement but gives no fertilizer amount."
+    },
+    {
+      "query_id": "h-sha512-recovery",
+      "rationale": "The hash-512 page says the digest identifies source bytes but does not describe recovering those bytes."
+    }
+  ]
+}

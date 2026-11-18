@@ -1,0 +1,268 @@
+/*
+  Ziggurat design tokens.
+
+  One system, two deliberate themes. Dark is the default because the reading scene
+  is an engineer evaluating a threat model beside a dark editor; light is a full
+  peer for long-form daylight reading, not an afterthought.
+
+  Theme resolution matches Starlight: the inline theme script sets
+  `data-theme="dark" | "light"` on <html>. With JavaScript disabled no attribute is
+  set, so the operating-system preference is honoured by the media query below and
+  dark remains the fallback.
+
+  Every foreground/background pair in this file is contrast-tested. Text roles
+  clear WCAG 2.2 AA 4.5:1 on every ground they are used against; rule-strong and
+  the tier marks clear 3:1 for non-text contrast.
+*/
+
+:root {
+  /* Tells the UA to render scrollbars and native controls for the active theme. */
+  color-scheme: dark;
+
+  /* --- Graphite (dark) values ------------------------------------------- */
+  --zg-d-ground: #101214;
+  --zg-d-raised: #181b1e;
+  --zg-d-sunk: #0a0c0d;
+  --zg-d-ink: #eceeec;
+  --zg-d-ink-2: #a9afb3;
+  --zg-d-ink-3: #8a9095;
+  --zg-d-rule: #2e3337;
+  --zg-d-rule-strong: #61686f;
+  --zg-d-bronze: #de9a6a;
+  --zg-d-silver: #96bad2;
+  --zg-d-gold: #e6b854;
+  --zg-d-refuse: #f49384;
+  --zg-d-link: #8fb6e8;
+  --zg-d-bronze-field: #221913;
+  --zg-d-silver-field: #141d24;
+  --zg-d-gold-field: #221c0e;
+  --zg-d-refuse-field: #251311;
+  --zg-d-selection: #2b3a46;
+
+  /* --- Mineral (light) values ------------------------------------------- */
+  --zg-l-ground: #f2f2ef;
+  --zg-l-raised: #fafaf8;
+  --zg-l-sunk: #e7e7e3;
+  --zg-l-ink: #14171a;
+  --zg-l-ink-2: #4c5257;
+  --zg-l-ink-3: #666c71;
+  --zg-l-rule: #c3c6c1;
+  --zg-l-rule-strong: #7e837d;
+  --zg-l-bronze: #8c4a22;
+  --zg-l-silver: #3b5a6b;
+  --zg-l-gold: #7a5a0e;
+  --zg-l-refuse: #9b2a1e;
+  --zg-l-link: #1f4e8c;
+  --zg-l-bronze-field: #f3e9e2;
+  --zg-l-silver-field: #e6edf1;
+  --zg-l-gold-field: #f3ecdb;
+  --zg-l-refuse-field: #f6e6e3;
+  --zg-l-selection: #d3e0ea;
+
+  /* --- Active mapping: graphite by default ------------------------------ */
+  --zg-ground: var(--zg-d-ground);
+  --zg-raised: var(--zg-d-raised);
+  --zg-sunk: var(--zg-d-sunk);
+  --zg-ink: var(--zg-d-ink);
+  --zg-ink-2: var(--zg-d-ink-2);
+  --zg-ink-3: var(--zg-d-ink-3);
+  --zg-rule: var(--zg-d-rule);
+  --zg-rule-strong: var(--zg-d-rule-strong);
+  --zg-bronze: var(--zg-d-bronze);
+  --zg-silver: var(--zg-d-silver);
+  --zg-gold: var(--zg-d-gold);
+  --zg-refuse: var(--zg-d-refuse);
+  --zg-link: var(--zg-d-link);
+  --zg-bronze-field: var(--zg-d-bronze-field);
+  --zg-silver-field: var(--zg-d-silver-field);
+  --zg-gold-field: var(--zg-d-gold-field);
+  --zg-refuse-field: var(--zg-d-refuse-field);
+  --zg-selection: var(--zg-d-selection);
+
+  /* Solid tier fills carry a fixed foreground in both themes so a filled
+     plate never has to guess which ink it is sitting under. */
+  --zg-bronze-solid: #8c4a22;
+  --zg-silver-solid: #3b5a6b;
+  --zg-gold-solid: #c8921f;
+  --zg-refuse-solid: #9b2a1e;
+  --zg-on-bronze: #fbf8f5;
+  --zg-on-silver: #f6fafc;
+  --zg-on-gold: #14171a;
+  --zg-on-refuse: #fdf6f4;
+
+  /* --- Type ------------------------------------------------------------- */
+  --zg-font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif;
+  --zg-font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Mono', Menlo, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
+  --zg-text--2: 0.75rem;
+  --zg-text--1: 0.8125rem;
+  --zg-text-0: 1.0625rem;
+  --zg-text-1: 1.1875rem;
+  --zg-text-2: 1.4375rem;
+  --zg-text-3: clamp(1.625rem, 1.35rem + 1.35vw, 2.375rem);
+  --zg-text-4: clamp(2rem, 1.5rem + 2.5vw, 3.25rem);
+  --zg-text-5: clamp(2.5rem, 1.45rem + 5.25vw, 5.25rem);
+
+  --zg-leading-tight: 1.08;
+  --zg-leading-snug: 1.28;
+  --zg-leading-body: 1.62;
+
+  /* --- Space (4px base) -------------------------------------------------- */
+  --zg-space-3xs: 0.25rem;
+  --zg-space-2xs: 0.5rem;
+  --zg-space-xs: 0.75rem;
+  --zg-space-s: 1rem;
+  --zg-space-m: 1.5rem;
+  --zg-space-l: 2.25rem;
+  --zg-space-xl: 3.5rem;
+  --zg-space-2xl: 5.5rem;
+  --zg-space-3xl: 8rem;
+
+  /* --- Structure --------------------------------------------------------- */
+  --zg-measure: 68ch;
+  --zg-page-max: 78rem;
+  --zg-rail: 6.5rem;
+  --zg-gutter: clamp(1.25rem, 0.75rem + 2vw, 3rem);
+  --zg-hair: 1px;
+
+  /* --- Motion ------------------------------------------------------------
+     One vocabulary, taken from the design export. `datum` is the signature
+     traversal: the cursor that tracks the level being read. `reveal` is section
+     entry. `tap`, `state`, and `rule` carry the hover grammar, which changes
+     paint properties rather than geometry so a hover never moves the layout.
+  */
+  --zg-dur-tap: 140ms;
+  --zg-dur-state: 160ms;
+  --zg-dur-rule: 180ms;
+  --zg-dur-mark: 320ms;
+  --zg-dur-datum: 620ms;
+
+  --zg-dur-reveal-fade: 300ms;
+  --zg-dur-reveal-rise: 420ms;
+
+  --zg-ease-standard: ease;
+  --zg-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --zg-ease-reveal: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --zg-ease-datum: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Section-entry travel. The datum cursor moves along its own rail and is
+     measured in the figure's user units instead. */
+  --zg-rise: 14px;
+
+  /* Reveal rhythm: 0ms, 90ms, 180ms. Capped at three steps by the controller. */
+  --zg-stagger: 90ms;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --zg-ground: var(--zg-l-ground);
+  --zg-raised: var(--zg-l-raised);
+  --zg-sunk: var(--zg-l-sunk);
+  --zg-ink: var(--zg-l-ink);
+  --zg-ink-2: var(--zg-l-ink-2);
+  --zg-ink-3: var(--zg-l-ink-3);
+  --zg-rule: var(--zg-l-rule);
+  --zg-rule-strong: var(--zg-l-rule-strong);
+  --zg-bronze: var(--zg-l-bronze);
+  --zg-silver: var(--zg-l-silver);
+  --zg-gold: var(--zg-l-gold);
+  --zg-refuse: var(--zg-l-refuse);
+  --zg-link: var(--zg-l-link);
+  --zg-bronze-field: var(--zg-l-bronze-field);
+  --zg-silver-field: var(--zg-l-silver-field);
+  --zg-gold-field: var(--zg-l-gold-field);
+  --zg-refuse-field: var(--zg-l-refuse-field);
+  --zg-selection: var(--zg-l-selection);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --zg-ground: var(--zg-l-ground);
+    --zg-raised: var(--zg-l-raised);
+    --zg-sunk: var(--zg-l-sunk);
+    --zg-ink: var(--zg-l-ink);
+    --zg-ink-2: var(--zg-l-ink-2);
+    --zg-ink-3: var(--zg-l-ink-3);
+    --zg-rule: var(--zg-l-rule);
+    --zg-rule-strong: var(--zg-l-rule-strong);
+    --zg-bronze: var(--zg-l-bronze);
+    --zg-silver: var(--zg-l-silver);
+    --zg-gold: var(--zg-l-gold);
+    --zg-refuse: var(--zg-l-refuse);
+    --zg-link: var(--zg-l-link);
+    --zg-bronze-field: var(--zg-l-bronze-field);
+    --zg-silver-field: var(--zg-l-silver-field);
+    --zg-gold-field: var(--zg-l-gold-field);
+    --zg-refuse-field: var(--zg-l-refuse-field);
+    --zg-selection: var(--zg-l-selection);
+  }
+}
+
+::selection {
+  background: var(--zg-selection);
+  color: var(--zg-ink);
+}
+
+/*
+  Cross-document route transition.
+
+  A root opacity cross-fade and nothing else. No named elements: a shared name
+  that carried an element between a Silver context and a Gold context would
+  animate a promotion this system cannot perform. Progressive enhancement: a
+  browser without cross-document view transitions simply navigates.
+*/
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: zg-route-out var(--zg-dur-state) var(--zg-ease-exit) both;
+}
+
+::view-transition-new(root) {
+  animation: zg-route-in var(--zg-dur-state) var(--zg-ease-standard) both;
+}
+
+@keyframes zg-route-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zg-route-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+  Global reduced-motion backstop.
+
+  Covers this project's CSS and the Starlight, Pagefind, and Expressive Code
+  stylesheets, which ship transitions that are not all guarded upstream. State
+  still changes and nothing is hidden; only the interpolation is removed.
+  1ms rather than 0s so transitionend still fires for any listener.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

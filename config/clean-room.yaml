@@ -1,0 +1,40 @@
+# Clean-room release gate configuration.
+#
+# `ziggurat check` scans regular files in the supplied tree, subject to its exclusions, for
+# material that must not appear in a published reference repository: machine paths,
+# email addresses, credentials, Git remotes, and generated retrieval state.
+# Those detectors are built in.
+#
+# Project names cannot be built in. Naming a private vault's projects inside this file
+# would put exactly the vocabulary the clean-room rule excludes into the repository, and
+# every adopter's project names are different. Add your own before publishing a fork.
+#
+# Because the scan covers this file too, a configured project name is also a finding
+# here. Add `config/clean-room.yaml` to `exclude_paths` when you configure names, and
+# re-read the file by hand before every release.
+#
+# This file is validated strictly. Only `project_names` and `exclude_paths` are allowed,
+# missing or null values mean empty additional lists, and other values must be lists
+# of non-empty strings. An absent, empty, comments-only, or YAML-null document uses
+# built-in defaults. Other non-mapping documents, malformed YAML, unknown keys,
+# unreadable files, and invalid list entries fail the audit.
+#
+# Example:
+#   project_names:
+#     - apollo
+#     - northwind
+project_names: []
+
+# Additional paths to exclude from the scan, beyond the built-in defaults
+# (package-lock.json and the audit's own test fixtures). Keep this list short and
+# justified: an exclusion is a promise that a human checked the file by hand.
+# Non-UTF-8 and binary files fail closed and require an explicit exclusion after
+# manual inspection.
+exclude_paths:
+  # Social preview card served as the og:image for the documentation site. It is a
+  # binary PNG, so the text scan cannot read it and fails closed by design. It is
+  # original artwork rendered at 1200x630 from the tracked source at
+  # site/public/social-preview.svg, which IS scanned. It contains only the project
+  # name, the public thesis line, and the tier labels. Re-render it from the SVG and
+  # re-inspect both files if either changes.
+  - site/public/social-preview.png
