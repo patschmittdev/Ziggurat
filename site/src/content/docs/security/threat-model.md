@@ -7,8 +7,10 @@ description: Assumptions, controls, and residual risks.
 
 Ziggurat addresses persistent AI memory and context poisoning: untrusted content
 enters a durable retrieval store and silently influences later model behavior.
-This attack class is described by [OWASP ASI06 - Memory & Context Poisoning](https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/)
-and [MITRE ATLAS AML.T0080 - AI Agent Context Poisoning, Memory](https://d3fend.mitre.org/offensive-technique/attack/AML.T0080/).
+This attack class is described by
+[OWASP ASI06 - Memory & Context Poisoning](https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/),
+[MITRE ATLAS AML.T0080 - AI Agent Context Poisoning, Memory](https://d3fend.mitre.org/offensive-technique/attack/AML.T0080/),
+and [Microsoft Learn - AI Memory / Context Poisoning](https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/ai-memory-context-poisoning).
 
 Relevant attack inputs include poisoned documents, fabricated facts, embedded
 instructions, tampered retrieval indexes, compromised agents, and stale
@@ -101,19 +103,18 @@ The exact field and signing contract lives in the
 
 ## Attack mapping
 
-The primary scenario is agent memory and context poisoning, as described by
-[OWASP ASI06 - Memory & Context Poisoning](https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/)
-and [MITRE ATLAS AML.T0080 - AI Agent Context Poisoning, Memory](https://d3fend.mitre.org/offensive-technique/attack/AML.T0080/).
-The same failure can begin as indirect prompt injection, become persistent data
-poisoning, and exploit weak retrieval-store integrity. Ziggurat addresses admission
-and retrieval integrity; it does not claim to prevent every prompt-injection or
+The primary scenario is the memory and context poisoning described above. The same
+failure can begin as indirect prompt injection, become persistent data poisoning,
+and exploit weak retrieval-store integrity. Ziggurat addresses admission and
+retrieval integrity; it does not claim to prevent every prompt-injection or
 model-behavior failure.
 
 ## Attack controls
 
-This page describes controls relevant to this attack class. It does not claim coverage
-of those frameworks' mitigations. Ziggurat retains free-text bodies and hostile
-instructions as evidence. It does not provide automatic purges, semantic sanitization,
+Most row names follow the recommended controls in the Microsoft Learn entry above.
+This is a partial mapping, not a claim of coverage for any cited framework's
+mitigations. Ziggurat retains free-text bodies and hostile instructions as
+evidence. It does not provide automatic purges, semantic sanitization,
 or drift monitoring.
 
 | Memory-poisoning control | Ziggurat enforcement |
