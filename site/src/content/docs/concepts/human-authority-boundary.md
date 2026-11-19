@@ -3,8 +3,6 @@ title: The human authority boundary
 description: Why Ziggurat's review step is a cryptographic capability rather than a workflow convention.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
 Most review steps are conventions. Someone is supposed to look, someone is supposed to
 approve, and the system records that they said they did. A convention fails silently: it
 holds exactly as long as everybody follows it, and nothing detects the moment they stop.

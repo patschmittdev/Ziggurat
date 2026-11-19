@@ -1,7 +1,5 @@
 # Ziggurat Architecture
 
-**Experimental:** model-backed refinement has no human usability scores; the revised model-workflow batch reused the fixtures that informed it and is not held out.
-
 ## System purpose
 
 Ziggurat is a memory admission firewall. It preserves untrusted source material,

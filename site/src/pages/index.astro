@@ -17,14 +17,10 @@ const description =
 
 const enforced = [
   '<strong>ingest</strong> is the only Bronze writer, and captures are no-overwrite and body-hash verified; later mutation is detectable, not prevented.',
-  'An ingest source must resolve to a real regular file physically under <code>inbox/</code>.',
   '<strong>refine</strong> can write only strict version-2 artifacts under <code>.ziggurat/proposals/</code>.',
-  'Silver candidates cannot carry status, reviewer, receipt, or admission metadata.',
   'Every Silver citation must match exact Bronze bytes, hashes, and line ranges.',
   'Gold requires a detached Ed25519 receipt from a key configured in <code>config/trust.yaml</code>.',
-  'gold, review, and evidence are physically separate version-2 indexes.',
   'Shipped MCP startup is Gold-only and exposes exactly two read-only tools.',
-  'Model endpoints are HTTP loopback only, with redirects disabled, a 30 second deadline, and 1 MiB request and response ceilings.',
   'Every returned chunk reports <code>content_role: reference</code> and <code>instruction_authority: none</code>.',
 ];
 
@@ -34,7 +30,6 @@ const notGuaranteed = [
   'A stolen reviewer key, a compromised reviewer, or an inattentive approval can authorize harmful or false content.',
   'A valid signature proves control of a configured key and approval of exact content. It does not prove factual truth.',
   'Approved text can still contain prompt injection; see <a href="/Ziggurat/concepts/provenance-and-authority/">provenance and authority</a>.',
-  'Application-level path checks cannot fully close time-of-check to time-of-use windows.',
   'No key custody, revocation service, hosted identity, transport security, or GUI review system is provided.',
 ];
 ---
@@ -324,10 +319,6 @@ retrieval_eligible: true
       <section class="band wrap" aria-labelledby="guarantees-title">
         <div class="band__head prose" data-reveal="1">
           <h2 id="guarantees-title">What is enforced, and what is not</h2>
-          <p>
-            The second column is not a disclaimer. A boundary you cannot describe the edges of is
-            a boundary you cannot rely on.
-          </p>
         </div>
 
         <div class="ledger-pair">
@@ -336,12 +327,14 @@ retrieval_eligible: true
             <ul>
               {enforced.map((item) => <li set:html={item} />)}
             </ul>
+            <p><a href={url('security/guarantees/')}>All enforced boundaries</a></p>
           </div>
           <div data-reveal="3">
             <h3 class="is-not">Explicitly not guaranteed</h3>
             <ul>
               {notGuaranteed.map((item) => <li set:html={item} />)}
             </ul>
+            <p><a href={url('security/threat-model/#explicit-non-guarantees-and-residual-risks')}>All residual risks</a></p>
           </div>
         </div>
       </section>

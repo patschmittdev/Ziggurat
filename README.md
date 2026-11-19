@@ -16,11 +16,11 @@ See the [threat model](site/src/content/docs/security/threat-model.md).
 
 ## Status
 
-Pre-release 0.1.0, source-only, with no tagged releases. Ziggurat is not published to npm; install it from source. Contracts, index formats, and CLI behavior may change before 1.0.
+Pre-release 0.1.0, source-only, with no tagged releases. Contracts, index formats, and CLI behavior may change before 1.0.
 
-**Experimental:** model-backed refinement has no human usability scores. A revision staged 90/90 on the same fixtures that informed it, so it is not a held-out result; human acceptance remains pending. See the [workflow evaluation](docs/model-workflow-evaluation.md).
+**Experimental:** model refinement has no human usability scores. Initial staging was 79/90, below the 81/90 gate. A revision staged 90/90 on the same fixtures that informed it, so it is not a held-out result; human acceptance remains pending. See [model evidence](docs/model-workflow-evaluation.md).
 
-Retrieval has no abstention: on the small synthetic corpus, 4/6 no-answer queries still returned results. A threshold experiment selected no candidate. See the [retrieval evaluation](docs/retrieval-evaluation.md).
+See [project status](site/src/content/docs/project/status.md) for bounded evidence and remaining gaps.
 
 ## Requirements and installation
 
@@ -48,15 +48,6 @@ Continue with [your first vault](site/src/content/docs/getting-started/first-vau
 The refine host reads selected Bronze and optional target context, sends bounded reference data to a loopback model, and receives a strict version-1 draft. It derives exact citations and hashes, validates against live files, and stages strict version-2 Silver. Explicit source selection authorizes disclosure and bypasses the default privacy filter; evidence validation and bounds still apply.
 
 A reviewer independently authors a knowledge page and obtains an external receipt. `build` admits Gold only after receipt verification and every eligibility check. Gold, review, and evidence indexes remain separate; shipped MCP exposes only read-only Gold. Retrieved chunks have reference status and no instruction authority. See the [authorization boundary](site/src/content/docs/concepts/human-authority-boundary.md), [isolated indexes](site/src/content/docs/concepts/isolated-indexes.md), and [provenance](site/src/content/docs/concepts/provenance-and-authority.md).
-
-## Evidence
-
-| Report | Bounded result |
-|---|---|
-| [Model workflow](docs/model-workflow-evaluation.md) | Initial staging was 79/90, below the 81/90 gate. Human usability remains unscored. |
-| [Retrieval](docs/retrieval-evaluation.md) | On a small synthetic corpus, exact-identifier holdout top-1 reached 8/8 and no-answer false positives remained 4/6. On the separate abstention fixture, the Gold-ID baseline holdout reached 3/6 exact top-1. |
-| [Operating envelope](docs/operating-envelope.md) | Synthetic 1,000-page targets passed on one Windows machine with 512 MiB old-space; default-heap RSS failed and native Windows disk-full recovery remains unverified. |
-| [External signing](docs/external-signing-interop.md) | Independent Python bytes and disposable signatures interoperated with Node; this is neither a shipped signer nor proof of human review. |
 
 ## Documentation
 

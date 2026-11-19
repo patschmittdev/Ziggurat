@@ -3,29 +3,19 @@ title: Overview
 description: What Ziggurat is, what it enforces, and what it deliberately does not do.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
 Ziggurat is a human-gated memory firewall: a local TypeScript reference implementation
 that treats durable AI memory as a privileged write surface.
+
+## The boundary in one paragraph
 
 A model can read authorized content and return a strict version-1 refinement draft with
 source IDs and line ranges. The refine host derives canonical citations and version-2
 Silver, then validates and persists only that artifact. Gold requires a
 valid receipt from a configured Ed25519 key that operator policy assigns to a reviewer.
 Ziggurat verifies key control and exact-content authorization, not humanity, attention,
-semantic support, or factual truth.
-
-## The boundary in one paragraph
-
-Content moves through three tiers. **Bronze** is canonical UTF-8 text captured from
-untrusted sources after CRLF-to-LF normalization; ingest creates it without overwriting,
-and its body hash detects later mutation. **Silver** is strict version-2 JSON that the
-refine host materializes from a model draft, validates, and persists; every citation is
-revalidated against stored Bronze text. **Gold** is eligible knowledge content admitted by `build` after a detached
-Ed25519 receipt from a configured key and every other eligibility check pass.
-
-Ziggurat ships no signer, apply, approve, or promote command; see the
-[human authority boundary](../concepts/human-authority-boundary.md).
+semantic support, or factual truth. See [Bronze, Silver, and Gold](../concepts/tiers.md),
+the [human authority boundary](../concepts/human-authority-boundary.md), and the
+[enforced boundaries](../security/guarantees.md#enforced-boundaries).
 
 ## What this is for
 
@@ -56,10 +46,8 @@ integrate with these products.
 
 - Not an OS sandbox, and not a multi-tenant authorization service.
 - Not a key custody, revocation, or hosted identity service.
-- Not a claim about truth. A valid signature proves that a configured key approved exact
-  content. It does not make that content correct.
-- Every retrieved chunk carries `content_role: reference` and
-  `instruction_authority: none`.
+
+See all [non-guarantees and residual risks](../security/threat-model.md#explicit-non-guarantees-and-residual-risks).
 
 :::caution[Gold is authorization, not truth]
 Gold carries no truth or safety guarantee; see
@@ -81,8 +69,6 @@ Gold carries no truth or safety guarantee; see
   residual risk.
 
 ## Canonical specifications
-
-This site is task-oriented documentation. Consult these canonical architecture, threat-model, and protocol references:
 
 - [ARCHITECTURE.md](https://github.com/patschmittdev/Ziggurat/blob/main/ARCHITECTURE.md)
 - [Threat model](../security/threat-model.md)

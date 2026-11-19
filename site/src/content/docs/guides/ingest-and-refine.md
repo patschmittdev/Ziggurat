@@ -3,9 +3,9 @@ title: Ingest and refine
 description: Capture untrusted evidence, then stage a strict Silver proposal through a loopback model.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
+**Experimental:** model refinement has no human usability scores. Initial staging was 79/90, below the 81/90 gate. A revision staged 90/90 on the same fixtures that informed it, so it is not a held-out result; human acceptance remains pending. See [model evidence](https://github.com/patschmittdev/Ziggurat/blob/main/docs/model-workflow-evaluation.md).
 
-This guide covers evidence capture and model-assisted refinement. `ingest` persists
+`ingest` persists
 Bronze evidence; the model pathway cannot invoke it. `refine` materializes and persists
 a Silver proposal from a model draft. Neither command writes Gold, knowledge pages,
 receipts, or trust anchors.
@@ -84,7 +84,8 @@ The host reads Bronze on the model's behalf and builds a bounded reference block
 | Request and response body ceiling | 1 MiB each |
 
 JSON encoding, metadata, prompts, and optional target context add request bytes;
-they share the separate 1 MiB request ceiling.
+they share the separate 1 MiB request ceiling. Each source carries its verified body
+digest and 1-based lines.
 
 The host verifies each record and supplies its body as explicit `{line_number, text}`
 entries with a source ID, using 1-based Bronze body coordinates rather than candidate

@@ -3,8 +3,6 @@ title: Bronze, Silver, and Gold
 description: What each tier stores, who can write it, and what crossing between tiers requires.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
 Tiers have distinct writers.
 
 ## Bronze: preserved evidence
