@@ -1,6 +1,6 @@
 ---
-title: Guarantees and residual risks
-description: What Ziggurat enforces in code, and the risks it explicitly does not remove.
+title: Guarantees
+description: What Ziggurat enforces in code, with links to the risks it explicitly does not remove.
 ---
 
 ## Enforced boundaries
