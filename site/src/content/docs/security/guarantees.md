@@ -3,14 +3,6 @@ title: Guarantees and residual risks
 description: What Ziggurat enforces in code, and the risks it explicitly does not remove.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
-Read both lists. A boundary whose edges you cannot describe is a boundary you cannot rely
-on.
-
-This page owns the explanation of enforced boundaries.
-[Threat model](./threat-model.md) owns the normative assumptions and residual risks.
-
 ## Enforced boundaries
 
 - `ingest` is the only Bronze writer. It stores canonical UTF-8 text after CRLF-to-LF
@@ -57,27 +49,12 @@ This page owns the explanation of enforced boundaries.
 - A present but malformed or unreadable `config/clean-room.yaml` fails the release audit
   instead of falling back to defaults.
 
-## Operationally important non-guarantees
+Corpus rejection diagnostics are described in
+[integrity and recovery](../guides/integrity-and-recovery.md).
 
-- Not an OS sandbox.
-- Not multi-tenant authorization.
-- No key-custody service, revocation service, hosted identity, transport security,
-  or GUI review.
-- A stolen key or inattentive approval can authorize harm, and approved text can still
-  contain prompt injection.
+## Residual risks and incident handling
 
-The full [non-guarantees and residual risks](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/security/threat-model.md#explicit-non-guarantees-and-residual-risks)
-cover filesystem and path races, metadata limits, delegated access, review mistakes,
-rendering, unavailable services, Git history, and denial of service.
-
-## Key and incident handling
-
-Handle private keys, compromised keys, poisoned memory, and unexpected state changes
-under
-[Threat model](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/security/threat-model.md#key-and-incident-handling).
-
-## Canonical source
-
-If this summary and
-[threat model](./threat-model.md) differ,
-the threat model wins. Update this page rather than treating it as a second specification.
+The [threat model](./threat-model.md) lists the
+[non-guarantees and residual risks](./threat-model.md#explicit-non-guarantees-and-residual-risks)
+and [key and incident handling](./threat-model.md#key-and-incident-handling).
+If this page and the threat model differ, the threat model wins.

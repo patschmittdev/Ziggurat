@@ -3,8 +3,6 @@ title: Configuration and selected limits
 description: Configuration files, their allowed keys, and security-relevant shipped CLI limits.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revised model-workflow batch reused the fixtures that informed it and is not held out.
-
 Configuration lives in `config/` and is validated strictly. Unknown keys are rejected at
 the top level **and** inside every nested object, so a typo such as `default_sensitvity`
 fails to load rather than being silently ignored.
@@ -115,6 +113,12 @@ it and returned an invalid draft. Requests use `max_tokens: 2048`, `temperature:
 and `stream: false`. There is no protocol fallback, JSON repair,
 retry, or tool-call path. See the
 [local model protocol and setup guide](https://github.com/patschmittdev/Ziggurat/blob/main/docs/local-model-protocol.md).
+
+The adapter reaches only HTTP loopback endpoints. It never follows redirects, so a
+loopback endpoint answering with an off-machine `Location` cannot turn the adapter
+into a server-side request forgery primitive. Every request carries a 30 second
+deadline, and request and response bodies are capped at 1 MiB, with the response
+ceiling enforced while streaming rather than after buffering.
 
 ## `config/trust.yaml`
 

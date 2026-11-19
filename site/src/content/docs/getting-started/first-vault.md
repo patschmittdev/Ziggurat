@@ -3,8 +3,6 @@ title: Your first vault
 description: Create a vault, capture one piece of evidence, and build the three isolated indexes.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
 A vault is an ordinary directory. `init` does not create a Git repository or a vault
 `.gitignore`. Before committing one, add vault-local ignore rules for generated indexes
 and decide whether inbox and Bronze evidence are safe to place in version control.

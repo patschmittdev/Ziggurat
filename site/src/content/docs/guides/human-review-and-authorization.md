@@ -36,7 +36,7 @@ prerequisites.
    key outside the vault and model-accessible processes; no shipped signing path accepts
    or uses it.
 
-5. **Follow the [authorization protocol](../reference/authorization-protocol.md)** to
+5. **Follow the [authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md)** to
    compute the canonical page digest, sign the domain-separated payload, and store the
    strict detached receipt under `authorizations/`.
 
@@ -117,24 +117,9 @@ Only the public key belongs here. `ziggurat check` flags PEM private-key materia
 
 ## The receipt
 
-Receipts are strict JSON, and the deterministic path for `knowledge/topic.md` is
-`authorizations/topic.md.authorization.json`.
-
-```json
-{
-  "schema_version": 1,
-  "decision": "admit",
-  "target_path": "knowledge/topic.md",
-  "content_sha256": "<canonical page SHA-256>",
-  "reviewer_id": "committee-chair",
-  "reviewed_at": "2026-08-29T21:00:00Z",
-  "key_id": "committee-chair-2026",
-  "algorithm": "ed25519",
-  "signature": "<detached base64 signature>"
-}
-```
-
-Review timestamps require canonical UTC ISO-8601 values.
+The receipt for `knowledge/topic.md` is strict JSON at
+`authorizations/topic.md.authorization.json`. Review timestamps require canonical UTC
+ISO-8601 values. See the [authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md) for receipt fields, canonicalization, and signing bytes.
 
 ## Why a signature is not enough on its own
 
@@ -153,9 +138,8 @@ page. Until then the contradiction blocks Gold.
 A valid signature proves control of a configured key and authorization of exact canonical
 content. It does not prove humanity, attention, completion of this workflow, semantic
 support, or factual truth; see
-[provenance and authority](../concepts/provenance-and-authority.md).
-A stolen key, a compromised reviewer, or an inattentive approval can authorize harmful
-content.
+[provenance and authority](../concepts/provenance-and-authority.md) and the
+[residual risks](../security/threat-model.md#explicit-non-guarantees-and-residual-risks).
 
 ## Related
 

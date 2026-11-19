@@ -3,8 +3,6 @@ title: Threat model
 description: Assumptions, controls, and residual risks.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
 Ziggurat addresses persistent AI memory and context poisoning: untrusted content
 enters a durable retrieval store and silently influences later model behavior.
 This attack class is described by
@@ -39,67 +37,19 @@ and advisory review/evidence tooling. Advisory access does not establish human i
 
 ## Security boundaries and capabilities
 
-The model endpoint receives messages and returns structured JSON. Ziggurat does not
-give that endpoint filesystem or tool capabilities. The refine pathway owns only a
-root-constrained Silver writer.
+The model endpoint receives host-selected, bounded data and returns structured JSON.
+It receives no path, handle, fetch, filesystem, or tool capability, and the refine
+pathway can write only Silver. `ingest` refuses any source that does not resolve to a
+real regular file physically under `inbox/`, before reading, copying, or deleting it.
+No production module writes knowledge pages, reviewed metadata, trusted reviewer keys,
+or authorization receipts. The human admission capability is an external Ed25519
+private key.
 
-The host reads Bronze and places the selected bytes into the request as an explicit,
-bounded, labeled reference block: at most 12 records, 32 KiB of canonical Bronze
-body bytes per source, and 256 KiB of combined canonical Bronze body bytes.
-JSON encoding, metadata, prompts, and optional target context add request bytes
-and share the separate 1 MiB request ceiling. Each source carries its verified
-body digest and 1-based lines. The model receives
-data, never a path, handle, or fetch capability, and the proposal it returns is still
-revalidated against the real Bronze files before staging. Oversize records are
-omitted rather than truncated so a citation can never be computed against bytes that
-differ from the stored record.
-
-The adapter reaches only HTTP loopback endpoints. It never follows redirects, so a
-loopback endpoint answering with an off-machine `Location` cannot turn the adapter
-into a server-side request forgery primitive. Every request carries a 30 second
-deadline, and request and response bodies are capped at 1 MiB, with the response
-ceiling enforced while streaming rather than after buffering.
-
-`ingest` reads and deletes its source, so its source path is a combined arbitrary-read
-and arbitrary-delete primitive if it escapes. A source must resolve to a real regular
-file physically under `inbox/`. The following are all refused before the file is opened:
-
-- Absolute paths
-- `..` traversal
-- empty segments
-- control characters
-- directories
-- symlinks
-- junctions
-- other reparse points
-- hard links
-- real-parent escapes
-
-A refused source is never read, copied, or unlinked.
-
-Retrieval is bounded per session: 1,024 UTF-16 code units per query, 20 results per search, and
-200 retained citations. Over-long queries are refused rather than truncated. When the
-citation ceiling is reached the oldest IDs are evicted, which revokes them: a read
-against an evicted ID fails closed with the same error as a forged ID.
-
-No production module writes knowledge pages, reviewed metadata, trusted reviewer
-keys, or authorization receipts. `init` can create an empty trust policy but never
-adds or replaces keys. `build` can write generated indexes, but Gold construction
-requires a valid receipt. Running `build` is not an admission capability.
-
-The human admission capability is an external Ed25519 private key. A receipt binds:
-
-- `decision: admit`
-- normalized knowledge target path
-- SHA-256 of canonical semantic page content
-- reviewer ID and review timestamp
-- trusted key ID and Ed25519 algorithm
-
-The signature payload is domain separated. The canonical page representation uses
-parsed fields in fixed order and an LF-normalized body, so verification is stable on
-Windows, macOS, and Linux. Review timestamps require canonical UTC ISO-8601 values.
-The exact field and signing contract lives in the
-[authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md#unsigned-receipt).
+Details: [enforced boundaries](./guarantees.md#enforced-boundaries),
+[ingest and refine](../guides/ingest-and-refine.md),
+[model transport and configuration](../reference/configuration.md),
+[retrieval session bounds](../guides/mcp-gold.md#bounds), and the
+[authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md).
 
 ## Attack mapping
 
@@ -152,19 +102,6 @@ Proposal corruption makes Silver and contradiction state unverifiable. Index sch
 chunk, provenance, trust-label, BM25, trust-policy, or live-corpus mismatch prevents
 startup or the next search/read. Rebuilding from current authoritative artifacts is
 required.
-
-A corpus entry that is unreadable, lacks frontmatter, has invalid YAML, or fails its
-schema is never admitted. It is reported by path with a category and structural
-detail so an operator can repair it. Rejection diagnostics deliberately carry no file
-content and no parsed values: for schema failures they name field paths and issue
-codes only, so a restricted page is never quoted back through build output or logs.
-
-A `config/clean-room.yaml` that is unreadable, has malformed YAML, carries unknown
-keys or invalid list entries, or is a non-null non-mapping document fails
-`ziggurat check` with an actionable diagnostic. Absent, empty, comments-only, and
-YAML-null documents use built-in defaults. Missing or null list values mean empty
-additional lists. This separate parser does not apply the main vault configuration
-parser's blanket prohibition on YAML anchors, aliases, explicit type tags, and tabs.
 
 ## Provenance is not instruction authority
 
@@ -220,8 +157,6 @@ Every retrieved chunk carries `content_role: reference` and
 - Treat any unexpected proposal, receipt, trust-policy, or index change as a
   potential memory-poisoning incident.
 
-Ziggurat ships no signer, apply, approve, or promote command; see the
-[human authority boundary](https://github.com/patschmittdev/Ziggurat/blob/main/site/src/content/docs/concepts/human-authority-boundary.md).
 
 
 Report vulnerabilities through [SECURITY.md](https://github.com/patschmittdev/Ziggurat/blob/main/SECURITY.md). See [guarantees](./guarantees.md).

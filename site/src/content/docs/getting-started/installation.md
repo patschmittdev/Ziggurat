@@ -3,8 +3,6 @@ title: Installation
 description: Build the Ziggurat CLI from a source checkout and verify that it works.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revised model-workflow batch reused the fixtures that informed it and is not held out.
-
 Ziggurat is distributed as source, not as a published npm package. Its `package.json`
 keeps `"private": true`, so do not depend on the `ziggurat` package name.
 

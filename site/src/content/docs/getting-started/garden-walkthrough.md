@@ -3,8 +3,6 @@ title: The garden walkthrough
 description: Prepare a fixture vault, ingest its sources, and print the manual steps that remain.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revision reused the fixtures that informed it and is not held out.
-
 The repository ships fixture inputs and a script that initializes a vault, ingests those
 files as Bronze, and prints the remaining manual steps.
 

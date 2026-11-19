@@ -3,8 +3,6 @@ title: CLI reference
 description: Every Ziggurat command, its options, and what it is allowed to write.
 ---
 
-**Experimental:** model-backed refinement has no human usability scores; the revised model-workflow batch reused the fixtures that informed it and is not held out.
-
 After `npm run build`, from source, replace `ziggurat` with `node dist/src/cli/main.js`, or use `npm link`.
 
 ## Commands
