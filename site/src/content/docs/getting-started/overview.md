@@ -31,8 +31,10 @@ Ziggurat ships no signer, apply, approve, or promote command; see the
 
 Use Ziggurat when you want persistent retrieval context for an AI system and you are not
 willing to let the AI system decide what enters it. It addresses agent memory and
-context poisoning, described by [OWASP ASI06 - Memory & Context Poisoning](https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/)
-and [MITRE ATLAS AML.T0080 - AI Agent Context Poisoning, Memory](https://d3fend.mitre.org/offensive-technique/attack/AML.T0080/):
+context poisoning, described by
+[OWASP ASI06 - Memory & Context Poisoning](https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/),
+[MITRE ATLAS AML.T0080 - AI Agent Context Poisoning, Memory](https://d3fend.mitre.org/offensive-technique/attack/AML.T0080/),
+and [Microsoft Learn - AI Memory / Context Poisoning](https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/ai-memory-context-poisoning):
 untrusted content enters a durable store and silently influences later model behaviour.
 
 ## How it differs from other agent-memory systems
