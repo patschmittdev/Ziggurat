@@ -1,18 +1,18 @@
 # Ziggurat
 
-Ziggurat is a local TypeScript reference implementation of a write gate for AI memory. A model can propose what an AI system should remember, with exact citations to stored evidence. Nothing becomes durable context, which Ziggurat calls Gold, until a key held outside model-accessible processes signs a detached Ed25519 receipt for that exact page. Ziggurat ships no promote, approve, apply, or signer command. `ingest` is the only writer of evidence (Bronze), and `refine` writes only proposals (Silver).
+Ziggurat is a local TypeScript reference implementation of a write gate for AI memory. A model can propose what an AI system should remember, with exact citations to stored evidence. Nothing becomes durable context, which Ziggurat calls Gold, until a key listed in `config/trust.yaml` signs a detached Ed25519 receipt for that exact page. Ziggurat assumes the operator keeps that key outside model-accessible processes; it does not enforce where the key lives. Ziggurat ships no promote, approve, apply, or signer command. `ingest` is the only writer of evidence (Bronze), and `refine` writes only proposals (Silver).
 
 Documentation: [patschmittdev.github.io/Ziggurat](https://patschmittdev.github.io/Ziggurat/).
 
 ## The problem, in one example
 
-An agent that saves memories from what it reads can be told what to remember. The repository's garden fixture, [`poisoned-memory-rule.md`](fixtures/garden/inbox/poisoned-memory-rule.md), is a supplier memo submitted through a public inbox. Buried in it is an instruction telling any AI that reads it to remember the supplier as approved and to skip review. If an agent writes that into its memory, every later session inherits it as if someone had decided it. OWASP, MITRE ATLAS, and Microsoft Learn catalog this as memory and context poisoning; see the [threat model](site/src/content/docs/security/threat-model.md).
+An agent that saves memories from what it reads can be told what to remember. The repository's garden fixture, [`poisoned-memory-rule.md`](fixtures/garden/inbox/poisoned-memory-rule.md), is a supplier memo submitted through a public inbox. It contains an instruction telling any AI that reads it to remember the supplier as approved and to skip review. If an agent writes that into its memory, every later session inherits it as if someone had decided it. OWASP, MITRE ATLAS, and Microsoft Learn catalog this as memory and context poisoning; see the [threat model](site/src/content/docs/security/threat-model.md).
 
 ## What Ziggurat does with it
 
 [`test/memory-boundary.test.ts`](test/memory-boundary.test.ts) runs that memo through the whole pipeline:
 
-1. `ingest` keeps the memo unchanged as Bronze evidence, marked restricted and PII-unknown. Default model access excludes fresh captures like it.
+1. `ingest` preserves the memo's text as Bronze evidence, marked restricted and PII-unknown. Default model access excludes fresh captures like it.
 2. A Silver proposal citing the instruction's exact lines is staged. Staging writes no knowledge page, receipt, trust entry, or index. The test stages it with a helper; in normal use, `refine` stages proposals from model output.
 3. `review` shows the instruction under an `UNTRUSTED REFERENCE` warning.
 4. A knowledge page whose own metadata claims it was reviewed still does not reach Gold.
@@ -35,7 +35,7 @@ See the [threat model](site/src/content/docs/security/threat-model.md).
 
 ## Status
 
-Ziggurat is a reference implementation, not a product. The tests cover the admission boundary and its failure modes. They do not measure whether people catch poisoned proposals in review, how review fatigue changes that, or any outcome in a deployed agent. A with-and-without comparison would score Ziggurat at zero admitted poison by construction, so the open question needs human reviewers, not a model benchmark.
+Ziggurat is a reference implementation, not a product. The tests cover the admission boundary and its failure modes. They do not measure whether people catch poisoned proposals in review, how review fatigue changes that, or any outcome in a deployed agent. A model-only comparison with no signer would score Ziggurat at zero admitted poison by construction. Once someone signs, the outcome depends on what they signed: the test above ends with a signed Gold page whose body still contains the instruction. So the open question needs human reviewers, not a model benchmark.
 
 Pre-release 0.1.0, source-only, with no tagged releases. Contracts, index formats, and CLI behavior may change before 1.0.
 
