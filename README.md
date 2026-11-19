@@ -10,13 +10,13 @@ An agent that saves memories from what it reads can be told what to remember. Th
 
 ## What Ziggurat does with it
 
-[`test/memory-boundary.test.ts`](test/memory-boundary.test.ts) runs that memo through the whole pipeline:
+[`test/memory-boundary.test.ts`](test/memory-boundary.test.ts) runs that memo through the whole pipeline. The [garden walkthrough](site/src/content/docs/getting-started/garden-walkthrough.md) describes each step in full; in short:
 
 1. `ingest` preserves the memo's text as Bronze evidence, marked restricted and PII-unknown. Default model access excludes fresh captures like it.
-2. A Silver proposal citing the instruction's exact lines is staged. Staging writes no knowledge page, receipt, trust entry, or index. The test stages it with a helper; in normal use, `refine` stages proposals from model output.
+2. A Silver proposal citing the instruction's exact lines is staged. Staging writes no knowledge page, receipt, trust entry, or index. The test calls the staging function directly; in normal use, `refine` stages proposals from model output.
 3. `review` shows the instruction under an `UNTRUSTED REFERENCE` warning.
 4. A knowledge page whose own metadata claims it was reviewed still does not reach Gold.
-5. Gold changes only after a key listed in `config/trust.yaml` signs a receipt for the exact page. The test signs with a generated key, so this demonstrates the cryptographic check, not a human decision.
+5. Gold changes only after a key listed in `config/trust.yaml` signs a receipt for the page. The test signs with a generated key, so this demonstrates the cryptographic check, not a human decision. [`test/authorization.test.ts`](test/authorization.test.ts) separately shows that the receipt stops verifying when the page content changes.
 6. Retrieved Gold reports `instruction_authority: none`, and a tampered index fails closed.
 
 Ziggurat does not detect the poison. It keeps hostile text as evidence and turns durable memory into a write that needs a signature. Whether a reviewer notices the instruction before signing is the part that matters most, and nothing here tests it.
