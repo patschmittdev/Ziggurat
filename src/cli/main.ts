@@ -90,7 +90,7 @@ export async function runCli(args: string[], io: CliIO = DEFAULT_IO): Promise<nu
       return `Usage: ${usage[command]}\n`;
     }
     return [
-      'Ziggurat: Models propose. Humans decide what persists.',
+      'Ziggurat: Models propose. A trusted key decides what persists.',
       '',
       'Usage: ziggurat <command> [options]',
       '',

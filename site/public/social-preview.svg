@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Ziggurat — models propose, humans decide what persists">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Ziggurat — models propose, a trusted key decides what persists">
   <rect width="1200" height="630" fill="#101214"></rect>
   <rect x="24.5" y="24.5" width="1151" height="581" fill="none" stroke="#2e3337" stroke-width="1"></rect>
 
@@ -8,9 +8,9 @@
   <rect x="222" y="207" width="36" height="18" fill="#eceeec"></rect>
   <g font-family="system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
     <text x="472" y="310" fill="#eceeec" font-size="76" font-weight="600" letter-spacing="-2">Ziggurat</text>
-    <text x="474" y="370" fill="#a9afb3" font-size="30">Models propose. Humans decide what persists.</text>
+    <text x="474" y="370" fill="#a9afb3" font-size="26">Models propose. A trusted key decides what persists.</text>
   </g>
   <g font-family="ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace" font-size="16" fill="#8a9095">
-    <text x="474" y="440">bronze: no-overwrite · silver: proposals only · gold: human-authorized</text>
+    <text x="474" y="440">bronze: no-overwrite · silver: proposals only · gold: key-signed</text>
   </g>
 </svg>

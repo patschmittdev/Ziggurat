@@ -20,7 +20,7 @@ body:
     id: boundary
     attributes:
       label: Human authority boundary
-      description: Explain how the proposal preserves or changes the rule that models propose and humans decide what persists.
+      description: Explain how the proposal preserves or changes the rule that models propose and a trusted key decides what persists.
     validations:
       required: true
   - type: textarea

@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const url = (path: string) => `${base}/${path.replace(/^\//, '')}`;
 
 const repo = 'https://github.com/patschmittdev/Ziggurat';
-const title = 'Ziggurat: models propose, humans decide what persists';
+const title = 'Ziggurat: models propose, a trusted key decides what persists';
 const description =
   'A reference write gate for AI memory. A model can draft an evidence-backed candidate for durable memory; nothing is admitted without a detached Ed25519 receipt from a key that operator policy assigns to a human reviewer.';
 
@@ -83,7 +83,7 @@ const notGuaranteed = [
       <!-- 1. Thesis and the boundary itself -->
       <section class="wrap" aria-labelledby="thesis-title">
         <div class="titleblock">
-          <h1 id="thesis-title">Models propose. Humans decide what persists.</h1>
+          <h1 id="thesis-title">Models propose. A trusted key decides what persists.</h1>
           <dl class="spec" translate="no">
             <dt>Project</dt>
             <dd>Ziggurat 0.1.0</dd>

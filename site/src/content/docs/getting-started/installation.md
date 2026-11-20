@@ -37,7 +37,7 @@ node dist/src/cli/main.js --help
 Bronze creation prevents overwrites; body hashes detect later mutation.
 
 ```text
-Ziggurat: Models propose. Humans decide what persists.
+Ziggurat: Models propose. A trusted key decides what persists.
 
 Usage: ziggurat <command> [options]
 
