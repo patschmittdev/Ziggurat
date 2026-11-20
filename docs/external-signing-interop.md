@@ -1,6 +1,6 @@
 # External signing interoperability
 
-Ziggurat verifies receipts. It does not provide a signing command, obtain a private
+The Ziggurat runtime verifies receipts. It has no signing command and does not obtain a private
 key, establish human attention, or turn a review checklist into authorization.
 The separately controlled signing environment must belong to the reviewer and
 must not be exposed through model tools, MCP, or the vault's automation.
@@ -24,7 +24,8 @@ npm run test:interop
 
 `ZIGGURAT_INTEROP_PYTHON` can select a separate Python executable. Missing Python
 or the package fails this explicit test rather than becoming a passing skip.
-The default core test command does not install or invoke an external signer.
+The default core test command invokes the standalone Node reference signer with
+disposable keys. It does not install signer dependencies.
 The harness uses only published vectors and disposable test keys; it is not a
 command for authorizing real pages.
 
@@ -57,9 +58,9 @@ payload defined by receipt v1.
 7. Rebuild and inspect eligibility reasons. Changing the page after signing, using
    a removed key, or leaving another admission rule unsatisfied must not admit it.
 
-This is an interoperability procedure, not a shipped signer or a key-custody
-service. Choose or maintain the external approval interface under the reviewer's
-control, and test it against the public vectors before using a real key.
+The repository includes a standalone reference signer in `examples/external-signer/`
+for use outside the vault. It is not a key-custody service. Keep its interface under
+the intended key holder's control and test it against the public vectors.
 
 ## Capability checks
 

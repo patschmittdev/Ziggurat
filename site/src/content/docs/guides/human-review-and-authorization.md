@@ -3,8 +3,8 @@ title: Human review and external authorization
 description: A recommended review workflow before build performs Gold admission.
 ---
 
-This is the recommended operator workflow. Ziggurat ships no signer, apply, approve,
-or promote command; see the
+This is the recommended operator workflow. The CLI and MCP server have no signing, apply, approve,
+or promote path; see the
 [human authority boundary](../concepts/human-authority-boundary.md).
 Gold eligibility does not prove that this workflow occurred: a Silver proposal, the
 `review` command, hand authorship, and a Git commit are not machine-enforced
@@ -33,8 +33,9 @@ prerequisites.
 
 4. **Sign with an external Ed25519 signer** whose public key is listed in
    `config/trust.yaml`. Operator policy assigns the key to a reviewer. Keep the private
-   key outside the vault and model-accessible processes; no shipped signing path accepts
-   or uses it.
+   key outside the vault and model-accessible processes. The standalone reference signer
+   is meant to run outside the vault under the key holder's control. Follow [Sign a page and reach Gold](./external-signing.md)
+   for a complete example.
 
 5. **Follow the [authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md)** to
    compute the canonical page digest, sign the domain-separated payload, and store the

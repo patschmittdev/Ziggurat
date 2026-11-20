@@ -16,7 +16,7 @@ List the targeted checks you ran.
 
 - [ ] Behavior changes include tests that use real temporary files.
 - [ ] Model pathways still cannot write Bronze, knowledge, trust, receipts, reviewed metadata, or indexes.
-- [ ] No signer, apply, approve, promote command, or `--promote` flag was added.
+- [ ] No signing, apply, approve, or promote path was added to the Ziggurat runtime (CLI, MCP server and `src/`); no `--promote` flag was added.
 - [ ] Retrieved content remains reference-only with `instruction_authority: none`.
 - [ ] Documentation and compatibility notes match the implementation.
 - [ ] `npm run check` passes.

@@ -1,6 +1,6 @@
 # Ziggurat
 
-Ziggurat is a local TypeScript reference implementation of a write gate for AI memory. A model can propose what an AI system should remember, with exact citations to stored evidence. Nothing becomes durable context, which Ziggurat calls Gold, until a key listed in `config/trust.yaml` signs a detached Ed25519 receipt for that exact page. Ziggurat assumes the operator keeps that key outside model-accessible processes; it does not enforce where the key lives. Ziggurat ships no promote, approve, apply, or signer command. `ingest` is the only writer of evidence (Bronze), and `refine` writes only proposals (Silver).
+Ziggurat is a local TypeScript reference implementation of a write gate for AI memory. A model can propose what an AI system should remember, with exact citations to stored evidence. Nothing becomes durable context, which Ziggurat calls Gold, until a key listed in `config/trust.yaml` signs a detached Ed25519 receipt for that exact page. Ziggurat assumes the operator keeps that key outside model-accessible processes; it does not enforce where the key lives. The Ziggurat runtime (CLI, MCP server and `src/`) has no signing, approval, apply or promotion command. The repository also contains a standalone reference signer in `examples/external-signer/`, meant to run outside the vault under the key holder's control. Tests sign only with disposable keys they generate. `ingest` is the only writer of evidence (Bronze), and `refine` writes only proposals (Silver).
 
 Documentation: [patschmittdev.github.io/Ziggurat](https://patschmittdev.github.io/Ziggurat/).
 
@@ -60,7 +60,7 @@ node dist/src/cli/main.js query --root ./my-vault --query garden
 
 Gold is empty because no page has external authorization. Ingest creates and verifies a new Bronze record before deleting the inbox source; a duplicate leaves its source untouched. Fresh captures are restricted and PII-unknown, so default model access excludes them.
 
-Continue with [your first vault](site/src/content/docs/getting-started/first-vault.md) and [ingest and refine](site/src/content/docs/guides/ingest-and-refine.md).
+Continue with [Sign a page and reach Gold](site/src/content/docs/guides/external-signing.md), [Run Ziggurat with models and agents](site/src/content/docs/guides/agents-and-models.md), [your first vault](site/src/content/docs/getting-started/first-vault.md) and [ingest and refine](site/src/content/docs/guides/ingest-and-refine.md).
 
 ## How it works
 

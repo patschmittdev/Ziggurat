@@ -20,9 +20,9 @@ description: What Ziggurat enforces in code, with links to the risks it explicit
 - Silver candidates cannot contain status, reviewer, receipt, or admission metadata.
 - Every Silver citation must match stored Bronze text, hashes, and line ranges. This is
   citation integrity, not semantic or factual verification.
-- No shipped function writes knowledge pages, reviewed metadata, trusted reviewer keys,
+- No function in `src/` writes knowledge pages, reviewed metadata, trusted reviewer keys,
   or authorization receipts.
-- Ziggurat ships no signer, apply, approve, or promote command; see the
+- The CLI and MCP server have no signing, apply, approve, or promote path; see the
   [human authority boundary](../concepts/human-authority-boundary.md).
 - Gold requires a detached Ed25519 receipt from a configured key, as defined in the
   [authorization protocol](https://github.com/patschmittdev/Ziggurat/blob/main/docs/authorization-protocol.md#unsigned-receipt).

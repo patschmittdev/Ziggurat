@@ -31,7 +31,7 @@ test('garden walkthrough: automation stops at the human signing boundary', async
       'the automated walkthrough must not write a curated page',
     );
 
-    assert.match(prepared.next_step, /human-only/iu);
+    assert.match(prepared.next_step, /receipt from a trusted key/iu);
     assert.match(prepared.next_step, /external Ed25519 signature/iu);
     const authorizations = await readdir(join(prepared.root, 'authorizations')).catch(() => []);
     assert.deepEqual(authorizations, []);

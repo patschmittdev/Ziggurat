@@ -71,7 +71,7 @@ or drift monitoring.
 |---|---|
 | Source approval | Sources remain isolated Bronze; extracted claims require separate admission |
 | Provenance | Exact Bronze citations, body hashes, quote hashes, and Gold lineage |
-| Memory write governance | External human signing capability required for Gold |
+| Memory write governance | External signing capability required for Gold |
 | Strict record and proposal schemas | Strict Zod v4 contracts reject unknown fields on Bronze records, main vault configuration and its nested objects, proposals, receipts, and indexes; clean-room configuration is validated separately |
 | Review and diff transparency | Complete Silver candidates and evidence in `review` |
 | Presentation sanitization | Candidate bodies are indented; quoted fields and control characters are escaped |
@@ -145,6 +145,10 @@ Every retrieved chunk carries `content_role: reference` and
   for audit and rollback, not as the cryptographic admission signal.
 - Availability attacks remain possible. Corrupt proposals or policy changes can
   intentionally force fail-closed denial of service.
+
+- A writer can restore an earlier signed page with its earlier receipt and re-admit
+  superseded text without the key. Receipt v1 has no supersession counter. This
+  rollback risk is bounded by the 90-day `last_verified` age rule and `review_after`.
 
 ## Key and incident handling
 

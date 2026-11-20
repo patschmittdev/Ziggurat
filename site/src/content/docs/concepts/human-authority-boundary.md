@@ -8,8 +8,7 @@ approve, and the system records that they said they did. A convention fails sile
 holds exactly as long as everybody follows it, and nothing detects the moment they stop.
 
 Ziggurat's authorization boundary is a capability. Gold admission requires a detached
-Ed25519 receipt produced by a key configured in the operator's trust policy. No shipped
-signing path accepts or uses a private key.
+Ed25519 receipt produced by a key configured in the operator's trust policy. The CLI, MCP server, and `src/` contain no signing path.
 
 A receipt is different in kind. It is a detached signature over a canonical
 representation of the exact page, verified against a public key in `config/trust.yaml`.
@@ -20,10 +19,10 @@ the corresponding private key.
 
 The boundary is defined as much by absence as by enforcement:
 
-- No `signer` command.
+- No signing command in the Ziggurat runtime (CLI, MCP server and `src/`).
 - No `apply`, `approve`, or `promote` command.
 - No `--promote` flag on any command; it must remain rejected and must not be added.
-- No function in the shipped codebase that writes knowledge pages, reviewed metadata,
+- No function in `src/` that writes knowledge pages, reviewed metadata,
   trusted reviewer keys, or authorization receipts.
 
 `init` can create an *empty* trust policy, but it never adds or replaces a key. `build`
@@ -54,7 +53,8 @@ is true, safe, complete, or well-judged. See
 
 Operator policy requires private keys to remain outside the vault and model-accessible
 processes. Key custody is deliberately not a feature: the reference implementation
-provides no signer, hardware key storage, revocation service, or hosted identity. The
+includes a standalone reference signer for use outside the vault, but provides no
+hardware key storage, revocation service, or hosted identity. The
 signing capability is not delegated through shipped refine or MCP interfaces.
 
 :::caution[The boundary has an inside]

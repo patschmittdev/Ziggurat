@@ -7,8 +7,10 @@ project is pre-release, so future versions may introduce a new receipt or
 canonicalization version rather than changing version 1 in place.
 
 The protocol lets an external human-controlled signer authorize one exact knowledge
-page for Gold admission. Ziggurat verifies signatures but intentionally ships no
-signing, approval, apply, or promotion command.
+page for Gold admission. The Ziggurat runtime (CLI, MCP server and `src/`) verifies signatures and has no
+signing, approval, apply or promotion command. The repository also contains a
+standalone reference signer in `examples/external-signer/`, meant to run outside
+the vault under the key holder's control. Tests sign only with disposable keys they generate.
 
 ## Trust model
 
@@ -171,8 +173,7 @@ is a deterministic vector file for independent signer implementations. It contai
 - `cases[]`, each with a page body, a receipt, the trust policy to load, and the
   expected `{ valid, reasons }` verification result
 
-No private key material is published. Verification, which is the only operation
-Ziggurat performs, needs only the public key. A signer implementation is conformant
+No private key material is published. Verification in the Ziggurat runtime needs only the public key. A signer implementation is conformant
 when it reproduces `canonical_page_content`, `content_sha256`, and `signing_payload`
 byte for byte from the frontmatter and body alone, and verifies the supplied
 signature against the published public key. A new signature made with an

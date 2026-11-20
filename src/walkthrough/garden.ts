@@ -64,7 +64,7 @@ export async function prepareGardenVault(
     ingest_results,
     bronze_by_name,
     next_step: [
-      'Bronze capture is complete. Gold admission is human-only.',
+      'Bronze capture is complete. Gold admission requires a receipt from a trusted key.',
       '',
       '  1. Configure a loopback model and stage a strict Silver proposal.',
       `  2. Inspect it with: ziggurat review --root "${root}"`,
@@ -73,7 +73,7 @@ export async function prepareGardenVault(
       '  5. Store the detached receipt under authorizations/ and commit both files.',
       `  6. Rebuild with: ziggurat build --root "${root}"`,
       '',
-      'Ziggurat ships no signing, apply, approval, or promotion command.',
+      'The Ziggurat runtime (CLI, MCP server and src/) has no signing, approval, apply or promotion command.',
     ].join('\n'),
   };
 }

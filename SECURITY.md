@@ -14,8 +14,10 @@ The latest commit on the default branch receives security fixes. There are no ta
 
 ## Scope
 
+Defects in `examples/external-signer/` are in scope, including showing different content than it signs, mishandling keys, or defective location checks.
+
 In scope: bypasses of receipt admission, citation or index integrity, vault path boundaries, privacy filtering, and model transport restrictions in shipped code.
 
-Out of scope: operator-controlled filesystem or trust-policy replacement, external signer compromise, and factual truth or human attention that the implementation does not establish. Report implementation failures that cross the documented boundary even when they start with hostile source content.
+Out of scope: operator-controlled filesystem or trust-policy replacement, compromise of the signing environment itself, and factual truth or human attention that the implementation does not establish. Report implementation failures that cross the documented boundary even when they start with hostile source content.
 
 Read the [threat model](site/src/content/docs/security/threat-model.md) for assumptions, controls, and residual risks, and [guarantees](site/src/content/docs/security/guarantees.md) for enforced boundaries.

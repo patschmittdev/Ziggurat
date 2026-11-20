@@ -30,11 +30,13 @@ test('homepage inline prose link boundaries', async ({ page }) => {
     }));
 
   expect(boundaries).toEqual([
+    { text: 'All enforced boundaries', before: '', after: '' },
     {
       text: 'provenance and authority',
       before: expect.stringMatching(/; see $/),
       after: '.',
     },
+    { text: 'All residual risks', before: '', after: '' },
     {
       text: 'repository',
       before: expect.stringMatching(/Clone the $/),
@@ -78,7 +80,7 @@ for (const route of routes) {
 
     if (route === '/') {
       await expect(page.locator('.thesis .prose')).toContainText(
-        'Ziggurat ships no signer. Keeping the private key outside the vault and inaccessible to the model and Ziggurat process is an operator responsibility.',
+        'The Ziggurat CLI has no signing command. Keeping the private key outside the vault and inaccessible to the model and Ziggurat process is an operator responsibility.',
       );
       await expect(page.locator('.admission__external')).toContainText(
         'Keep the private key separate from the model and host.',

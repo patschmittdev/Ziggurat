@@ -145,5 +145,5 @@ history separately before publication.
 
 ## Unavailable commands
 
-Ziggurat ships no signer, apply, approve, or promote command; see the
+The CLI has no signing, apply, approve, or promote command; see the
 [human authority boundary](../concepts/human-authority-boundary.md).

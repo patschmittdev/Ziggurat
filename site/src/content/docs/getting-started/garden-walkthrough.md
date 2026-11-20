@@ -11,7 +11,7 @@ node scripts/run-garden-walkthrough.mjs
 ```
 
 The script does not stage Silver, render review, create a page or receipt, build indexes,
-or query Gold. No shipped path creates authorization, signs a receipt, or applies Silver
+or query Gold. The Ziggurat runtime (CLI, MCP server and `src/`) never creates authorization, signs a receipt, or applies Silver
 to knowledge.
 
 ## What the fixture contains
