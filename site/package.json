@@ -1,7 +1,7 @@
 {
   "name": "ziggurat-site",
   "version": "0.1.0",
-  "description": "Documentation site for Ziggurat, a human-gated memory firewall.",
+  "description": "Documentation site for Ziggurat, a reference write gate for AI memory.",
   "private": true,
   "license": "MIT",
   "type": "module",

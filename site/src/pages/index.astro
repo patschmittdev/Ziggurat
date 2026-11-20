@@ -13,7 +13,7 @@ const url = (path: string) => `${base}/${path.replace(/^\//, '')}`;
 const repo = 'https://github.com/patschmittdev/Ziggurat';
 const title = 'Ziggurat: models propose, humans decide what persists';
 const description =
-  'A human-gated memory firewall. A model can draft an evidence-backed candidate for durable AI memory; nothing is admitted without a detached Ed25519 receipt from a key that operator policy assigns to a human reviewer.';
+  'A reference write gate for AI memory. A model can draft an evidence-backed candidate for durable memory; nothing is admitted without a detached Ed25519 receipt from a key that operator policy assigns to a human reviewer.';
 
 const enforced = [
   '<strong>ingest</strong> is the only Bronze writer, and captures are no-overwrite and body-hash verified; later mutation is detectable, not prevented.',
@@ -101,8 +101,8 @@ const notGuaranteed = [
         <div class="thesis">
           <div class="prose">
             <p class="lede">
-              Ziggurat is a human-gated memory firewall: a local TypeScript reference
-              implementation that treats durable AI memory as a privileged write surface.
+              Ziggurat is a local TypeScript reference implementation of a write gate for
+              AI memory. It treats durable memory as a privileged write surface.
             </p>
             <p>
               A model can read authorized content and draft a complete, evidence-backed

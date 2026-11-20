@@ -2,9 +2,9 @@
 
 ## System purpose
 
-Ziggurat is a memory admission firewall. It preserves untrusted source material,
-allows models to stage evidence-backed candidates, and requires a separately
-verifiable human capability before content becomes durable Gold context.
+Ziggurat is a write gate for AI memory. It preserves untrusted source material,
+allows models to stage evidence-backed candidates, and requires a detached receipt
+from a trusted key before content becomes durable Gold context.
 
 ## Assets
 

@@ -16,7 +16,7 @@ export default defineConfig({
     starlight({
       title: 'Ziggurat',
       description:
-        'A human-gated memory firewall. The refine host persists model-originated Silver JSON; Gold requires authorization from a configured external Ed25519 key.',
+        'A reference write gate for AI memory. The refine host persists model-originated Silver JSON; Gold requires authorization from a configured external Ed25519 key.',
       logo: {
         light: './src/assets/ziggurat-mark-light.svg',
         dark: './src/assets/ziggurat-mark-dark.svg',

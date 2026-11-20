@@ -1,7 +1,7 @@
 {
   "name": "ziggurat",
   "version": "0.1.0",
-  "description": "A human-gated memory firewall for evidence-backed AI context.",
+  "description": "Reference write gate for AI memory: nothing becomes durable context until a trusted key signs it.",
   "private": true,
   "license": "MIT",
   "repository": "github:patschmittdev/Ziggurat",

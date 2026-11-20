@@ -3,8 +3,8 @@ title: Overview
 description: What Ziggurat is, what it enforces, and what it deliberately does not do.
 ---
 
-Ziggurat is a human-gated memory firewall: a local TypeScript reference implementation
-that treats durable AI memory as a privileged write surface.
+Ziggurat is a local TypeScript reference implementation of a write gate for AI memory.
+It treats durable memory as a privileged write surface.
 
 ## The boundary in one paragraph
 
